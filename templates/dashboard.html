@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}DASHBOARD - STUDYLOGIX{% endblock %}
+
+{% block content %}
+<!-- Nothing OS Welcome Section -->
+<div class="welcome-section-nothing ambient-card">
+    <h1 class="welcome-title-nothing">
+        <i class="fas fa-terminal me-3" style="color: var(--nothing-cyan);"></i>
+        WELCOME, {{ session.username.upper() }}
+    </h1>
+    <p class="welcome-subtitle-nothing">SYSTEM STATUS: READY • SESSION ACTIVE • LEARNING MODE ENABLED</p>
+    <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 32px;">
+        <a href="{{ url_for('log_session') }}" class="btn-nothing btn-nothing-primary">
+            <i class="fas fa-plus"></i>
+            NEW SESSION
+        </a>
+        <a href="{{ url_for('pomodoro') }}" class="btn-nothing">
+            <i class="fas fa-stopwatch"></i>
+            FOCUS MODE
+        </a>
+        <a href="{{ url_for('analytics') }}" class="btn-nothing">
+            <i class="fas fa-chart-line"></i>
+            ANALYTICS
+        </a>
+    </div>
+</div>
+
+<!-- Nothing OS Stats Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 32px;">
+    <div class="stats-card-nothing stats-card-primary float">
+        <div class="stats-value-nothing">
+            <i class="fas fa-clock stats-icon-nothing"></i>
+            {{ total_hours }}:{{ '{:02d}'.format(total_mins) }}
+        </div>
+        <div class="stats-label-nothing">TOTAL STUDY TIME</div>
+        <div style="font-size: 12px; color: var(--nothing-gray-500); margin-top: 8px;">
+            {% if total_hours == 0 and total_mins == 0 %}
+                READY TO START YOUR JOURNEY
+            {% elif total_hours < 10 %}
+                BUILDING MOMENTUM
+            {% else %}
+                CONSISTENCY ACHIEVED
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="stats-card-nothing stats-card-success float" style="animation-delay: 0.1s;">
+        <div class="stats-value-nothing">
+            <i class="fas fa-layer-group stats-icon-nothing"></i>
+            {{ subjects_data|length or 0 }}
+        </div>
+        <div class="stats-label-nothing">ACTIVE SUBJECTS</div>
+        <div style="font-size: 12px; color: var(--nothing-gray-500); margin-top: 8px;">
+            {% if subjects_data|length == 0 %}
+                AWAITING FIRST SUBJECT
+            {% elif subjects_data|length < 3 %}
+                EXPANDING KNOWLEDGE BASE
+            {% else %}
+                MULTI-DOMAIN LEARNER
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="stats-card-nothing stats-card-warning float" style="animation-delay: 0.2s;">
+        <div class="stats-value-nothing">
+            <i class="fas fa-rocket stats-icon-nothing"></i>
+            {{ subjects_data|sum(attribute=2) or 0 }}
+        </div>
+        <div class="stats-label-nothing">SESSIONS COMPLETED</div>
+        <div style="font-size: 12px; color: var(--nothing-gray-500); margin-top: 8px;">
+            {% set session_count = subjects_data|sum(attribute=2) or 0 %}
+            {% if session_count == 0 %}
+                INITIALIZATION PENDING
+            {% elif session_count < 10 %}
+                PROGRESSION ACTIVE
+            {% else %}
+                ELITE STATUS UNLOCKED
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="stats-card-nothing stats-card-danger float" style="animation-delay: 0.3s;">
+        <div class="stats-value-nothing">
+            <i class="fas fa-target stats-icon-nothing"></i>
+            {% if pomodoro_stats %}{{ pomodoro_stats.total_sessions }}{% else %}0{% endif %}
+        </div>
+        <div class="stats-label-nothing">FOCUS SESSIONS</div>
+        <div style="font-size: 12px; color: var(--nothing-gray-500); margin-top: 8px;">
+            {% if not pomodoro_stats or pomodoro_stats.total_sessions == 0 %}
+                FOCUS MODE AWAITING
+            {% else %}
+                DEEP WORK MASTERY
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+    <!-- Subject Analysis Panel -->
+    <div class="glass-card">
+        <div style="padding: 24px; border-bottom: 1px solid var(--glass-border);">
+            <h3 style="font-family: 'DotGothic16', monospace; font-size: 18px; color: var(--nothing-white); margin: 0; display: flex; align-items: center; gap: 12px;">
+                <i class="fas fa-database" style="color: var(--nothing-blue);"></i>
+                SUBJECT ANALYSIS
+            </h3>
+        </div>
+        <div style="padding: 24px;">
+            {% if subjects_data %}
+                {% for subject, minutes, sessions in subjects_data %}
+                <div class="session-card-nothing" style="margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div class="session-subject">{{ subject.upper() }}</div>
+                            <div style="font-size: 12px; color: var(--nothing-gray-500);">
+                                <i class="fas fa-play me-1"></i>{{ sessions }} SESSIONS LOGGED
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="stats-value-nothing" style="font-size: 1.2rem; margin-bottom: 0;">
+                                {{ (minutes // 60) }}:{{ '{:02d}'.format(minutes % 60) }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="text-align: center; padding: 48px 24px; color: var(--nothing-gray-500);">
+                    <i class="fas fa-database" style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;"></i>
+                    <div style="font-family: 'DotGothic16', monospace; margin-bottom: 8px;">NO DATA AVAILABLE</div>
+                    <div style="font-size: 14px; margin-bottom: 24px;">SUBJECT ANALYTICS WILL POPULATE AFTER FIRST SESSION</div>
+                    <a href="{{ url_for('log_session') }}" class="btn-nothing btn-nothing-primary">
+                        <i class="fas fa-plus"></i>
+                        INITIALIZE TRACKING
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Activity Timeline Panel -->
+    <div class="glass-card">
+        <div style="padding: 24px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-family: 'DotGothic16', monospace; font-size: 18px; color: var(--nothing-white); margin: 0; display: flex; align-items: center; gap: 12px;">
+                <i class="fas fa-history" style="color: var(--nothing-cyan);"></i>
+                RECENT ACTIVITY
+            </h3>
+            <a href="{{ url_for('sessions') }}" class="btn-nothing" style="padding: 8px 16px; font-size: 12px;">
+                VIEW ALL
+            </a>
+        </div>
+        <div style="padding: 24px;">
+            {% if recent_sessions %}
+                {% for session in recent_sessions %}
+                <div class="session-card-nothing mood-{{ session[3].lower().replace(' ', '-') }}" style="margin-bottom: 16px;">
+                    <div class="session-subject">{{ session[1].upper() }}</div>
+                    <div class="session-duration">
+                        <i class="fas fa-stopwatch me-1"></i>{{ (session[2] // 60) }}H {{ (session[2] % 60) }}M
+                    </div>
+                    <div class="session-meta">
+                        <span style="color: var(--nothing-gray-400);">{{ session[6] }}</span>
+                        <span style="padding: 2px 8px; background: rgba(0, 255, 204, 0.1); border-radius: 4px; font-size: 10px; text-transform: uppercase;">{{ session[3] }}</span>
+                        <span style="padding: 2px 8px; background: rgba(0, 102, 255, 0.1); border-radius: 4px; font-size: 10px; text-transform: uppercase;">{{ session[4] }}</span>
+                    </div>
+                    {% if session[5] %}
+                    <div style="font-size: 12px; color: var(--nothing-gray-500); margin-top: 8px; font-style: italic;">
+                        "{{ session[5] }}"
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="text-align: center; padding: 48px 24px; color: var(--nothing-gray-500);">
+                    <i class="fas fa-history" style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;"></i>
+                    <div style="font-family: 'DotGothic16', monospace; margin-bottom: 8px;">NO ACTIVITY LOGGED</div>
+                    <div style="font-size: 14px; margin-bottom: 24px;">YOUR STUDY TIMELINE WILL APPEAR HERE</div>
+                    <a href="{{ url_for('log_session') }}" class="btn-nothing btn-nothing-primary">
+                        <i class="fas fa-play"></i>
+                        START SESSION
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Command Interface -->
+<div class="glass-card">
+    <div style="padding: 24px; border-bottom: 1px solid var(--glass-border);">
+        <h3 style="font-family: 'DotGothic16', monospace; font-size: 18px; color: var(--nothing-white); margin: 0; display: flex; align-items: center; gap: 12px;">
+            <i class="fas fa-terminal" style="color: var(--nothing-green);"></i>
+            COMMAND INTERFACE
+        </h3>
+    </div>
+    <div style="padding: 24px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+            <a href="{{ url_for('log_session') }}" class="btn-nothing btn-nothing-primary" style="text-align: center; padding: 16px;">
+                <i class="fas fa-plus" style="display: block; font-size: 24px; margin-bottom: 8px;"></i>
+                LOG SESSION
+            </a>
+            <a href="{{ url_for('pomodoro') }}" class="btn-nothing" style="text-align: center; padding: 16px;">
+                <i class="fas fa-stopwatch" style="display: block; font-size: 24px; margin-bottom: 8px;"></i>
+                FOCUS MODE
+            </a>
+            <a href="{{ url_for('sessions') }}" class="btn-nothing" style="text-align: center; padding: 16px;">
+                <i class="fas fa-history" style="display: block; font-size: 24px; margin-bottom: 8px;"></i>
+                SESSIONS
+            </a>
+            <a href="{{ url_for('analytics') }}" class="btn-nothing" style="text-align: center; padding: 16px;">
+                <i class="fas fa-chart-line" style="display: block; font-size: 24px; margin-bottom: 8px;"></i>
+                ANALYTICS
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Nothing OS Dashboard Enhancements
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animate stats cards on load
+        const statsCards = document.querySelectorAll('.stats-card-nothing');
+        statsCards.forEach((card, index) => {
+            setTimeout(() => {
+                card.style.transform = 'translateY(0)';
+                card.style.opacity = '1';
+            }, index * 100);
+        });
+        
+        // Add live clock
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { 
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
+            // Update any clock elements if they exist
+            const clockElements = document.querySelectorAll('.live-clock');
+            clockElements.forEach(el => {
+                el.textContent = timeString;
+            });
+        }
+        
+        setInterval(updateClock, 1000);
+        updateClock();
+        
+        // Add system status indicator
+        const welcomeSection = document.querySelector('.welcome-section-nothing');
+        if (welcomeSection) {
+            const statusIndicator = document.createElement('div');
+            statusIndicator.style.cssText = `
+                position: absolute;
+                top: 16px;
+                right: 16px;
+                width: 12px;
+                height: 12px;
+                background: var(--nothing-green);
+                border-radius: 50%;
+                box-shadow: 0 0 10px var(--nothing-green);
+                animation: pulse 2s ease-in-out infinite;
+            `;
+            welcomeSection.appendChild(statusIndicator);
+        }
+    });
+</script>
+{% endblock %}

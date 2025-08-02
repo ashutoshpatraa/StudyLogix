@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}STUDYLOGIX - NOTHING OS{% endblock %}
+
+{% block content %}
+<!-- Nothing OS Landing Page -->
+<div style="min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px;">
+    <div class="glass-card ambient-card" style="max-width: 800px; width: 100%; text-align: center;">
+        <!-- Hero Section -->
+        <div style="padding: 60px 40px 40px 40px;">
+            <div style="margin-bottom: 32px;">
+                <div style="width: 120px; height: 120px; margin: 0 auto 24px auto; display: flex; align-items: center; justify-content: center; border: 3px solid var(--nothing-cyan); border-radius: 50%; background: var(--glass-bg); animation: ambient-pulse 3s ease-in-out infinite;">
+                    <i class="fas fa-terminal" style="font-size: 48px; color: var(--nothing-cyan);"></i>
+                </div>
+                <h1 style="font-family: 'DotGothic16', monospace; font-size: 48px; color: var(--nothing-white); margin: 0 0 16px 0; text-shadow: 0 0 20px rgba(0, 255, 204, 0.3);">
+                    STUDYLOGIX
+                </h1>
+                <div style="height: 2px; width: 60px; background: linear-gradient(90deg, var(--nothing-cyan), var(--nothing-purple)); margin: 0 auto 24px auto; border-radius: 1px;"></div>
+                <p style="font-size: 18px; color: var(--nothing-gray-300); margin: 0 0 40px 0; max-width: 600px; margin-left: auto; margin-right: auto;">
+                    TRACK • ANALYZE • OPTIMIZE YOUR LEARNING PROTOCOL
+                </p>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px;">
+                <a href="{{ url_for('login') }}" class="btn-nothing btn-nothing-primary" style="padding: 20px; font-size: 18px; text-decoration: none;">
+                    <i class="fas fa-sign-in-alt"></i>
+                    SYSTEM ACCESS
+                </a>
+                <a href="{{ url_for('register') }}" class="btn-nothing" style="padding: 20px; font-size: 18px; text-decoration: none;">
+                    <i class="fas fa-user-plus"></i>
+                    CREATE ACCOUNT
+                </a>
+            </div>
+            
+            <!-- System Status -->
+            <div style="display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--glass-border);">
+                <div style="display: flex; align-items: center; gap: 8px; color: var(--nothing-green); font-family: 'JetBrains Mono', monospace; font-size: 12px;">
+                    <i class="fas fa-circle" style="font-size: 8px; animation: ambient-pulse 2s ease-in-out infinite;"></i>
+                    SYSTEM_ONLINE
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; color: var(--nothing-cyan); font-family: 'JetBrains Mono', monospace; font-size: 12px;">
+                    <i class="fas fa-circle" style="font-size: 8px; animation: ambient-pulse 2s ease-in-out infinite 0.5s;"></i>
+                    DATABASE_READY
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; color: var(--nothing-purple); font-family: 'JetBrains Mono', monospace; font-size: 12px;">
+                    <i class="fas fa-circle" style="font-size: 8px; animation: ambient-pulse 2s ease-in-out infinite 1s;"></i>
+                    ANALYTICS_ACTIVE
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div style="margin-top: 60px;">
+    <div style="text-align: center; margin-bottom: 48px;">
+        <h2 style="font-family: 'DotGothic16', monospace; font-size: 32px; color: var(--nothing-white); margin-bottom: 16px;">
+            SYSTEM CAPABILITIES
+        </h2>
+        <div style="height: 2px; width: 80px; background: linear-gradient(90deg, var(--nothing-orange), var(--nothing-red)); margin: 0 auto; border-radius: 1px;"></div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px;">
+        <!-- Feature 1: Time Tracking -->
+        <div class="glass-card ambient-card" style="text-align: center; animation-delay: 0.1s;">
+            <div style="padding: 40px 24px;">
+                <div style="width: 80px; height: 80px; margin: 0 auto 24px auto; display: flex; align-items: center; justify-content: center; border: 2px solid var(--nothing-orange); border-radius: 50%; background: var(--glass-bg);">
+                    <i class="fas fa-stopwatch" style="font-size: 32px; color: var(--nothing-orange);"></i>
+                </div>
+                <h3 style="font-family: 'DotGothic16', monospace; color: var(--nothing-white); margin-bottom: 16px; font-size: 20px;">
+                    POMODORO TIMER
+                </h3>
+                <p style="color: var(--nothing-gray-300); font-size: 14px; line-height: 1.6;">
+                    IMMERSIVE FOCUS MODE WITH FLOATING ORB TIMER • DISTRACTION ELIMINATION • PRODUCTIVITY TRACKING
+                </p>
+            </div>
+        </div>
+        
+        <!-- Feature 2: Analytics -->
+        <div class="glass-card ambient-card" style="text-align: center; animation-delay: 0.2s;">
+            <div style="padding: 40px 24px;">
+                <div style="width: 80px; height: 80px; margin: 0 auto 24px auto; display: flex; align-items: center; justify-content: center; border: 2px solid var(--nothing-green); border-radius: 50%; background: var(--glass-bg);">
+                    <i class="fas fa-chart-line" style="font-size: 32px; color: var(--nothing-green);"></i>
+                </div>
+                <h3 style="font-family: 'DotGothic16', monospace; color: var(--nothing-white); margin-bottom: 16px; font-size: 20px;">
+                    VISUAL ANALYTICS
+                </h3>
+                <p style="color: var(--nothing-gray-300); font-size: 14px; line-height: 1.6;">
+                    PERFORMANCE GRAPHS • MOOD ANALYSIS • PRODUCTIVITY PATTERNS • DATA VISUALIZATION
+                </p>
+            </div>
+        </div>
+        
+        <!-- Feature 3: Goal Tracking -->
+        <div class="glass-card ambient-card" style="text-align: center; animation-delay: 0.3s;">
+            <div style="padding: 40px 24px;">
+                <div style="width: 80px; height: 80px; margin: 0 auto 24px auto; display: flex; align-items: center; justify-content: center; border: 2px solid var(--nothing-purple); border-radius: 50%; background: var(--glass-bg);">
+                    <i class="fas fa-target" style="font-size: 32px; color: var(--nothing-purple);"></i>
+                </div>
+                <h3 style="font-family: 'DotGothic16', monospace; color: var(--nothing-white); margin-bottom: 16px; font-size: 20px;">
+                    GOAL OPTIMIZATION
+                </h3>
+                <p style="color: var(--nothing-gray-300); font-size: 14px; line-height: 1.6;">
+                    WEEKLY TARGETS • PROGRESS MONITORING • ACHIEVEMENT TRACKING • PERFORMANCE METRICS
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Terminal Code Animation Background -->
+<div class="terminal-lines" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; opacity: 0.08;">
+    <div style="position: absolute; top: 10%; left: 5%; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--nothing-green); animation: terminal-glow 8s ease-in-out infinite;">
+        > STUDYLOGIX_SYSTEM_READY
+    </div>
+    <div style="position: absolute; top: 25%; right: 8%; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--nothing-cyan); animation: terminal-glow 8s ease-in-out infinite 2s;">
+        > NOTHING_OS_DESIGN_LOADED
+    </div>
+    <div style="position: absolute; top: 40%; left: 15%; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--nothing-purple); animation: terminal-glow 8s ease-in-out infinite 4s;">
+        > ANALYTICS_ENGINE_ACTIVE
+    </div>
+    <div style="position: absolute; top: 60%; right: 12%; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--nothing-orange); animation: terminal-glow 8s ease-in-out infinite 6s;">
+        > POMODORO_TIMER_INITIALIZED
+    </div>
+    <div style="position: absolute; bottom: 30%; left: 8%; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--nothing-red); animation: terminal-glow 8s ease-in-out infinite 7s;">
+        > USER_AUTHENTICATION_READY
+    </div>
+</div>
+{% endblock %}

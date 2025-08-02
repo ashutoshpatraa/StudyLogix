@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - StudyLogix{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="mb-0">
+            <i class="fas fa-chart-bar me-2"></i>Analytics Dashboard
+        </h2>
+        <p class="text-muted">Visualize your study patterns and track your learning progress</p>
+    </div>
+</div>
+
+<!-- Summary Stats -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card stats-card-primary">
+            <div class="stats-value">
+                <i class="fas fa-clock stats-icon"></i>
+                {{ (total_time // 60) }}h {{ (total_time % 60) }}m
+            </div>
+            <div class="stats-label">Total Study Time</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card stats-card-success">
+            <div class="stats-value">
+                <i class="fas fa-books stats-icon"></i>
+                {{ subjects_data|length }}
+            </div>
+            <div class="stats-label">Active Subjects</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card stats-card-info">
+            <div class="stats-value">
+                <i class="fas fa-graduation-cap stats-icon"></i>
+                {{ subjects_data|sum(attribute=2) or 0 }}
+            </div>
+            <div class="stats-label">Total Sessions</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card stats-card-warning">
+            <div class="stats-value">
+                <i class="fas fa-calendar-day stats-icon"></i>
+                {% if daily_data %}
+                    {{ (daily_data|sum(attribute=1) / daily_data|length / 60)|round(1) }}h
+                {% else %}
+                    0h
+                {% endif %}
+            </div>
+            <div class="stats-label">Daily Average</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row">
+    <!-- Subject Distribution Chart -->
+    <div class="col-lg-6 mb-4">
+        <div class="chart-container">
+            {% if subjects_data %}
+                <div class="w-100" style="height: 300px;">
+                    <canvas id="subjectChart"></canvas>
+                </div>
+            {% else %}
+                <div class="dummy-chart">
+                    <div class="dummy-pie"></div>
+                    <h6 class="mb-2">Subject Distribution</h6>
+                    <p class="mb-3 text-muted">Your study time distribution across different subjects will appear here.</p>
+                    <div class="d-flex justify-content-center gap-2 mt-3">
+                        <div class="badge bg-primary">Math</div>
+                        <div class="badge bg-success">Science</div>
+                        <div class="badge bg-warning">History</div>
+                        <div class="badge bg-info">Languages</div>
+                    </div>
+                    <a href="{{ url_for('log_session') }}" class="cta-button mt-3">
+                        <i class="fas fa-plus-circle"></i>
+                        Log First Session
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Daily Timeline Chart -->
+    <div class="col-lg-6 mb-4">
+        <div class="chart-container">
+            {% if daily_data %}
+                <div class="w-100" style="height: 300px;">
+                    <canvas id="timelineChart"></canvas>
+                </div>
+            {% else %}
+                <div class="dummy-chart">
+                    <div class="dummy-chart-bars">
+                        <div class="dummy-bar"></div>
+                        <div class="dummy-bar"></div>
+                        <div class="dummy-bar"></div>
+                        <div class="dummy-bar"></div>
+                        <div class="dummy-bar"></div>
+                        <div class="dummy-bar"></div>
+                        <div class="dummy-bar"></div>
+                    </div>
+                    <h6 class="mb-2">Daily Study Timeline</h6>
+                    <p class="mb-3 text-muted">Track your daily study patterns and consistency over the last 30 days.</p>
+                    <div class="d-flex justify-content-center gap-2 mt-3">
+                        <small class="text-muted">Mon</small>
+                        <small class="text-muted">Tue</small>
+                        <small class="text-muted">Wed</small>
+                        <small class="text-muted">Thu</small>
+                        <small class="text-muted">Fri</small>
+                        <small class="text-muted">Sat</small>
+                        <small class="text-muted">Sun</small>
+                    </div>
+                    <a href="{{ url_for('log_session') }}" class="cta-button mt-3">
+                        <i class="fas fa-calendar-plus"></i>
+                        Start Tracking
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Subject Breakdown Table -->
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-table me-2"></i>Detailed Subject Breakdown
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if subjects_data %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Subject</th>
+                                    <th>Total Time</th>
+                                    <th>Sessions</th>
+                                    <th>Average Session</th>
+                                    <th>Progress</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subject, minutes, sessions in subjects_data %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">{{ subject }}</div>
+                                        <small class="text-muted">{{ sessions }} study sessions</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary fs-6">
+                                            {{ (minutes // 60) }}h {{ (minutes % 60) }}m
+                                        </span>
+                                    </td>
+                                    <td>{{ sessions }}</td>
+                                    <td>{{ ((minutes / sessions) // 60)|int }}h {{ ((minutes / sessions) % 60)|int }}m</td>
+                                    <td>
+                                        {% set percentage = (minutes / total_time * 100)|round(1) if total_time > 0 else 0 %}
+                                        <div class="progress" style="height: 24px; border-radius: 12px;">
+                                            <div class="progress-bar bg-gradient" role="progressbar" 
+                                                 style="width: {{ percentage }}%; border-radius: 12px;">
+                                                <span class="fw-bold">{{ percentage }}%</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="chart-placeholder">
+                        <div class="chart-placeholder-icon">
+                            <i class="fas fa-table"></i>
+                        </div>
+                        <h6 class="mb-2">Subject Analysis</h6>
+                        <p class="mb-3">Detailed breakdown of your study time across different subjects will appear here.</p>
+                        <a href="{{ url_for('log_session') }}" class="cta-button">
+                            <i class="fas fa-chart-bar"></i>
+                            Start Analyzing
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-tools me-2"></i>Analytics Tools
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <a href="{{ url_for('sessions') }}" class="cta-button cta-secondary w-100 text-center">
+                            <i class="fas fa-list"></i>
+                            View All Sessions
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ url_for('log_session') }}" class="cta-button w-100 text-center">
+                            <i class="fas fa-plus-circle"></i>
+                            Log New Session
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#" class="cta-button cta-secondary w-100 text-center" onclick="alert('Export feature coming soon!')">
+                            <i class="fas fa-download"></i>
+                            Export Report
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if subjects_data %}
+<script>
+// Subject Distribution Pie Chart
+const subjectCtx = document.getElementById('subjectChart').getContext('2d');
+const subjectChart = new Chart(subjectCtx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ subjects_data|map(attribute=0)|list|tojson }},
+        datasets: [{
+            data: {{ subjects_data|map(attribute=1)|map('int')|list|tojson }},
+            backgroundColor: [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
+                '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+            ],
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const minutes = context.parsed;
+                        const hours = Math.floor(minutes / 60);
+                        const mins = minutes % 60;
+                        return context.label + ': ' + hours + 'h ' + mins + 'm';
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+{% endif %}
+
+{% if daily_data %}
+<script>
+// Daily Timeline Chart
+const timelineCtx = document.getElementById('timelineChart').getContext('2d');
+const timelineChart = new Chart(timelineCtx, {
+    type: 'line',
+    data: {
+        labels: {{ daily_data|map(attribute=0)|list|tojson }},
+        datasets: [{
+            label: 'Study Hours',
+            data: {{ daily_data|map(attribute=1)|map('float')|map('round', 2)|list|tojson }},
+            borderColor: '#36A2EB',
+            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Minutes'
+                }
+            },
+            x: {
+                title: {
+                    display: true,
+                    text: 'Date'
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const minutes = context.parsed.y;
+                        const hours = Math.floor(minutes / 60);
+                        const mins = Math.round(minutes % 60);
+                        return 'Study Time: ' + hours + 'h ' + mins + 'm';
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

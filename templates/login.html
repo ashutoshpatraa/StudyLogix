@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}SYSTEM ACCESS - STUDYLOGIX{% endblock %}
+
+{% block content %}
+<!-- Nothing OS Login Interface -->
+<div style="display: flex; justify-content: center; align-items: center; min-height: 80vh; padding: 20px;">
+    <div class="glass-card ambient-card" style="max-width: 480px; width: 100%;">
+        <!-- Header -->
+        <div style="padding: 32px 32px 24px 32px; text-align: center; border-bottom: 1px solid var(--glass-border);">
+            <div style="width: 80px; height: 80px; margin: 0 auto 20px auto; display: flex; align-items: center; justify-content: center; border: 2px solid var(--nothing-cyan); border-radius: 50%; background: var(--glass-bg);">
+                <i class="fas fa-terminal" style="font-size: 32px; color: var(--nothing-cyan);"></i>
+            </div>
+            <h1 style="font-family: 'DotGothic16', monospace; font-size: 24px; color: var(--nothing-white); margin: 0 0 8px 0;">
+                SYSTEM ACCESS
+            </h1>
+            <p style="color: var(--nothing-gray-400); margin: 0; font-size: 14px;">
+                AUTHENTICATE • INITIALIZE • COMMENCE LEARNING PROTOCOL
+            </p>
+        </div>
+        
+        <!-- Login Form -->
+        <div style="padding: 32px;">
+            <form method="POST" style="display: flex; flex-direction: column; gap: 24px;">
+                <!-- Username Field -->
+                <div class="form-group-nothing">
+                    <label style="display: flex; align-items: center; gap: 12px; color: var(--nothing-gray-300); font-family: 'DotGothic16', monospace; font-size: 14px; margin-bottom: 8px;">
+                        <i class="fas fa-user" style="color: var(--nothing-cyan);"></i>
+                        USERNAME
+                    </label>
+                    <input type="text" class="form-control-nothing" id="username" name="username" required 
+                           placeholder="ENTER_USERNAME" style="font-family: 'JetBrains Mono', monospace;">
+                </div>
+                
+                <!-- Password Field -->
+                <div class="form-group-nothing">
+                    <label style="display: flex; align-items: center; gap: 12px; color: var(--nothing-gray-300); font-family: 'DotGothic16', monospace; font-size: 14px; margin-bottom: 8px;">
+                        <i class="fas fa-lock" style="color: var(--nothing-orange);"></i>
+                        PASSWORD
+                    </label>
+                    <input type="password" class="form-control-nothing" id="password" name="password" required
+                           placeholder="ENTER_PASSWORD" style="font-family: 'JetBrains Mono', monospace;">
+                </div>
+                
+                <!-- Submit Button -->
+                <button type="submit" class="btn-nothing btn-nothing-primary" style="margin-top: 16px; padding: 16px; font-size: 16px;">
+                    <i class="fas fa-sign-in-alt"></i>
+                    INITIATE ACCESS
+                </button>
+            </form>
+            
+            <!-- Register Link -->
+            <div style="text-align: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--glass-border);">
+                <p style="color: var(--nothing-gray-400); margin: 0 0 12px 0; font-size: 14px;">
+                    NO_ACCOUNT_FOUND?
+                </p>
+                <a href="{{ url_for('register') }}" class="btn-nothing" style="display: inline-flex;">
+                    <i class="fas fa-user-plus"></i>
+                    CREATE_NEW_ACCOUNT
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Terminal Boot Animation -->
+<div class="terminal-lines" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; opacity: 0.1;">
+    <div style="position: absolute; top: 20%; left: 10%; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--nothing-green); animation: terminal-glow 3s ease-in-out infinite;">
+        > AUTHENTICATION_PROTOCOL_READY
+    </div>
+    <div style="position: absolute; top: 70%; right: 10%; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--nothing-cyan); animation: terminal-glow 3s ease-in-out infinite 1s;">
+        > SECURE_CONNECTION_ESTABLISHED
+    </div>
+    <div style="position: absolute; bottom: 30%; left: 15%; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--nothing-purple); animation: terminal-glow 3s ease-in-out infinite 2s;">
+        > AWAITING_USER_CREDENTIALS
+    </div>
+</div>
+{% endblock %}
