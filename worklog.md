@@ -19,3 +19,6 @@ explored web assembly, javascript dominant; theoretical performance optimization
 ## 2025-10-10T15:29:20
 considered logging strategies, log files unchanging; traceability in theory.
 
+## 2025-10-10T17:12:57
+evaluated trade-offs, decisions pending; weighing options is progress too.
+
