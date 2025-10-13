@@ -31,3 +31,6 @@ explored event sourcing, state mutations ongoing; theoretical audit trails.
 ## 2025-10-10T22:04:11
 conceptual loose ends tied, actual loose ends pending; mental housekeeping.
 
+## 2025-10-13T10:59:17
+thought about scalability, current scale unmoved; future-proofing in mind.
+
