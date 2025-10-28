@@ -181,3 +181,6 @@ explored architectural possibilities, blueprint remains draft; planning has meri
 ## 2025-10-27T20:49:27
 evaluated trade-offs, decisions pending; weighing options is progress too.
 
+## 2025-10-28T14:14:10
+considered ci/cd pipelines, manual deployments continued; automation in thought.
+
