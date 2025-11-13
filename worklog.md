@@ -307,3 +307,6 @@ mental api gateway design, direct service calls ongoing; theoretical request man
 ## 2025-11-13T18:20:03
 debated best practices, practice put on hold; principles before patterns.
 
+## 2025-11-13T20:24:38
+deepened understanding, delayed execution; knowledge precedes implementation.
+
