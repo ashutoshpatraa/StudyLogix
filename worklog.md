@@ -373,3 +373,6 @@ explored architectural possibilities, blueprint remains draft; planning has meri
 ## 2025-11-24T20:09:15
 explored asynchronous patterns, callbacks unwritten; concurrent thinking exercise.
 
+## 2025-11-24T22:50:12
+considered containerization, docker-free day; isolation in thought only.
+
