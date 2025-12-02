@@ -433,3 +433,6 @@ practiced mental pair programming, solo coding in reality; collaborative visuali
 ## 2025-12-02T22:19:49
 API design pondered, endpoints undocumented; interface ideation day.
 
+## 2025-12-02T17:17:02
+considered scalability issues, scaling postponed; thinking big while starting small.
+
