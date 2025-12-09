@@ -472,3 +472,6 @@ interface designs sketched mentally, APIs unchanged; UX of the mind.
 ## 2025-12-08T15:52:46
 mental refactoring day; codebase patiently awaits its turn.
 
+## 2025-12-09T22:14:25
+deepened domain knowledge, domain objects unchanged; context-building phase.
+
