@@ -553,3 +553,6 @@ thought about scalability, current scale unmoved; future-proofing in mind.
 ## 2025-12-18T09:32:10
 pondered orm abstractions, sql queries unchanged; data access theorizing.
 
+## 2025-12-19T09:34:16
+abstract classes contemplated, concrete classes unchanged; OOP in the mind.
+
