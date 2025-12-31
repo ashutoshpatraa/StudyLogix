@@ -62,9 +62,22 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{{ url_for('friends') }}" class="nav-link-nothing">
+                        <i class="fas fa-users"></i>
+                        <span>FRIENDS</span>
+                    </a>
+                </li>
+                <li>
+                    <button id="themeToggle" class="theme-toggle" title="Toggle Dark/Light Theme">
+                        <span class="theme-icon">
+                            <i class="fas fa-moon" id="themeIcon"></i>
+                        </span>
+                    </button>
+                </li>
+                <li>
                     <a href="{{ url_for('logout') }}" class="nav-link-nothing text-red" style="margin-left: 16px;">
                         <i class="fas fa-power-off"></i>
-                        <span>{{ session.username[:4].upper() }}</span>
+                        <span>{{ session.username.upper() }}</span>
                     </a>
                 </li>
             </ul>
@@ -191,8 +204,195 @@
             if (e.altKey && e.key === 'l') {
                 e.preventDefault();
                 window.location.href = "{{ url_for('log_session') }}";
+            }            // Alt + T for Theme Toggle
+            if (e.altKey && e.key === 't') {
+                e.preventDefault();
+                document.getElementById('themeToggle').click();
             }
         });
+
+        // Theme Toggle Script
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = document.getElementById('themeIcon');
+            const html = document.documentElement;
+
+            // Load saved theme preference or detect system preference
+            const savedTheme = localStorage.getItem('studylogix-theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+
+            // Set initial theme
+            if (initialTheme === 'light') {
+                html.classList.add('light-theme');
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+            }
+
+            // Theme toggle handler
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function() {
+                    const isLightTheme = html.classList.toggle('light-theme');
+                    
+                    // Update icon
+                    if (isLightTheme) {
+                        themeIcon.classList.remove('fa-moon');
+                        themeIcon.classList.add('fa-sun');
+                        localStorage.setItem('studylogix-theme', 'light');
+                    } else {
+                        themeIcon.classList.remove('fa-sun');
+                        themeIcon.classList.add('fa-moon');
+                        localStorage.setItem('studylogix-theme', 'dark');
+                    }
+                });
+            }        });
+    </script>
+    
+    <!-- Toast Notification System -->
+    <div id="toastContainer" style="position: fixed; top: 80px; right: 24px; z-index: 10000; display: flex; flex-direction: column; gap: 12px;"></div>
+    
+    <style>
+        .toast-notification {
+            background: var(--nothing-bg);
+            border: 1px solid var(--nothing-border);
+            border-radius: 12px;
+            padding: 16px 20px;
+            min-width: 300px;
+            max-width: 400px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideInRight 0.3s ease-out;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+        }
+        
+        .toast-notification.success {
+            border-left: 4px solid var(--nothing-green);
+        }
+        
+        .toast-notification.error {
+            border-left: 4px solid var(--nothing-red);
+        }
+        
+        .toast-notification.info {
+            border-left: 4px solid var(--nothing-cyan);
+        }
+        
+        .toast-notification.warning {
+            border-left: 4px solid var(--nothing-orange);
+        }
+        
+        .toast-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        
+        .toast-notification.success .toast-icon {
+            color: var(--nothing-green);
+        }
+        
+        .toast-notification.error .toast-icon {
+            color: var(--nothing-red);
+        }
+        
+        .toast-notification.info .toast-icon {
+            color: var(--nothing-cyan);
+        }
+        
+        .toast-notification.warning .toast-icon {
+            color: var(--nothing-orange);
+        }
+        
+        .toast-message {
+            flex: 1;
+            color: var(--nothing-text);
+        }
+        
+        .toast-close {
+            background: none;
+            border: none;
+            color: var(--nothing-text-secondary);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .toast-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--nothing-white);
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+        
+        .toast-notification.removing {
+            animation: slideOutRight 0.3s ease-out;
+        }
+    </style>
+    
+    <script>
+        // Global toast notification function
+        function showToast(message, type = 'info', duration = 4000) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast-notification ${type}`;
+            
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                info: 'fa-info-circle',
+                warning: 'fa-exclamation-triangle'
+            };
+            
+            toast.innerHTML = `
+                <i class="fas ${icons[type]} toast-icon"></i>
+                <div class="toast-message">${message}</div>
+                <button class="toast-close" onclick="removeToast(this.parentElement)">×</button>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Auto-remove after duration
+            setTimeout(() => {
+                removeToast(toast);
+            }, duration);
+        }
+        
+        function removeToast(toast) {
+            toast.classList.add('removing');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }
     </script>
     
     {% block scripts %}{% endblock %}

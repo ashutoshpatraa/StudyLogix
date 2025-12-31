@@ -16,12 +16,10 @@ class PomodoroManager:
         with self.db_lock:
             cursor = self.db.connection.cursor()
             try:
-                start_time = datetime.now()
-                
                 cursor.execute("""
-                    INSERT INTO pomodoro_sessions (user_id, subject, start_time, end_time, duration, session_type, completed)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (user_id, subject, start_time, start_time, 0, 'focus', False))
+                    INSERT INTO pomodoro_sessions (user_id, subject, duration_minutes, status)
+                    VALUES (?, ?, ?, ?)
+                """, (user_id, subject, 25, 'active'))
                 
                 self.db.connection.commit()
                 session_id = cursor.lastrowid
@@ -43,9 +41,9 @@ class PomodoroManager:
                 
                 cursor.execute("""
                     UPDATE pomodoro_sessions 
-                    SET end_time = ?, duration = ?, completed = ?
-                    WHERE id = ?
-                """, (end_time, duration_minutes, True, session_id))
+                    SET completed_at = ?, duration_minutes = ?, status = ?
+                    WHERE session_id = ?
+                """, (end_time, duration_minutes, 'completed', session_id))
                 
                 self.db.connection.commit()
                 
@@ -66,9 +64,10 @@ class PomodoroManager:
             cursor = self.db.connection.cursor()
             try:
                 cursor.execute("""
-                    DELETE FROM pomodoro_sessions 
-                    WHERE id = ? AND completed = ?
-                """, (session_id, False))
+                    UPDATE pomodoro_sessions 
+                    SET status = ?
+                    WHERE session_id = ? AND status = ?
+                """, ('cancelled', session_id, 'active'))
                 
                 self.db.connection.commit()
                 
@@ -88,22 +87,22 @@ class PomodoroManager:
                 # Get total completed Pomodoros
                 cursor.execute("""
                     SELECT COUNT(*) as total_sessions, 
-                           SUM(duration) as total_minutes,
-                           COUNT(CASE WHEN DATE(start_time) = DATE('now') THEN 1 END) as today_sessions
+                           SUM(duration_minutes) as total_minutes,
+                           COUNT(CASE WHEN DATE(started_at) = DATE('now') THEN 1 END) as today_sessions
                     FROM pomodoro_sessions 
-                    WHERE user_id = ? AND completed = ? AND session_type = ?
-                """, (user_id, True, 'focus'))
+                    WHERE user_id = ? AND status = ?
+                """, (user_id, 'completed'))
                 
                 stats = cursor.fetchone()
                 
                 # Get subject breakdown
                 cursor.execute("""
-                    SELECT subject, COUNT(*) as sessions, SUM(duration) as minutes
+                    SELECT subject, COUNT(*) as sessions, SUM(duration_minutes) as minutes
                     FROM pomodoro_sessions 
-                    WHERE user_id = ? AND completed = ? AND session_type = ?
+                    WHERE user_id = ? AND status = ?
                     GROUP BY subject
                     ORDER BY minutes DESC
-                """, (user_id, True, 'focus'))
+                """, (user_id, 'completed'))
                 
                 subjects = cursor.fetchall()
                 
@@ -131,15 +130,15 @@ class PomodoroManager:
             cursor = self.db.connection.cursor()
             try:
                 cursor.execute("""
-                    SELECT id, subject, start_time, end_time, duration, session_type, completed
+                    SELECT session_id, subject, started_at, completed_at, duration_minutes, status
                     FROM pomodoro_sessions 
-                    WHERE user_id = ? AND completed = ?
-                    ORDER BY start_time DESC 
+                    WHERE user_id = ? AND status = ?
+                    ORDER BY started_at DESC 
                     LIMIT ?
-                """, (user_id, True, limit))
+                """, (user_id, 'completed', limit))
                 
                 sessions = cursor.fetchall()
-                return [(row[0], row[1], row[2], row[3], row[4], row[5], row[6]) for row in sessions]
+                return [(row[0], row[1], row[2], row[3], row[4], row[5]) for row in sessions]
                 
             except Exception as e:
                 print(f"Error getting recent Pomodoro sessions: {e}")
@@ -163,10 +162,10 @@ class PomodoroManager:
                 
                 # Get Pomodoro session time
                 cursor.execute("""
-                    SELECT COALESCE(SUM(duration), 0) as pomodoro_time
+                    SELECT COALESCE(SUM(duration_minutes), 0) as pomodoro_time
                     FROM pomodoro_sessions 
-                    WHERE user_id = ? AND completed = ? AND session_type = ?
-                """, (user_id, True, 'focus'))
+                    WHERE user_id = ? AND status = ?
+                """, (user_id, 'completed'))
                 
                 pomodoro_time = cursor.fetchone()[0] or 0
                 

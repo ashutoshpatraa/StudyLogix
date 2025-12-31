@@ -119,10 +119,50 @@
     <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbByRrZE2MXPKBqLOpRSZXeD1jgNP8hAL0fKnMjdoFfzHWFLyHj7bCiTv1hZJvOHt+fJPJ6sHuL+KjQFWJ8LT1gNB4Z4Qk8Hb5jLqHpKStnK8mZHldnC6pnXwdBnf4VCr0yWTrZZnSJ7rXsLaKlMTyTHlJJ3TvKRn1GhKo1+1H8UE1wjJYCyPeF8SdM/qvs+Q5P/XC2hOJ9nM6Gx8rZL4y9jA+FtQ1TUwmvJJ9ljX9nO3OMSLPQlOCzMHFnGF8H9YMzYHqaHYL1hQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYAAA=" type="audio/wav">
 </audio>
 
+<!-- Custom Confirmation Modal -->
+<div id="confirmModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 99999; backdrop-filter: blur(10px); align-items: center; justify-content: center;">
+    <div class="glass-card" style="max-width: 500px; width: 90%; padding: 32px; animation: float 6s ease-in-out infinite;">
+        <div style="margin-bottom: 24px;">
+            <h3 id="confirmTitle" style="font-family: 'DotGothic16', monospace; color: var(--nothing-white); margin: 0 0 12px 0; font-size: 20px;"></h3>
+            <p id="confirmMessage" style="color: var(--nothing-gray-400); margin: 0; font-size: 14px; line-height: 1.6;"></p>
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button id="confirmCancel" class="btn-nothing" onclick="closeConfirmModal(false)">
+                <i class="fas fa-times"></i>
+                CANCEL
+            </button>
+            <button id="confirmOk" class="btn-nothing btn-nothing-primary" onclick="closeConfirmModal(true)">
+                <i class="fas fa-check"></i>
+                CONFIRM
+            </button>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
+// Custom Confirm Modal
+let confirmResolve;
+
+function showConfirm(title, message) {
+    return new Promise((resolve) => {
+        confirmResolve = resolve;
+        document.getElementById('confirmTitle').textContent = title;
+        document.getElementById('confirmMessage').textContent = message;
+        document.getElementById('confirmModal').style.display = 'flex';
+    });
+}
+
+function closeConfirmModal(result) {
+    document.getElementById('confirmModal').style.display = 'none';
+    if (confirmResolve) {
+        confirmResolve(result);
+        confirmResolve = null;
+    }
+}
+
 // Nothing OS Pomodoro Timer System
 let timerInterval;
 let isRunning = false;
@@ -192,7 +232,7 @@ function startCustomTimer() {
     }
 }
 
-function startTimer(minutes, breakMode, label) {
+function startTimer(minutes, breakMode, label, skipBackendCall = false) {
     if (isRunning) return;
     
     // Request notification permission
@@ -211,14 +251,15 @@ function startTimer(minutes, breakMode, label) {
     
     enterFocusMode();
     
-    // Start session in backend if not break
-    if (!isBreakTime) {
+    // Start session in backend if not break and not skipping
+    if (!isBreakTime && !skipBackendCall) {
         fetch('/api/pomodoro/start', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ 
+                subject: label,
                 duration: minutes,
                 session_type: 'work'
             })
@@ -239,11 +280,35 @@ function startTimer(minutes, breakMode, label) {
             document.getElementById('timeDisplay').textContent = formatTime(currentTime);
             updateProgress(currentTime, totalTime);
             
+            // Update live timer status every 10 seconds
+            if (!isBreakTime && currentSessionId && currentTime % 10 === 0) {
+                updateLiveTimer();
+            }
+            
             if (currentTime <= 0) {
                 timerComplete();
             }
         }
     }, 1000);
+}
+
+function updateLiveTimer() {
+    // Send timer status to backend for friends to see
+    if (!currentSessionId) return;
+    
+    fetch('/api/timer/update', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            session_id: currentSessionId,
+            subject: currentSubject || 'STUDY',
+            duration_minutes: Math.floor(totalTime / 60),
+            time_remaining: currentTime,
+            is_break: isBreakTime
+        })
+    }).catch(error => console.error('Error updating live timer:', error));
 }
 
 function timerComplete() {
@@ -270,10 +335,11 @@ function timerComplete() {
         .then(response => response.json())
         .then(data => {
             console.log('Session completed:', data);
-            setTimeout(() => {
+            setTimeout(async () => {
                 exitFocusMode();
                 // Auto-suggest break
-                if (confirm('FOCUS SESSION COMPLETE!\n\nStart a 5-minute break?')) {
+                const startBreakNow = await showConfirm('FOCUS SESSION COMPLETE!', 'Start a 5-minute break?');
+                if (startBreakNow) {
                     setTimeout(() => startBreak(), 1000);
                 }
             }, 2000);
@@ -283,10 +349,11 @@ function timerComplete() {
             setTimeout(exitFocusMode, 2000);
         });
     } else {
-        setTimeout(() => {
+        setTimeout(async () => {
             exitFocusMode();
             if (isBreakTime) {
-                if (confirm('BREAK COMPLETE!\n\nReady for another focus session?')) {
+                const startFocus = await showConfirm('BREAK COMPLETE!', 'Ready for another focus session?');
+                if (startFocus) {
                     setTimeout(() => startPomodoro(), 1000);
                 }
             }
@@ -310,8 +377,9 @@ function pauseTimer() {
     }
 }
 
-function stopTimer() {
-    if (confirm('Are you sure you want to stop the timer? This will save your current progress.')) {
+async function stopTimer() {
+    const confirmStop = await showConfirm('STOP TIMER', 'Are you sure you want to stop the timer? This will save your current progress.');
+    if (confirmStop) {
         clearInterval(timerInterval);
         isRunning = false;
         
@@ -320,9 +388,11 @@ function stopTimer() {
         const elapsedMinutes = Math.max(1, Math.ceil(elapsedSeconds / 60));
         
         console.log(`DEBUG - Timer stopped. Elapsed: ${elapsedSeconds}s, Minutes: ${elapsedMinutes}`);
+        console.log(`DEBUG - Current Session ID: ${currentSessionId}, Is Break: ${isBreakTime}`);
         
         // Complete the session with actual elapsed time
         if (currentSessionId && !isBreakTime) {
+            console.log('DEBUG - Calling complete API...');
             fetch('/api/pomodoro/complete', {
                 method: 'POST',
                 headers: {
@@ -333,12 +403,20 @@ function stopTimer() {
                     duration: elapsedMinutes 
                 })
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('DEBUG - Complete API response status:', response.status);
+                return response.json();
+            })
             .then(data => {
-                console.log('Stop complete response:', data);
+                console.log('DEBUG - Stop complete response:', data);
+                exitFocusMode();
+            })
+            .catch(error => {
+                console.error('DEBUG - Error completing session:', error);
                 exitFocusMode();
             });
         } else {
+            console.log('DEBUG - Cancelling session (break time or no session ID)');
             // If it's break time or no session ID, just cancel
             if (currentSessionId) {
                 fetch('/api/pomodoro/cancel', {
@@ -347,9 +425,12 @@ function stopTimer() {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ session_id: currentSessionId })
-                });
+                })
+                .then(() => exitFocusMode())
+                .catch(() => exitFocusMode());
+            } else {
+                exitFocusMode();
             }
-            exitFocusMode();
         }
     }
 }
@@ -379,6 +460,35 @@ document.addEventListener('keydown', function(e) {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('FOCUS MODE INITIALIZED');
     console.log('SHORTCUTS: F=Focus, B=Break, SPACE=Pause, ESC=Stop');
+    
+    // Check for autostart from quick start modal
+    const urlParams = new URLSearchParams(window.location.search);
+    const autostart = urlParams.get('autostart');
+    const duration = urlParams.get('duration');
+    
+    if (autostart === 'true') {
+        // Get session info from sessionStorage
+        const sessionId = sessionStorage.getItem('activeSessionId');
+        const sessionDuration = sessionStorage.getItem('activeSessionDuration');
+        const sessionSubject = sessionStorage.getItem('activeSessionSubject');
+        
+        console.log('Autostart detected:', { sessionId, sessionDuration, sessionSubject });
+        
+        if (sessionId && sessionDuration && sessionSubject) {
+            // Clear the sessionStorage
+            sessionStorage.removeItem('activeSessionId');
+            sessionStorage.removeItem('activeSessionDuration');
+            sessionStorage.removeItem('activeSessionSubject');
+            
+            // Set current session
+            currentSessionId = sessionId;
+            currentSubject = sessionSubject;
+            
+            // Start the timer with custom duration (skip backend call since session already created)
+            const durationMins = parseInt(sessionDuration) || 25;
+            startTimer(durationMins, false, sessionSubject.toUpperCase(), true);
+        }
+    }
 });
 </script>
 {% endblock %}

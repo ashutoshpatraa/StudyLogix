@@ -36,7 +36,7 @@ class DatabaseManager:
             CREATE TABLE IF NOT EXISTS users (
                 user_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
-                email TEXT UNIQUE NOT NULL,
+                email TEXT,
                 password_hash BLOB NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
@@ -90,6 +90,68 @@ class DatabaseManager:
             )
             """
             cursor.execute(pomodoro_sessions_table)
+            
+            # Create friendships table
+            friendships_table = """
+            CREATE TABLE IF NOT EXISTS friendships (
+                friendship_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                friend_id INTEGER NOT NULL,
+                status TEXT CHECK(status IN ('pending', 'accepted', 'rejected', 'blocked')) DEFAULT 'pending',
+                requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                responded_at TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+                FOREIGN KEY (friend_id) REFERENCES users(user_id) ON DELETE CASCADE,
+                UNIQUE(user_id, friend_id)
+            )
+            """
+            cursor.execute(friendships_table)
+            
+            # Create study_groups table
+            study_groups_table = """
+            CREATE TABLE IF NOT EXISTS study_groups (
+                group_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                group_name TEXT NOT NULL,
+                created_by INTEGER NOT NULL,
+                description TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (created_by) REFERENCES users(user_id) ON DELETE CASCADE
+            )
+            """
+            cursor.execute(study_groups_table)
+            
+            # Create group_members table
+            group_members_table = """
+            CREATE TABLE IF NOT EXISTS group_members (
+                member_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                group_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                role TEXT CHECK(role IN ('admin', 'member')) DEFAULT 'member',
+                joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (group_id) REFERENCES study_groups(group_id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+                UNIQUE(group_id, user_id)
+            )
+            """
+            cursor.execute(group_members_table)
+            
+            # Create active_timers table for live tracking
+            active_timers_table = """
+            CREATE TABLE IF NOT EXISTS active_timers (
+                timer_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                session_id INTEGER NOT NULL,
+                subject TEXT NOT NULL,
+                duration_minutes INTEGER NOT NULL,
+                time_remaining INTEGER NOT NULL,
+                is_break INTEGER DEFAULT 0,
+                started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+                FOREIGN KEY (session_id) REFERENCES pomodoro_sessions(session_id) ON DELETE CASCADE
+            )
+            """
+            cursor.execute(active_timers_table)
             
             self.connection.commit()
             print("✅ All tables created successfully!")

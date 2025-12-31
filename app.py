@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from werkzeug.security import generate_password_hash, check_password_hash
 from database import initialize_database
 from pomodoro_manager import PomodoroManager
+from friend_manager import FriendManager
 import bcrypt
 from datetime import datetime, date, timedelta
 import os
@@ -16,9 +17,15 @@ import base64
 app = Flask(__name__)
 app.secret_key = 'studylogix-secret-key-change-this-in-production'
 
+# Add custom Jinja2 filter for zfill
+@app.template_filter('zfill')
+def zfill_filter(value, width):
+    return str(value).zfill(width)
+
 # Global database connection
 db = None
 pomodoro_manager = None
+friend_manager = None
 
 # Add thread safety for SQLite
 import threading
@@ -28,27 +35,24 @@ class WebUserManager:
     def __init__(self, db_manager):
         self.db = db_manager
     
-    def register_user(self, username, email, password):
+    def register_user(self, username, password):
         """Register a new user"""
         cursor = None
         with db_lock:  # Thread safety
             try:
                 cursor = self.db.connection.cursor()
                 
-                # Check if username or email already exists
-                cursor.execute("SELECT username, email FROM users WHERE username = ? OR email = ?", (username, email))
+                # Check if username already exists
+                cursor.execute("SELECT username FROM users WHERE username = ?", (username,))
                 existing_user = cursor.fetchone()
                 
                 if existing_user:
-                    if existing_user[0] == username:
-                        return False, "Username already exists"
-                    else:
-                        return False, "Email already exists"
+                    return False, "Username already exists"
                 
                 # Hash password and insert user
                 password_hash = self.db.hash_password(password)
-                cursor.execute("INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)", 
-                              (username, email, password_hash))
+                cursor.execute("INSERT INTO users (username, password_hash) VALUES (?, ?)", 
+                              (username, password_hash))
                 self.db.connection.commit()
                 
                 return True, "User registered successfully"
@@ -211,12 +215,13 @@ class WebSessionManager:
 
 # Initialize managers
 def init_managers():
-    global db, user_manager, session_manager, pomodoro_manager
+    global db, user_manager, session_manager, pomodoro_manager, friend_manager
     db = initialize_database()
     if db:
         user_manager = WebUserManager(db)
         session_manager = WebSessionManager(db)
         pomodoro_manager = PomodoroManager(db)
+        friend_manager = FriendManager(db)
         
         # Create charts directory if it doesn't exist
         charts_dir = os.path.join('static', 'charts')
@@ -236,7 +241,6 @@ def index():
 def register():
     if request.method == 'POST':
         username = request.form['username']
-        email = request.form['email']
         password = request.form['password']
         confirm_password = request.form['confirm_password']
         
@@ -244,7 +248,7 @@ def register():
             flash('Passwords do not match!', 'error')
             return render_template('register.html')
         
-        success, message = user_manager.register_user(username, email, password)
+        success, message = user_manager.register_user(username, password)
         
         if success:
             flash(message, 'success')
@@ -472,7 +476,7 @@ def pomodoro():
     recent_sessions = pomodoro_manager.get_recent_pomodoro_sessions(user_id, 5)
     
     return render_template('pomodoro.html', 
-                         stats=pomodoro_stats, 
+                         pomodoro_stats=pomodoro_stats, 
                          recent_sessions=recent_sessions)
 
 @app.route('/api/pomodoro/start', methods=['POST'])
@@ -553,6 +557,121 @@ def pomodoro_stats():
     stats = pomodoro_manager.get_user_pomodoro_stats(user_id)
     
     return jsonify(stats)
+
+# Friend Management Routes
+@app.route('/friends')
+def friends():
+    """Display friends page"""
+    if 'user_id' not in session:
+        flash('Please log in to view friends', 'error')
+        return redirect(url_for('login'))
+    
+    user_id = session['user_id']
+    friends_list = friend_manager.get_friends_list(user_id)
+    pending_requests = friend_manager.get_pending_requests(user_id)
+    friends_progress = friend_manager.get_friends_progress(user_id)
+    active_timers = friend_manager.get_active_friend_timers(user_id)
+    
+    return render_template('friends.html', 
+                         friends=friends_list,
+                         pending_requests=pending_requests,
+                         friends_progress=friends_progress,
+                         active_timers=active_timers)
+
+@app.route('/api/friends/send_request', methods=['POST'])
+def send_friend_request():
+    """Send a friend request"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    data = request.get_json()
+    friend_username = data.get('username')
+    
+    if not friend_username:
+        return jsonify({'error': 'Username required'}), 400
+    
+    user_id = session['user_id']
+    success, message = friend_manager.send_friend_request(user_id, friend_username)
+    
+    if success:
+        return jsonify({'success': True, 'message': message})
+    else:
+        return jsonify({'error': message}), 400
+
+@app.route('/api/friends/respond', methods=['POST'])
+def respond_friend_request():
+    """Accept or reject a friend request"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    data = request.get_json()
+    friendship_id = data.get('friendship_id')
+    accept = data.get('accept', False)
+    
+    if not friendship_id:
+        return jsonify({'error': 'Friendship ID required'}), 400
+    
+    user_id = session['user_id']
+    success, message = friend_manager.respond_to_request(friendship_id, user_id, accept)
+    
+    if success:
+        return jsonify({'success': True, 'message': message})
+    else:
+        return jsonify({'error': message}), 400
+
+@app.route('/api/friends/remove', methods=['POST'])
+def remove_friend():
+    """Remove a friend"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    data = request.get_json()
+    friend_id = data.get('friend_id')
+    
+    if not friend_id:
+        return jsonify({'error': 'Friend ID required'}), 400
+    
+    user_id = session['user_id']
+    success, message = friend_manager.remove_friend(user_id, friend_id)
+    
+    if success:
+        return jsonify({'success': True, 'message': message})
+    else:
+        return jsonify({'error': message}), 400
+
+@app.route('/api/friends/active_timers')
+def get_active_timers():
+    """Get active timers for all friends"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user_id = session['user_id']
+    active_timers = friend_manager.get_active_friend_timers(user_id)
+    
+    return jsonify({'timers': active_timers})
+
+@app.route('/api/timer/update', methods=['POST'])
+def update_timer():
+    """Update active timer status"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    data = request.get_json()
+    session_id = data.get('session_id')
+    subject = data.get('subject')
+    duration_minutes = data.get('duration_minutes')
+    time_remaining = data.get('time_remaining')
+    is_break = data.get('is_break', False)
+    
+    user_id = session['user_id']
+    success = friend_manager.update_active_timer(
+        user_id, session_id, subject, duration_minutes, time_remaining, is_break
+    )
+    
+    if success:
+        return jsonify({'success': True})
+    else:
+        return jsonify({'error': 'Failed to update timer'}), 500
 
 if __name__ == '__main__':
     if init_managers():

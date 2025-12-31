@@ -11,10 +11,10 @@
     </h1>
     <p class="welcome-subtitle-nothing">SYSTEM STATUS: READY • SESSION ACTIVE • LEARNING MODE ENABLED</p>
     <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 32px;">
-        <a href="{{ url_for('log_session') }}" class="btn-nothing btn-nothing-primary">
+        <button onclick="openQuickStartModal()" class="btn-nothing btn-nothing-primary">
             <i class="fas fa-plus"></i>
             NEW SESSION
-        </a>
+        </button>
         <a href="{{ url_for('pomodoro') }}" class="btn-nothing">
             <i class="fas fa-stopwatch"></i>
             FOCUS MODE
@@ -23,6 +23,42 @@
             <i class="fas fa-chart-line"></i>
             ANALYTICS
         </a>
+    </div>
+</div>
+
+<!-- Quick Start Modal -->
+<div id="quickStartModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 9999; backdrop-filter: blur(10px); align-items: center; justify-content: center;">
+    <div class="glass-card" style="max-width: 500px; width: 90%; padding: 32px; animation: float 6s ease-in-out infinite;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h2 style="font-family: 'DotGothic16', monospace; color: var(--text-primary); margin: 0;">
+                <i class="fas fa-rocket" style="color: var(--nothing-cyan);"></i>
+                QUICK START FOCUS SESSION
+            </h2>
+            <button onclick="closeQuickStartModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer; padding: 0; width: 32px; height: 32px;">×</button>
+        </div>
+        
+        <form id="quickStartForm" style="display: flex; flex-direction: column; gap: 20px;">
+            <div class="form-group-nothing">
+                <label style="display: flex; align-items: center; gap: 12px; color: var(--text-secondary); font-family: 'DotGothic16', monospace; font-size: 14px; margin-bottom: 8px;">
+                    <i class="fas fa-book" style="color: var(--nothing-cyan);"></i>
+                    SUBJECT
+                </label>
+                <input type="text" id="quickSubject" class="form-control-nothing" placeholder="ENTER_SUBJECT" required style="font-family: 'JetBrains Mono', monospace;">
+            </div>
+            
+            <div class="form-group-nothing">
+                <label style="display: flex; align-items: center; gap: 12px; color: var(--text-secondary); font-family: 'DotGothic16', monospace; font-size: 14px; margin-bottom: 8px;">
+                    <i class="fas fa-clock" style="color: var(--nothing-orange);"></i>
+                    DURATION (MINUTES)
+                </label>
+                <input type="number" id="quickDuration" class="form-control-nothing" placeholder="25" value="25" min="1" max="120" required style="font-family: 'JetBrains Mono', monospace;">
+            </div>
+            
+            <button type="submit" class="btn-nothing btn-nothing-primary" style="margin-top: 16px; padding: 16px; font-size: 16px;">
+                <i class="fas fa-play"></i>
+                START FOCUS SESSION
+            </button>
+        </form>
     </div>
 </div>
 
@@ -264,6 +300,74 @@
                 animation: pulse 2s ease-in-out infinite;
             `;
             welcomeSection.appendChild(statusIndicator);
+        }
+    });
+    
+    // Quick Start Modal Functions
+    function openQuickStartModal() {
+        const modal = document.getElementById('quickStartModal');
+        modal.style.display = 'flex';
+        document.getElementById('quickSubject').focus();
+    }
+    
+    function closeQuickStartModal() {
+        const modal = document.getElementById('quickStartModal');
+        modal.style.display = 'none';
+        document.getElementById('quickStartForm').reset();
+    }
+    
+    // Handle Quick Start Form Submission
+    document.getElementById('quickStartForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const subject = document.getElementById('quickSubject').value.trim();
+        const duration = parseInt(document.getElementById('quickDuration').value);
+        
+        if (!subject) {
+            showToast('Please enter a subject', 'warning');
+            return;
+        }
+        
+        if (duration < 1 || duration > 120) {
+            showToast('Duration must be between 1 and 120 minutes', 'warning');
+            return;
+        }
+        
+        try {
+            // Start Pomodoro session via API
+            const response = await fetch('/api/pomodoro/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ subject: subject })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
+                // Store session info and redirect to pomodoro page
+                sessionStorage.setItem('activeSessionId', data.session_id);
+                sessionStorage.setItem('activeSessionDuration', duration);
+                sessionStorage.setItem('activeSessionSubject', subject);
+                
+                showToast('Starting focus session...', 'success', 1500);
+                setTimeout(() => {
+                    window.location.href = '/pomodoro?autostart=true&duration=' + duration;
+                }, 500);
+            } else {
+                showToast('Failed to start session: ' + (data.error || 'Unknown error'), 'error');
+            }
+        } catch (error) {
+            console.error('Error starting session:', error);
+            showToast('Failed to start session. Please try again.', 'error');
+        }
+    });
+    
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeQuickStartModal();
         }
     });
 </script>

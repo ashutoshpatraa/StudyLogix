@@ -1,6 +1,6 @@
-flask==2.3.2
-matplotlib==3.7.1
-pandas==2.0.3
-bcrypt==4.0.1
-numpy==1.24.3
-werkzeug==2.3.6
+flask==3.0.0
+matplotlib==3.8.0
+pandas==2.2.0
+bcrypt==4.1.1
+numpy==1.26.0
+werkzeug==3.0.0
