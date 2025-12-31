@@ -2,7 +2,7 @@ services:
   - type: web
     name: studylogix
     env: python
-    runtime: python-3.12
+    pythonVersion: 3.12
     region: oregon
     plan: free
     buildCommand: "pip install -r requirements.txt"
@@ -10,6 +10,10 @@ services:
     envVars:
       - key: FLASK_ENV
         value: production
+    disk:
+      name: studylogix-data
+      mountPath: /opt/render/project/src
+      sizeGB: 1
     disk:
       name: studylogix-data
       mountPath: /opt/render/project/src
