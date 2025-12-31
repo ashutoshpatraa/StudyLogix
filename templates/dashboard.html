@@ -10,7 +10,7 @@
         WELCOME, {{ session.username.upper() }}
     </h1>
     <p class="welcome-subtitle-nothing">SYSTEM STATUS: READY • SESSION ACTIVE • LEARNING MODE ENABLED</p>
-    <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 32px;">
+    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 24px;">
         <button onclick="openQuickStartModal()" class="btn-nothing btn-nothing-primary">
             <i class="fas fa-plus"></i>
             NEW SESSION
@@ -63,7 +63,7 @@
 </div>
 
 <!-- Nothing OS Stats Grid -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 32px;">
+<div class="stats-grid">
     <div class="stats-card-nothing stats-card-primary float">
         <div class="stats-value-nothing">
             <i class="fas fa-clock stats-icon-nothing"></i>
@@ -132,7 +132,7 @@
     </div>
 </div>
 
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+<div class="content-grid-2">
     <!-- Subject Analysis Panel -->
     <div class="glass-card">
         <div style="padding: 24px; border-bottom: 1px solid var(--glass-border);">
@@ -229,7 +229,7 @@
         </h3>
     </div>
     <div style="padding: 24px;">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+        <div class="command-grid">
             <a href="{{ url_for('log_session') }}" class="btn-nothing btn-nothing-primary" style="text-align: center; padding: 16px;">
                 <i class="fas fa-plus" style="display: block; font-size: 24px; margin-bottom: 8px;"></i>
                 LOG SESSION
