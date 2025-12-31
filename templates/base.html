@@ -133,20 +133,44 @@
         document.addEventListener('DOMContentLoaded', function() {
             const navToggle = document.getElementById('navToggle');
             const navMenu = document.getElementById('navMenu');
+            const navbar = document.getElementById('navbar');
             
             if (navToggle && navMenu) {
-                navToggle.addEventListener('click', function() {
+                // Toggle menu on button click
+                navToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
                     navMenu.classList.toggle('active');
                     const icon = navToggle.querySelector('i');
                     icon.classList.toggle('fa-bars');
                     icon.classList.toggle('fa-times');
                 });
+                
+                // Close menu when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!navbar.contains(e.target) && navMenu.classList.contains('active')) {
+                        navMenu.classList.remove('active');
+                        const icon = navToggle.querySelector('i');
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                });
+                
+                // Close menu when clicking on a nav link
+                const navLinks = navMenu.querySelectorAll('.nav-link-nothing');
+                navLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        navMenu.classList.remove('active');
+                        const icon = navToggle.querySelector('i');
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    });
+                });
             }
             
             // Active link highlighting
             const currentPath = window.location.pathname;
-            const navLinks = document.querySelectorAll('.nav-link-nothing');
-            navLinks.forEach(link => {
+            const allNavLinks = document.querySelectorAll('.nav-link-nothing');
+            allNavLinks.forEach(link => {
                 if (link.getAttribute('href') === currentPath) {
                     link.classList.add('active');
                 }

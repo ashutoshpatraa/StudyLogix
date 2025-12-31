@@ -5,41 +5,41 @@
 {% block content %}
 <!-- Nothing OS Pomodoro Interface -->
 <div class="glass-card" style="margin-bottom: 32px;">
-    <div style="padding: 24px; border-bottom: 1px solid var(--glass-border);">
-        <h1 style="font-family: 'DotGothic16', monospace; font-size: 28px; color: var(--nothing-white); margin: 0; display: flex; align-items: center; gap: 16px;">
+    <div style="padding: 20px; border-bottom: 1px solid var(--glass-border);">
+        <h1 style="font-family: 'DotGothic16', monospace; font-size: 24px; color: var(--nothing-white); margin: 0; display: flex; align-items: center; gap: 12px;">
             <i class="fas fa-stopwatch" style="color: var(--nothing-red);"></i>
-            FOCUS MODE CONTROL
+            FOCUS MODE
         </h1>
-        <p style="color: var(--nothing-gray-400); margin: 8px 0 0 0; font-size: 14px;">
-            DEEP WORK PROTOCOL • DISTRACTION ELIMINATION • PRODUCTIVITY MAXIMIZATION
+        <p style="color: var(--nothing-gray-400); margin: 8px 0 0 0; font-size: 13px;">
+            DEEP WORK PROTOCOL • DISTRACTION ELIMINATION
         </p>
     </div>
     
-    <div style="padding: 32px;">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+    <div style="padding: 24px;">
+        <div class="pomodoro-grid">
             <!-- Start Pomodoro Card -->
             <div class="pomodoro-card-small ambient-card">
-                <h3 style="font-family: 'DotGothic16', monospace; color: var(--nothing-red); margin-bottom: 16px; display: flex; align-items: center; gap: 12px;">
+                <h3 style="font-family: 'DotGothic16', monospace; color: var(--nothing-red); margin-bottom: 12px; display: flex; align-items: center; gap: 12px; font-size: 16px;">
                     <i class="fas fa-play"></i>
                     WORK SESSION
                 </h3>
-                <p style="color: var(--nothing-gray-300); margin-bottom: 20px; font-size: 14px;">
-                    25 MINUTES • FULL CONCENTRATION • SINGLE TASK FOCUS
+                <p style="color: var(--nothing-gray-300); margin-bottom: 16px; font-size: 13px; line-height: 1.5;">
+                    25 MIN • FULL FOCUS
                 </p>
                 <button onclick="startPomodoro()" class="btn-nothing btn-nothing-primary" style="width: 100%;">
                     <i class="fas fa-rocket"></i>
-                    INITIATE FOCUS MODE
+                    START FOCUS
                 </button>
             </div>
             
             <!-- Break Session Card -->
             <div class="pomodoro-card-small ambient-card" style="animation-delay: 0.1s;">
-                <h3 style="font-family: 'DotGothic16', monospace; color: var(--nothing-green); margin-bottom: 16px; display: flex; align-items: center; gap: 12px;">
+                <h3 style="font-family: 'DotGothic16', monospace; color: var(--nothing-green); margin-bottom: 12px; display: flex; align-items: center; gap: 12px; font-size: 16px;">
                     <i class="fas fa-pause"></i>
                     BREAK SESSION
                 </h3>
-                <p style="color: var(--nothing-gray-300); margin-bottom: 20px; font-size: 14px;">
-                    5 MINUTES • MENTAL RESET • ENERGY RESTORATION
+                <p style="color: var(--nothing-gray-300); margin-bottom: 16px; font-size: 13px; line-height: 1.5;">
+                    5 MIN • MENTAL RESET
                 </p>
                 <button onclick="startBreak()" class="btn-nothing" style="width: 100%;">
                     <i class="fas fa-coffee"></i>
@@ -49,12 +49,12 @@
             
             <!-- Custom Timer Card -->
             <div class="pomodoro-card-small ambient-card" style="animation-delay: 0.2s;">
-                <h3 style="font-family: 'DotGothic16', monospace; color: var(--nothing-blue); margin-bottom: 16px; display: flex; align-items: center; gap: 12px;">
+                <h3 style="font-family: 'DotGothic16', monospace; color: var(--nothing-blue); margin-bottom: 12px; display: flex; align-items: center; gap: 12px; font-size: 16px;">
                     <i class="fas fa-cog"></i>
                     CUSTOM TIMER
                 </h3>
-                <div style="margin-bottom: 16px;">
-                    <input type="number" id="customMinutes" class="form-control-nothing" placeholder="MINUTES" style="margin-bottom: 12px;" min="1" max="120">
+                <div style="margin-bottom: 12px;">
+                    <input type="number" id="customMinutes" class="form-control-nothing" placeholder="MINUTES" min="1" max="120">
                 </div>
                 <button onclick="startCustomTimer()" class="btn-nothing" style="width: 100%;">
                     <i class="fas fa-timer"></i>
@@ -64,34 +64,34 @@
         </div>
         
         <!-- Session Stats -->
-        <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--glass-border);">
-            <h3 style="font-family: 'DotGothic16', monospace; color: var(--nothing-white); margin-bottom: 20px; text-align: center;">
-                SESSION STATISTICS
+        <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--glass-border);">
+            <h3 style="font-family: 'DotGothic16', monospace; color: var(--nothing-white); margin-bottom: 16px; text-align: center; font-size: 16px;">
+                SESSION STATS
             </h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 16px; text-align: center;">
-                <div>
+            <div class="stats-grid-mini">
+                <div style="text-align: center;">
                     <div class="stats-value-nothing" style="font-size: 1.5rem; color: var(--nothing-cyan);">
                         {% if pomodoro_stats %}{{ pomodoro_stats.total_sessions }}{% else %}0{% endif %}
                     </div>
-                    <div class="stats-label-nothing" style="font-size: 12px;">TOTAL SESSIONS</div>
+                    <div class="stats-label-nothing" style="font-size: 11px;">SESSIONS</div>
                 </div>
-                <div>
+                <div style="text-align: center;">
                     <div class="stats-value-nothing" style="font-size: 1.5rem; color: var(--nothing-green);">
                         {% if pomodoro_stats %}{{ pomodoro_stats.total_focus_time }}{% else %}0{% endif %}
                     </div>
-                    <div class="stats-label-nothing" style="font-size: 12px;">FOCUS MINUTES</div>
+                    <div class="stats-label-nothing" style="font-size: 11px;">MINUTES</div>
                 </div>
-                <div>
+                <div style="text-align: center;">
                     <div class="stats-value-nothing" style="font-size: 1.5rem; color: var(--nothing-orange);">
                         {% if pomodoro_stats %}{{ pomodoro_stats.today_sessions }}{% else %}0{% endif %}
                     </div>
-                    <div class="stats-label-nothing" style="font-size: 12px;">TODAY</div>
+                    <div class="stats-label-nothing" style="font-size: 11px;">TODAY</div>
                 </div>
-                <div>
+                <div style="text-align: center;">
                     <div class="stats-value-nothing" style="font-size: 1.5rem; color: var(--nothing-purple);">
                         {% if pomodoro_stats %}{{ pomodoro_stats.average_session_length }}{% else %}0{% endif %}
                     </div>
-                    <div class="stats-label-nothing" style="font-size: 12px;">AVG LENGTH</div>
+                    <div class="stats-label-nothing" style="font-size: 11px;">AVG</div>
                 </div>
             </div>
         </div>
