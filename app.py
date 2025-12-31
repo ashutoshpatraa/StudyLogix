@@ -671,10 +671,11 @@ def update_timer():
     if success:
         return jsonify({'success': True})
     else:
-        return jsonify({'error': 'Failed to update timer'}), 500
+        return jsonify({'error': 'Failed to update timer'}), 500# Initialize managers at module load time (needed for gunicorn)
+init_managers()
 
 if __name__ == '__main__':
-    if init_managers():
+    if user_manager:
         print("🚀 Starting StudyLogix Web App...")
         print("📱 Open your browser and go to: http://localhost:5000")
         import os
