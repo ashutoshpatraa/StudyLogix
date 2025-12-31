@@ -677,6 +677,11 @@ if __name__ == '__main__':
     if init_managers():
         print("🚀 Starting StudyLogix Web App...")
         print("📱 Open your browser and go to: http://localhost:5000")
-        app.run(debug=True, host='0.0.0.0', port=5000)
+        import os
+        port = int(os.environ.get('PORT', 5000))
+        debug = os.environ.get('FLASK_ENV') != 'production'
+        app.run(debug=debug, host='0.0.0.0', port=port)
+    else:
+        print("❌ Failed to initialize database!")
     else:
         print("❌ Failed to initialize database!")
