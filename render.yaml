@@ -2,7 +2,7 @@ services:
   - type: web
     name: studylogix
     env: python
-    runtime: python-3.12.0
+    runtime: python-3.12
     region: oregon
     plan: free
     buildCommand: "pip install -r requirements.txt"
