@@ -5,5 +5,4 @@ bcrypt
 numpy
 werkzeug
 gunicorn
-distutils
 matplotlib 
