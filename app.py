@@ -683,5 +683,3 @@ if __name__ == '__main__':
         app.run(debug=debug, host='0.0.0.0', port=port)
     else:
         print("❌ Failed to initialize database!")
-    else:
-        print("❌ Failed to initialize database!")
