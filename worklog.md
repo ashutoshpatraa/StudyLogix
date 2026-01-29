@@ -892,3 +892,6 @@ explored chaos engineering mentally, stability maintained; theoretical resilienc
 ## 2026-01-29T17:25:19
 mapped the problem domain, code domain unexplored; charting the course.
 
+## 2026-01-29T14:10:38
+debated best practices, practice put on hold; principles before patterns.
+
