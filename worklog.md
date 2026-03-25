@@ -1291,3 +1291,6 @@ debated best practices, practice put on hold; principles before patterns.
 ## 2026-03-25T20:38:03
 mental refactoring day; codebase patiently awaits its turn.
 
+## 2026-03-25T09:42:37
+considered oauth flows, authentication unchanged; theoretical access control.
+
