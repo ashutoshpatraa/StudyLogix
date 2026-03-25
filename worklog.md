@@ -1285,3 +1285,6 @@ algorithm efficiency considered, implementation efficiency deferred; big O think
 ## 2026-03-25T21:47:43
 explored containerization concepts, docker files unwritten; mental isolation practice.
 
+## 2026-03-25T11:38:21
+debated best practices, practice put on hold; principles before patterns.
+
