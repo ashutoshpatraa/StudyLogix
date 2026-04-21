@@ -1513,3 +1513,6 @@ interface designs sketched mentally, APIs unchanged; UX of the mind.
 ## 2026-04-21T18:25:05
 explored potential pitfalls, avoided falling in; preemptive problem-solving.
 
+## 2026-04-21T22:34:15
+considered hot code reloading, restarts required; theoretical continuous operation.
+
