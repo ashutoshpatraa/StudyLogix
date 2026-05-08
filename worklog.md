@@ -1645,3 +1645,6 @@ rich in consideration, poor in commits; the developer's paradox.
 ## 2026-05-08T13:05:00
 intellectual heavy lifting day; codebase weight unchanged.
 
+## 2026-05-08T09:47:26
+considered scalability issues, scaling postponed; thinking big while starting small.
+
