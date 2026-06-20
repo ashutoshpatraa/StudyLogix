@@ -53,7 +53,7 @@
                         <div style="font-weight: 600;">{{ friend.username }}</div>
                         <div class="stats-label-nothing">Member since {{ friend.member_since[:10] }}</div>
                     </div>
-                    <button onclick="removeFriend({{ friend.user_id }}, '{{ friend.username }}')" class="nothing-btn-outline" style="font-size: 0.9rem; padding: 6px 12px;">
+                    <button class="nothing-btn-outline remove-friend-btn" data-friend-id="{{ friend.user_id }}" data-friend-name="{{ friend.username }}" style="font-size: 0.9rem; padding: 6px 12px;">
                         Remove
                     </button>
                 </div>
@@ -219,31 +219,33 @@ async function respondToRequest(friendshipId, accept) {
     }
 }
 
-async function removeFriend(friendId, username) {
-    if (!confirm(`Remove ${username} from your friends?`)) {
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/friends/remove', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ friend_id: friendId })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            showToast(`${username} removed from friends`, 'success');
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            showToast(data.error || 'Failed to remove friend', 'error');
+// Attach remove-friend handlers via data attributes (XSS-safe)
+document.querySelectorAll('.remove-friend-btn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+        const friendId = this.dataset.friendId;
+        const username = this.dataset.friendName;
+        if (!confirm('Remove ' + username + ' from your friends?')) {
+            return;
         }
-    } catch (error) {
-        console.error('Error:', error);
-        showToast('Failed to remove friend', 'error');
-    }
-}
+        try {
+            const response = await fetch('/api/friends/remove', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ friend_id: parseInt(friendId) })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                showToast(username + ' removed from friends', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast(data.error || 'Failed to remove friend', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Failed to remove friend', 'error');
+        }
+    });
+});
 
 // Auto-refresh active timers every 5 seconds
 setInterval(async () => {
@@ -261,40 +263,62 @@ setInterval(async () => {
 
 function updateTimersDisplay(timers) {
     const container = document.getElementById('activeTimersList');
+    container.textContent = ''; // Clear safely
     
     if (timers.length === 0) {
-        container.innerHTML = `
-            <div style="text-align: center; padding: 40px; color: var(--nothing-text-secondary);">
-                <div style="font-size: 3rem; margin-bottom: 16px;">⏱️</div>
-                <div>No friends are currently studying</div>
-            </div>
-        `;
+        const empty = document.createElement('div');
+        empty.style.cssText = 'text-align: center; padding: 40px; color: var(--nothing-text-secondary);';
+        const emoji = document.createElement('div');
+        emoji.style.cssText = 'font-size: 3rem; margin-bottom: 16px;';
+        emoji.textContent = '\u23F1\uFE0F';
+        const label = document.createElement('div');
+        label.textContent = 'No friends are currently studying';
+        empty.appendChild(emoji);
+        empty.appendChild(label);
+        container.appendChild(empty);
         return;
     }
     
-    container.innerHTML = timers.map(timer => {
+    timers.forEach(timer => {
         const minutes = Math.floor(timer.time_remaining / 60);
         const seconds = timer.time_remaining % 60;
-        const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        const activity = timer.is_break ? '🧘 BREAK TIME' : `📚 ${timer.subject}`;
+        const timeStr = String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+        const activity = timer.is_break ? '\uD83E\uDDD8 BREAK TIME' : '\uD83D\uDCDA ' + timer.subject;
         
-        return `
-            <div class="timer-card" style="padding: 16px; background: var(--nothing-bg-secondary); border-radius: 12px; border-left: 3px solid var(--nothing-purple); margin-bottom: 12px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <div style="font-weight: 600; font-size: 1.1rem;">${timer.username}</div>
-                        <div style="color: var(--nothing-cyan); margin-top: 4px;">${activity}</div>
-                    </div>
-                    <div style="text-align: right;">
-                        <div class="pomodoro-timer" style="font-size: 1.5rem; font-weight: 700; color: var(--nothing-purple);">
-                            ${timeStr}
-                        </div>
-                        <div class="stats-label-nothing">${timer.duration_minutes} min session</div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
+        const card = document.createElement('div');
+        card.className = 'timer-card';
+        card.style.cssText = 'padding: 16px; background: var(--nothing-bg-secondary); border-radius: 12px; border-left: 3px solid var(--nothing-purple); margin-bottom: 12px;';
+        
+        const row = document.createElement('div');
+        row.style.cssText = 'display: flex; justify-content: space-between; align-items: center;';
+        
+        const left = document.createElement('div');
+        const nameEl = document.createElement('div');
+        nameEl.style.cssText = 'font-weight: 600; font-size: 1.1rem;';
+        nameEl.textContent = timer.username;
+        const activityEl = document.createElement('div');
+        activityEl.style.cssText = 'color: var(--nothing-cyan); margin-top: 4px;';
+        activityEl.textContent = activity;
+        left.appendChild(nameEl);
+        left.appendChild(activityEl);
+        
+        const right = document.createElement('div');
+        right.style.textAlign = 'right';
+        const timeEl = document.createElement('div');
+        timeEl.className = 'pomodoro-timer';
+        timeEl.style.cssText = 'font-size: 1.5rem; font-weight: 700; color: var(--nothing-purple);';
+        timeEl.textContent = timeStr;
+        const durationEl = document.createElement('div');
+        durationEl.className = 'stats-label-nothing';
+        durationEl.textContent = timer.duration_minutes + ' min session';
+        right.appendChild(timeEl);
+        right.appendChild(durationEl);
+        
+        row.appendChild(left);
+        row.appendChild(right);
+        card.appendChild(row);
+        container.appendChild(card);
+    });
 }
 
 // Close modal on escape key

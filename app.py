@@ -1,220 +1,356 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_file
-from werkzeug.security import generate_password_hash, check_password_hash
-from database import initialize_database
-from pomodoro_manager import PomodoroManager
-from friend_manager import FriendManager
-import bcrypt
-from datetime import datetime, date, timedelta
+"""
+StudyLogix — Flask Web Application
+A study session tracker with Pomodoro timer, analytics, and social features.
+"""
+
+import logging
 import os
-import matplotlib
-matplotlib.use('Agg')  # Use non-interactive backend
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
+import re
+import threading
+from datetime import date, datetime, timedelta
+from functools import wraps
 from io import BytesIO
-import base64
+
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend before importing pyplot
+import matplotlib.pyplot as plt
+import numpy as np
+
+from flask import (
+    Flask, flash, jsonify, redirect, render_template, request,
+    send_file, session, url_for,
+)
+
+from database import initialize_database
+from friend_manager import FriendManager
+from pomodoro_manager import PomodoroManager
+
+# ---------------------------------------------------------------------------
+# Application factory & configuration
+# ---------------------------------------------------------------------------
 
 app = Flask(__name__)
-app.secret_key = 'studylogix-secret-key-change-this-in-production'
 
-# Add custom Jinja2 filter for zfill
+# Security: read secret key from environment; fall back to random bytes in dev
+_secret = os.environ.get('SECRET_KEY')
+if _secret:
+    app.secret_key = _secret
+else:
+    app.secret_key = os.urandom(32)
+    app.logger.warning(
+        "SECRET_KEY not set — using random bytes. "
+        "Sessions will not persist across restarts. "
+        "Set SECRET_KEY in your environment for production."
+    )
+
+# Session security configuration
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    PERMANENT_SESSION_LIFETIME=timedelta(hours=2),
+)
+
+# In production, enforce secure cookies
+if os.environ.get('FLASK_ENV') == 'production':
+    app.config['SESSION_COOKIE_SECURE'] = True
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+)
+logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Security middleware — HTTP response headers
+# ---------------------------------------------------------------------------
+
+@app.after_request
+def set_security_headers(response):
+    """Inject security-related HTTP headers on every response."""
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    response.headers['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=()'
+    # CSP: allow inline styles/scripts for the current design; tighten later
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
+        "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; "
+        "img-src 'self' data:; "
+        "connect-src 'self';"
+    )
+    return response
+
+# ---------------------------------------------------------------------------
+# Custom Jinja2 filters
+# ---------------------------------------------------------------------------
+
 @app.template_filter('zfill')
 def zfill_filter(value, width):
+    """Pad a value with leading zeros."""
     return str(value).zfill(width)
 
-# Global database connection
+# ---------------------------------------------------------------------------
+# Input validation helpers
+# ---------------------------------------------------------------------------
+
+_USERNAME_RE = re.compile(r'^[a-zA-Z0-9_]{3,30}$')
+
+
+def _validate_username(username: str) -> str | None:
+    """Return an error message if username is invalid, else None."""
+    if not username or not _USERNAME_RE.match(username):
+        return "Username must be 3-30 characters (letters, numbers, underscores)."
+    return None
+
+
+def _validate_password(password: str) -> str | None:
+    """Return an error message if password is too weak, else None."""
+    if not password or len(password) < 8:
+        return "Password must be at least 8 characters."
+    return None
+
+
+def _validate_subject(subject: str) -> str | None:
+    if not subject or len(subject.strip()) == 0:
+        return "Subject is required."
+    if len(subject) > 100:
+        return "Subject must be 100 characters or fewer."
+    return None
+
+
+def _validate_duration(raw_value: str) -> tuple[int | None, str | None]:
+    """Parse and validate duration. Returns (value, error)."""
+    try:
+        val = int(raw_value)
+    except (ValueError, TypeError):
+        return None, "Duration must be a number."
+    if val < 1 or val > 600:
+        return None, "Duration must be between 1 and 600 minutes."
+    return val, None
+
+
+def _validate_notes(notes: str) -> str | None:
+    if notes and len(notes) > 1000:
+        return "Notes must be 1000 characters or fewer."
+    return None
+
+# ---------------------------------------------------------------------------
+# Authentication decorator
+# ---------------------------------------------------------------------------
+
+def login_required(f):
+    """Decorator that redirects unauthenticated users to the login page."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Please log in to continue.', 'error')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def api_login_required(f):
+    """Decorator for JSON API endpoints — returns 401 instead of redirect."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return jsonify({'error': 'Not authenticated'}), 401
+        return f(*args, **kwargs)
+    return decorated_function
+
+# ---------------------------------------------------------------------------
+# Database & manager initialisation
+# ---------------------------------------------------------------------------
+
+# Thread safety lock shared across web-layer managers
+db_lock = threading.Lock()
+
+# Global manager instances
 db = None
+user_manager = None
+session_manager = None
 pomodoro_manager = None
 friend_manager = None
 
-# Add thread safety for SQLite
-import threading
-db_lock = threading.Lock()
 
 class WebUserManager:
+    """Handles user registration and authentication for the web app."""
+
     def __init__(self, db_manager):
         self.db = db_manager
-    
+
     def register_user(self, username, password):
-        """Register a new user"""
-        cursor = None
-        with db_lock:  # Thread safety
+        """Register a new user. Returns (success, message)."""
+        with db_lock:
+            cursor = None
             try:
                 cursor = self.db.connection.cursor()
-                
-                # Check if username already exists
-                cursor.execute("SELECT username FROM users WHERE username = ?", (username,))
-                existing_user = cursor.fetchone()
-                
-                if existing_user:
-                    return False, "Username already exists"
-                
-                # Hash password and insert user
+                cursor.execute(
+                    "SELECT username FROM users WHERE username = ?",
+                    (username,),
+                )
+                if cursor.fetchone():
+                    return False, "Username already exists."
+
                 password_hash = self.db.hash_password(password)
-                cursor.execute("INSERT INTO users (username, password_hash) VALUES (?, ?)", 
-                              (username, password_hash))
+                cursor.execute(
+                    "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+                    (username, password_hash),
+                )
                 self.db.connection.commit()
-                
-                return True, "User registered successfully"
-                
-            except Exception as e:
-                return False, f"Database error: {e}"
-            finally:
-                if cursor:
-                    cursor.close()
-    
-    def login_user(self, username, password):
-        """Authenticate user login"""
-        cursor = None
-        with db_lock:  # Thread safety
-            try:
-                cursor = self.db.connection.cursor()
-                
-                cursor.execute("SELECT user_id, username, password_hash FROM users WHERE username = ?", (username,))
-                user = cursor.fetchone()
-                
-                if user and self.db.verify_password(password, user[2]):
-                    return True, {"user_id": user[0], "username": user[1]}, "Login successful"
-                else:
-                    return False, None, "Invalid username or password"
-                    
-            except Exception as e:
-                return False, None, f"Database error: {e}"
+                return True, "Account created successfully!"
+            except Exception:
+                logger.exception("Error registering user")
+                return False, "An unexpected error occurred. Please try again."
             finally:
                 if cursor:
                     cursor.close()
 
-class WebSessionManager:
-    def __init__(self, db_manager):
-        self.db = db_manager
-    
-    def log_study_session(self, user_id, subject, duration_minutes, mood, productivity, notes="", session_date=None):
-        """Log a new study session"""
-        cursor = None
-        with db_lock:  # Thread safety
+    def login_user(self, username, password):
+        """Authenticate a user. Returns (success, user_data|None, message)."""
+        with db_lock:
+            cursor = None
             try:
                 cursor = self.db.connection.cursor()
-                
+                cursor.execute(
+                    "SELECT user_id, username, password_hash FROM users WHERE username = ?",
+                    (username,),
+                )
+                user = cursor.fetchone()
+                if user and self.db.verify_password(password, user[2]):
+                    return True, {"user_id": user[0], "username": user[1]}, "Login successful"
+                return False, None, "Invalid username or password."
+            except Exception:
+                logger.exception("Error during login")
+                return False, None, "An unexpected error occurred. Please try again."
+            finally:
+                if cursor:
+                    cursor.close()
+
+
+class WebSessionManager:
+    """Handles study session CRUD for the web app."""
+
+    def __init__(self, db_manager):
+        self.db = db_manager
+
+    def log_study_session(self, user_id, subject, duration_minutes, mood, productivity, notes="", session_date=None):
+        """Log a new study session."""
+        with db_lock:
+            cursor = None
+            try:
+                cursor = self.db.connection.cursor()
                 if session_date is None:
                     session_date = date.today()
-                
                 cursor.execute("""
-                    INSERT INTO study_sessions (user_id, subject, duration_minutes, mood, productivity, notes, session_date)
+                    INSERT INTO study_sessions
+                        (user_id, subject, duration_minutes, mood, productivity, notes, session_date)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                 """, (user_id, subject, duration_minutes, mood, productivity, notes, session_date))
                 self.db.connection.commit()
-                
-                return True, "Study session logged successfully"
-                
-            except Exception as e:
-                return False, f"Database error: {e}"
+                return True, "Study session logged successfully!"
+            except Exception:
+                logger.exception("Error logging study session")
+                return False, "Failed to log session. Please try again."
             finally:
                 if cursor:
                     cursor.close()
-    
+
     def get_user_sessions(self, user_id, limit=None):
-        """Get all study sessions for a user"""
-        cursor = None
-        with db_lock:  # Thread safety
+        """Retrieve study sessions for a user, most recent first."""
+        with db_lock:
+            cursor = None
             try:
                 cursor = self.db.connection.cursor()
-                
+                query = """
+                    SELECT session_id, subject, duration_minutes, mood,
+                           productivity, notes, session_date, created_at
+                    FROM study_sessions
+                    WHERE user_id = ?
+                    ORDER BY session_date DESC, created_at DESC
+                """
                 if limit:
-                    cursor.execute("""
-                        SELECT session_id, subject, duration_minutes, mood, productivity, notes, session_date, created_at
-                        FROM study_sessions 
-                        WHERE user_id = ? 
-                        ORDER BY session_date DESC, created_at DESC
-                        LIMIT ?
-                    """, (user_id, limit))
+                    query += " LIMIT ?"
+                    cursor.execute(query, (user_id, limit))
                 else:
-                    cursor.execute("""
-                        SELECT session_id, subject, duration_minutes, mood, productivity, notes, session_date, created_at
-                        FROM study_sessions 
-                        WHERE user_id = ? 
-                        ORDER BY session_date DESC, created_at DESC
-                    """, (user_id,))
-                
-                sessions = cursor.fetchall()
-                return sessions
-                
-            except Exception as e:
-                print(f"Database error: {e}")
+                    cursor.execute(query, (user_id,))
+                return cursor.fetchall()
+            except Exception:
+                logger.exception("Error fetching user sessions")
                 return []
             finally:
                 if cursor:
                     cursor.close()
-    
+
     def get_total_study_time(self, user_id):
-        """Get total study time for a user"""
-        cursor = None
-        with db_lock:  # Thread safety
+        """Return total study minutes for a user."""
+        with db_lock:
+            cursor = None
             try:
                 cursor = self.db.connection.cursor()
-                cursor.execute("SELECT SUM(duration_minutes) FROM study_sessions WHERE user_id = ?", (user_id,))
+                cursor.execute(
+                    "SELECT SUM(duration_minutes) FROM study_sessions WHERE user_id = ?",
+                    (user_id,),
+                )
                 result = cursor.fetchone()
-                
                 return result[0] if result[0] else 0
-                
-            except Exception as e:
-                print(f"Database error: {e}")
+            except Exception:
+                logger.exception("Error fetching total study time")
                 return 0
             finally:
                 if cursor:
                     cursor.close()
-    
+
     def get_subject_breakdown(self, user_id):
-        """Get study time breakdown by subject"""
-        cursor = None
-        with db_lock:  # Thread safety
+        """Return study time grouped by subject."""
+        with db_lock:
+            cursor = None
             try:
                 cursor = self.db.connection.cursor()
                 cursor.execute("""
-                    SELECT subject, SUM(duration_minutes) as total_minutes, COUNT(*) as session_count
-                    FROM study_sessions 
-                    WHERE user_id = ? 
+                    SELECT subject, SUM(duration_minutes) AS total_minutes, COUNT(*) AS session_count
+                    FROM study_sessions
+                    WHERE user_id = ?
                     GROUP BY subject
                     ORDER BY total_minutes DESC
                 """, (user_id,))
-                subjects = cursor.fetchall()
-                
-                return subjects
-                
-            except Exception as e:
-                print(f"Database error: {e}")
-                return []
-            finally:
-                if cursor:
-                    cursor.close()
-    
-    def get_daily_study_data(self, user_id, days=30):
-        """Get daily study data for charts"""
-        cursor = None
-        with db_lock:  # Thread safety
-            try:
-                cursor = self.db.connection.cursor()
-                cutoff_date = date.today() - timedelta(days=days)
-                
-                cursor.execute("""
-                    SELECT session_date, SUM(duration_minutes) as total_minutes
-                    FROM study_sessions 
-                    WHERE user_id = ? AND session_date >= ?
-                    GROUP BY session_date
-                    ORDER BY session_date
-                """, (user_id, cutoff_date))
-                
-                data = cursor.fetchall()
-                return data
-                
-            except Exception as e:
-                print(f"Database error: {e}")
+                return cursor.fetchall()
+            except Exception:
+                logger.exception("Error fetching subject breakdown")
                 return []
             finally:
                 if cursor:
                     cursor.close()
 
-# Initialize managers
+    def get_daily_study_data(self, user_id, days=30):
+        """Return daily aggregated study data for charts."""
+        with db_lock:
+            cursor = None
+            try:
+                cursor = self.db.connection.cursor()
+                cutoff_date = date.today() - timedelta(days=days)
+                cursor.execute("""
+                    SELECT session_date, SUM(duration_minutes) AS total_minutes
+                    FROM study_sessions
+                    WHERE user_id = ? AND session_date >= ?
+                    GROUP BY session_date
+                    ORDER BY session_date
+                """, (user_id, cutoff_date))
+                return cursor.fetchall()
+            except Exception:
+                logger.exception("Error fetching daily study data")
+                return []
+            finally:
+                if cursor:
+                    cursor.close()
+
+
 def init_managers():
+    """Initialise database and all manager instances."""
     global db, user_manager, session_manager, pomodoro_manager, friend_manager
     db = initialize_database()
     if db:
@@ -222,14 +358,15 @@ def init_managers():
         session_manager = WebSessionManager(db)
         pomodoro_manager = PomodoroManager(db)
         friend_manager = FriendManager(db)
-        
-        # Create charts directory if it doesn't exist
+
         charts_dir = os.path.join('static', 'charts')
-        if not os.path.exists(charts_dir):
-            os.makedirs(charts_dir)
-        
+        os.makedirs(charts_dir, exist_ok=True)
         return True
     return False
+
+# ---------------------------------------------------------------------------
+# Routes — Public
+# ---------------------------------------------------------------------------
 
 @app.route('/')
 def index():
@@ -237,44 +374,57 @@ def index():
         return redirect(url_for('dashboard'))
     return render_template('index.html')
 
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        confirm_password = request.form['confirm_password']
-        
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
+
+        # Validation
+        err = _validate_username(username)
+        if err:
+            flash(err, 'error')
+            return render_template('register.html')
+
+        err = _validate_password(password)
+        if err:
+            flash(err, 'error')
+            return render_template('register.html')
+
         if password != confirm_password:
             flash('Passwords do not match!', 'error')
             return render_template('register.html')
-        
+
         success, message = user_manager.register_user(username, password)
-        
         if success:
             flash(message, 'success')
             return redirect(url_for('login'))
         else:
             flash(message, 'error')
-    
+
     return render_template('register.html')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+
         success, user_data, message = user_manager.login_user(username, password)
-        
         if success:
             session['user_id'] = user_data['user_id']
             session['username'] = user_data['username']
+            session.permanent = True
             flash(message, 'success')
             return redirect(url_for('dashboard'))
         else:
             flash(message, 'error')
-    
+
     return render_template('login.html')
+
 
 @app.route('/logout')
 def logout():
@@ -282,405 +432,400 @@ def logout():
     flash('Logged out successfully!', 'success')
     return redirect(url_for('index'))
 
+# ---------------------------------------------------------------------------
+# Routes — Authenticated pages
+# ---------------------------------------------------------------------------
+
 @app.route('/dashboard')
+@login_required
 def dashboard():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    
     user_id = session['user_id']
-    
-    # Get summary data including Pomodoro sessions
+
     study_time_data = pomodoro_manager.get_total_study_time_including_pomodoros(user_id)
     subjects_data = session_manager.get_subject_breakdown(user_id)
     recent_sessions = session_manager.get_user_sessions(user_id, 5)
     pomodoro_stats = pomodoro_manager.get_user_pomodoro_stats(user_id)
-    
-    # Debug: Print the study time data
-    print(f"DEBUG - Study time data: {study_time_data}")
-    print(f"DEBUG - Pomodoro stats: {pomodoro_stats}")
-    
-    # Use combined time from regular sessions and Pomodoros
+
     total_hours = study_time_data['total_hours']
     total_mins = study_time_data['remaining_minutes']
-    
-    return render_template('dashboard.html', 
-                         total_hours=total_hours,
-                         total_mins=total_mins,
-                         pomodoro_stats=pomodoro_stats,
-                         subjects_data=subjects_data,
-                         recent_sessions=recent_sessions)
+
+    return render_template(
+        'dashboard.html',
+        total_hours=total_hours,
+        total_mins=total_mins,
+        pomodoro_stats=pomodoro_stats,
+        subjects_data=subjects_data,
+        recent_sessions=recent_sessions,
+    )
+
 
 @app.route('/log_session', methods=['GET', 'POST'])
+@login_required
 def log_session():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    
     if request.method == 'POST':
         user_id = session['user_id']
-        subject = request.form['subject']
-        duration = int(request.form['duration'])
-        mood = request.form['mood']
-        productivity = request.form['productivity']
-        notes = request.form['notes']
-        
+        subject = request.form.get('subject', '').strip()
+        raw_duration = request.form.get('duration', '')
+        mood = request.form.get('mood', '')
+        productivity = request.form.get('productivity', '')
+        notes = request.form.get('notes', '').strip()
+
+        # Validate inputs
+        err = _validate_subject(subject)
+        if err:
+            flash(err, 'error')
+            return render_template('log_session.html')
+
+        duration, err = _validate_duration(raw_duration)
+        if err:
+            flash(err, 'error')
+            return render_template('log_session.html')
+
+        err = _validate_notes(notes)
+        if err:
+            flash(err, 'error')
+            return render_template('log_session.html')
+
+        # Validate mood and productivity against allowed values
+        allowed_moods = {'excellent', 'good', 'fair', 'poor'}
+        allowed_productivity = {'very_high', 'high', 'medium', 'low', 'very_low'}
+        if mood not in allowed_moods:
+            flash('Invalid mood selection.', 'error')
+            return render_template('log_session.html')
+        if productivity not in allowed_productivity:
+            flash('Invalid productivity selection.', 'error')
+            return render_template('log_session.html')
+
         # Handle session date
         session_date_str = request.form.get('session_date')
+        session_date = None
         if session_date_str:
-            session_date = datetime.strptime(session_date_str, '%Y-%m-%d').date()
-        else:
-            session_date = None
-        
+            try:
+                session_date = datetime.strptime(session_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                flash('Invalid date format.', 'error')
+                return render_template('log_session.html')
+
         success, message = session_manager.log_study_session(
-            user_id, subject, duration, mood, productivity, notes, session_date
+            user_id, subject, duration, mood, productivity, notes, session_date,
         )
-        
         if success:
             flash(message, 'success')
             return redirect(url_for('dashboard'))
         else:
             flash(message, 'error')
-    
+
     return render_template('log_session.html')
 
+
 @app.route('/sessions')
+@login_required
 def sessions():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    
     user_id = session['user_id']
     all_sessions = session_manager.get_user_sessions(user_id)
-    
     return render_template('sessions.html', sessions=all_sessions)
 
+
 @app.route('/analytics')
+@login_required
 def analytics():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    
     user_id = session['user_id']
-    
-    # Get analytics data
     total_time = session_manager.get_total_study_time(user_id)
     subjects_data = session_manager.get_subject_breakdown(user_id)
     daily_data = session_manager.get_daily_study_data(user_id, 30)
-    
-    return render_template('analytics.html',
-                         total_time=total_time,
-                         subjects_data=subjects_data,
-                         daily_data=daily_data)
+    return render_template(
+        'analytics.html',
+        total_time=total_time,
+        subjects_data=subjects_data,
+        daily_data=daily_data,
+    )
+
+# ---------------------------------------------------------------------------
+# Routes — Chart generation (served from memory, not filesystem)
+# ---------------------------------------------------------------------------
 
 @app.route('/chart/<chart_type>')
+@login_required
 def generate_chart(chart_type):
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    
     user_id = session['user_id']
-    
     if chart_type == 'subject_pie':
-        return generate_subject_pie_chart(user_id)
+        return _generate_subject_pie_chart(user_id)
     elif chart_type == 'daily_timeline':
-        return generate_daily_timeline_chart(user_id)
-    
-    return "Chart type not found", 404
+        return _generate_daily_timeline_chart(user_id)
+    return jsonify({'error': 'Chart type not found'}), 404
 
-def generate_subject_pie_chart(user_id):
-    """Generate pie chart for subject distribution"""
+
+def _generate_subject_pie_chart(user_id):
+    """Generate and serve a subject-distribution pie chart from memory."""
     subjects_data = session_manager.get_subject_breakdown(user_id)
-    
     if not subjects_data:
-        return "No data available", 404
-    
+        return jsonify({'error': 'No data available'}), 404
+
     subjects = [item[0] for item in subjects_data]
     minutes = [item[1] for item in subjects_data]
-    hours = [m/60 for m in minutes]
-    
-    plt.figure(figsize=(10, 8))
-    colors = plt.cm.Set3(np.linspace(0, 1, len(subjects)))
-    
-    wedges, texts, autotexts = plt.pie(hours, labels=subjects, autopct='%1.1f%%', 
-                                      colors=colors, startangle=90)
-    
-    plt.title('Study Time Distribution by Subject', fontsize=16, fontweight='bold')
-    plt.axis('equal')
-    
-    # Save to static directory
-    chart_path = os.path.join('static', 'charts', f'subject_pie_{user_id}.png')
-    plt.savefig(chart_path, dpi=300, bbox_inches='tight')
-    plt.close()
-    
-    return send_file(chart_path, mimetype='image/png')
+    hours = [m / 60 for m in minutes]
 
-def generate_daily_timeline_chart(user_id):
-    """Generate daily timeline chart"""
+    fig, ax = plt.subplots(figsize=(10, 8))
+    colors = plt.cm.Set3(np.linspace(0, 1, len(subjects)))
+    ax.pie(hours, labels=subjects, autopct='%1.1f%%', colors=colors, startangle=90)
+    ax.set_title('Study Time Distribution by Subject', fontsize=16, fontweight='bold')
+    ax.axis('equal')
+
+    buf = BytesIO()
+    fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')
+    plt.close(fig)
+    buf.seek(0)
+    return send_file(buf, mimetype='image/png')
+
+
+def _generate_daily_timeline_chart(user_id):
+    """Generate and serve a daily-study-time line chart from memory."""
     daily_data = session_manager.get_daily_study_data(user_id, 30)
-    
     if not daily_data:
-        return "No data available", 404
-    
+        return jsonify({'error': 'No data available'}), 404
+
     dates = [item[0] for item in daily_data]
     minutes = [item[1] for item in daily_data]
-    hours = [m/60 for m in minutes]
-    
-    plt.figure(figsize=(12, 6))
-    plt.plot(dates, hours, marker='o', linewidth=2, markersize=6, color='#2E86AB')
-    plt.fill_between(dates, hours, alpha=0.3, color='#2E86AB')
-    
-    plt.xlabel('Date', fontsize=12)
-    plt.ylabel('Study Hours', fontsize=12)
-    plt.title('Daily Study Time - Last 30 Days', fontsize=16, fontweight='bold')
+    hours = [m / 60 for m in minutes]
+
+    fig, ax = plt.subplots(figsize=(12, 6))
+    ax.plot(dates, hours, marker='o', linewidth=2, markersize=6, color='#2E86AB')
+    ax.fill_between(dates, hours, alpha=0.3, color='#2E86AB')
+    ax.set_xlabel('Date', fontsize=12)
+    ax.set_ylabel('Study Hours', fontsize=12)
+    ax.set_title('Daily Study Time — Last 30 Days', fontsize=16, fontweight='bold')
     plt.xticks(rotation=45)
-    plt.grid(True, alpha=0.3)
-    
-    # Add average line
+    ax.grid(True, alpha=0.3)
+
     if hours:
         avg_hours = sum(hours) / len(hours)
-        plt.axhline(y=avg_hours, color='red', linestyle='--', alpha=0.7, 
+        ax.axhline(y=avg_hours, color='red', linestyle='--', alpha=0.7,
                    label=f'Average: {avg_hours:.1f}h')
-        plt.legend()
-    
-    plt.tight_layout()
-    
-    # Save to static directory
-    chart_path = os.path.join('static', 'charts', f'daily_timeline_{user_id}.png')
-    plt.savefig(chart_path, dpi=300, bbox_inches='tight')
-    plt.close()
-    
-    return send_file(chart_path, mimetype='image/png')
+        ax.legend()
+
+    fig.tight_layout()
+    buf = BytesIO()
+    fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')
+    plt.close(fig)
+    buf.seek(0)
+    return send_file(buf, mimetype='image/png')
+
+# ---------------------------------------------------------------------------
+# API — Subject data
+# ---------------------------------------------------------------------------
 
 @app.route('/api/subjects')
+@api_login_required
 def api_subjects():
-    """API endpoint for subject data"""
-    if 'user_id' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
-    
+    """Return subject breakdown as JSON."""
     user_id = session['user_id']
     subjects_data = session_manager.get_subject_breakdown(user_id)
-    
-    data = {
+    return jsonify({
         'subjects': [item[0] for item in subjects_data],
-        'hours': [item[1]/60 for item in subjects_data]
-    }
-    
-    return jsonify(data)
+        'hours': [item[1] / 60 for item in subjects_data],
+    })
 
-# Pomodoro Timer Routes
+# ---------------------------------------------------------------------------
+# Routes — Pomodoro Timer
+# ---------------------------------------------------------------------------
+
 @app.route('/pomodoro')
+@login_required
 def pomodoro():
-    """Display Pomodoro Timer page"""
-    if 'user_id' not in session:
-        flash('Please log in to access the Pomodoro timer', 'error')
-        return redirect(url_for('login'))
-    
+    """Display Pomodoro Timer page."""
     user_id = session['user_id']
-    pomodoro_stats = pomodoro_manager.get_user_pomodoro_stats(user_id)
+    pomo_stats = pomodoro_manager.get_user_pomodoro_stats(user_id)
     recent_sessions = pomodoro_manager.get_recent_pomodoro_sessions(user_id, 5)
-    
-    return render_template('pomodoro.html', 
-                         pomodoro_stats=pomodoro_stats, 
-                         recent_sessions=recent_sessions)
+    return render_template(
+        'pomodoro.html',
+        pomodoro_stats=pomo_stats,
+        recent_sessions=recent_sessions,
+    )
+
 
 @app.route('/api/pomodoro/start', methods=['POST'])
+@api_login_required
 def start_pomodoro():
-    """Start a new Pomodoro session"""
-    if 'user_id' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
-    
-    data = request.get_json()
+    """Start a new Pomodoro session."""
+    data = request.get_json(silent=True) or {}
     subject = data.get('subject', '').strip()
-    
-    if not subject:
-        return jsonify({'error': 'Subject is required'}), 400
-    
+
+    err = _validate_subject(subject)
+    if err:
+        return jsonify({'error': err}), 400
+
     success, session_id, message = pomodoro_manager.start_pomodoro_session(
-        session['user_id'], subject
+        session['user_id'], subject,
     )
-    
     if success:
-        return jsonify({
-            'success': True, 
-            'session_id': session_id, 
-            'message': message
-        })
-    else:
-        return jsonify({'error': message}), 500
+        return jsonify({'success': True, 'session_id': session_id, 'message': message})
+    return jsonify({'error': message}), 500
+
 
 @app.route('/api/pomodoro/complete', methods=['POST'])
+@api_login_required
 def complete_pomodoro():
-    """Complete a Pomodoro session"""
-    if 'user_id' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
-    
-    data = request.get_json()
+    """Complete a Pomodoro session (with ownership verification)."""
+    data = request.get_json(silent=True) or {}
     session_id = data.get('session_id')
     duration = data.get('duration', 25)
-    
-    print(f"DEBUG - Completing Pomodoro session {session_id} with duration {duration}")
-    
+
     if not session_id:
         return jsonify({'error': 'Session ID is required'}), 400
-    
+
+    # IDOR protection: verify the session belongs to this user
+    if not pomodoro_manager.verify_session_ownership(session_id, session['user_id']):
+        return jsonify({'error': 'Session not found'}), 404
+
     success, message = pomodoro_manager.complete_pomodoro_session(session_id, duration)
-    
-    print(f"DEBUG - Complete result: success={success}, message={message}")
-    
     if success:
         return jsonify({'success': True, 'message': message})
-    else:
-        return jsonify({'error': message}), 500
+    return jsonify({'error': message}), 500
+
 
 @app.route('/api/pomodoro/cancel', methods=['POST'])
+@api_login_required
 def cancel_pomodoro():
-    """Cancel a Pomodoro session"""
-    if 'user_id' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
-    
-    data = request.get_json()
+    """Cancel a Pomodoro session (with ownership verification)."""
+    data = request.get_json(silent=True) or {}
     session_id = data.get('session_id')
-    
+
     if not session_id:
         return jsonify({'error': 'Session ID is required'}), 400
-    
+
+    # IDOR protection
+    if not pomodoro_manager.verify_session_ownership(session_id, session['user_id']):
+        return jsonify({'error': 'Session not found'}), 404
+
     success, message = pomodoro_manager.cancel_pomodoro_session(session_id)
-    
     if success:
         return jsonify({'success': True, 'message': message})
-    else:
-        return jsonify({'error': message}), 500
+    return jsonify({'error': message}), 500
+
 
 @app.route('/api/pomodoro/stats')
+@api_login_required
 def pomodoro_stats():
-    """Get Pomodoro statistics"""
-    if 'user_id' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
-    
+    """Return Pomodoro statistics as JSON."""
     user_id = session['user_id']
     stats = pomodoro_manager.get_user_pomodoro_stats(user_id)
-    
     return jsonify(stats)
 
-# Friend Management Routes
+# ---------------------------------------------------------------------------
+# Routes — Friend Management
+# ---------------------------------------------------------------------------
+
 @app.route('/friends')
+@login_required
 def friends():
-    """Display friends page"""
-    if 'user_id' not in session:
-        flash('Please log in to view friends', 'error')
-        return redirect(url_for('login'))
-    
+    """Display friends page."""
     user_id = session['user_id']
     friends_list = friend_manager.get_friends_list(user_id)
     pending_requests = friend_manager.get_pending_requests(user_id)
     friends_progress = friend_manager.get_friends_progress(user_id)
     active_timers = friend_manager.get_active_friend_timers(user_id)
-    
-    return render_template('friends.html', 
-                         friends=friends_list,
-                         pending_requests=pending_requests,
-                         friends_progress=friends_progress,
-                         active_timers=active_timers)
+    return render_template(
+        'friends.html',
+        friends=friends_list,
+        pending_requests=pending_requests,
+        friends_progress=friends_progress,
+        active_timers=active_timers,
+    )
+
 
 @app.route('/api/friends/send_request', methods=['POST'])
+@api_login_required
 def send_friend_request():
-    """Send a friend request"""
-    if 'user_id' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
-    
-    data = request.get_json()
-    friend_username = data.get('username')
-    
+    """Send a friend request."""
+    data = request.get_json(silent=True) or {}
+    friend_username = data.get('username', '').strip()
+
     if not friend_username:
-        return jsonify({'error': 'Username required'}), 400
-    
+        return jsonify({'error': 'Username is required'}), 400
+
     user_id = session['user_id']
     success, message = friend_manager.send_friend_request(user_id, friend_username)
-    
     if success:
         return jsonify({'success': True, 'message': message})
-    else:
-        return jsonify({'error': message}), 400
+    return jsonify({'error': message}), 400
+
 
 @app.route('/api/friends/respond', methods=['POST'])
+@api_login_required
 def respond_friend_request():
-    """Accept or reject a friend request"""
-    if 'user_id' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
-    
-    data = request.get_json()
+    """Accept or reject a friend request."""
+    data = request.get_json(silent=True) or {}
     friendship_id = data.get('friendship_id')
     accept = data.get('accept', False)
-    
+
     if not friendship_id:
-        return jsonify({'error': 'Friendship ID required'}), 400
-    
+        return jsonify({'error': 'Friendship ID is required'}), 400
+
     user_id = session['user_id']
     success, message = friend_manager.respond_to_request(friendship_id, user_id, accept)
-    
     if success:
         return jsonify({'success': True, 'message': message})
-    else:
-        return jsonify({'error': message}), 400
+    return jsonify({'error': message}), 400
+
 
 @app.route('/api/friends/remove', methods=['POST'])
+@api_login_required
 def remove_friend():
-    """Remove a friend"""
-    if 'user_id' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
-    
-    data = request.get_json()
+    """Remove a friend."""
+    data = request.get_json(silent=True) or {}
     friend_id = data.get('friend_id')
-    
+
     if not friend_id:
-        return jsonify({'error': 'Friend ID required'}), 400
-    
+        return jsonify({'error': 'Friend ID is required'}), 400
+
     user_id = session['user_id']
     success, message = friend_manager.remove_friend(user_id, friend_id)
-    
     if success:
         return jsonify({'success': True, 'message': message})
-    else:
-        return jsonify({'error': message}), 400
+    return jsonify({'error': message}), 400
+
 
 @app.route('/api/friends/active_timers')
+@api_login_required
 def get_active_timers():
-    """Get active timers for all friends"""
-    if 'user_id' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
-    
+    """Return active timers for all friends as JSON."""
     user_id = session['user_id']
     active_timers = friend_manager.get_active_friend_timers(user_id)
-    
     return jsonify({'timers': active_timers})
 
+
 @app.route('/api/timer/update', methods=['POST'])
+@api_login_required
 def update_timer():
-    """Update active timer status"""
-    if 'user_id' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
-    
-    data = request.get_json()
+    """Update active timer status for friend visibility."""
+    data = request.get_json(silent=True) or {}
     session_id = data.get('session_id')
     subject = data.get('subject')
     duration_minutes = data.get('duration_minutes')
     time_remaining = data.get('time_remaining')
     is_break = data.get('is_break', False)
-    
+
     user_id = session['user_id']
     success = friend_manager.update_active_timer(
-        user_id, session_id, subject, duration_minutes, time_remaining, is_break
+        user_id, session_id, subject, duration_minutes, time_remaining, is_break,
     )
-    
     if success:
         return jsonify({'success': True})
-    else:
-        return jsonify({'error': 'Failed to update timer'}), 500# Initialize managers at module load time (needed for gunicorn)
+    return jsonify({'error': 'Failed to update timer'}), 500
+
+# ---------------------------------------------------------------------------
+# Application startup
+# ---------------------------------------------------------------------------
+
+# Initialise managers at module load time (needed for gunicorn)
 init_managers()
 
 if __name__ == '__main__':
     if user_manager:
-        print("🚀 Starting StudyLogix Web App...")
-        print("📱 Open your browser and go to: http://localhost:5000")
-        import os
+        logger.info("🚀 Starting StudyLogix Web App...")
+        logger.info("📱 Open your browser and go to: http://localhost:5000")
         port = int(os.environ.get('PORT', 5000))
         debug = os.environ.get('FLASK_ENV') != 'production'
         app.run(debug=debug, host='0.0.0.0', port=port)
     else:
-        print("❌ Failed to initialize database!")
+        logger.error("❌ Failed to initialize database!")

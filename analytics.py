@@ -1,3 +1,11 @@
+"""
+StudyLogix — CLI Analytics (not used by the web application)
+
+This module provides matplotlib-based chart generation and CSV export for
+command-line usage.  The web application generates its own charts via
+Chart.js (client-side) and server-side matplotlib in app.py.
+"""
+
 import matplotlib.pyplot as plt
 import pandas as pd
 from datetime import datetime, timedelta, date

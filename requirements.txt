@@ -1,8 +1,7 @@
-setuptools
-flask
-pandas
-bcrypt
-numpy
-werkzeug
-gunicorn
-matplotlib 
+flask>=3.0,<4.0
+bcrypt>=4.1,<5.0
+werkzeug>=3.0,<4.0
+gunicorn>=22.0,<23.0
+matplotlib>=3.8,<4.0
+numpy>=1.26,<3.0
+pandas>=2.1,<3.0

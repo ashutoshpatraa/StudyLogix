@@ -38,7 +38,11 @@ env/
 Thumbs.db
 
 # Database
+*.db
 *.db-journal
+
+# Generated charts
+static/charts/
 
 # Logs
 *.log

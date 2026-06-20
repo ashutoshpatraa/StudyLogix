@@ -1,3 +1,12 @@
+"""
+StudyLogix — CLI Managers (not used by the web application)
+
+These classes (UserManager, StudySessionManager, GoalManager) provide a
+command-line interface to the database.  The web app uses its own
+WebUserManager and WebSessionManager defined in app.py.  This module is
+kept for potential CLI tooling and as a reference implementation.
+"""
+
 from database import DatabaseManager
 import sqlite3
 from datetime import date, timedelta

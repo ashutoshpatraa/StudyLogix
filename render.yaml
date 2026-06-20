@@ -1,8 +1,13 @@
+# ===========================================================================
+# StudyLogix — Render.com Deployment Configuration
+# ===========================================================================
+# Docs: https://render.com/docs/blueprint-spec
+
 services:
   - type: web
     name: studylogix
     env: python
-    pythonVersion: 3.12
+    pythonVersion: "3.12"
     region: oregon
     plan: free
     buildCommand: "pip install -r requirements.txt"
@@ -10,10 +15,10 @@ services:
     envVars:
       - key: FLASK_ENV
         value: production
-    disk:
-      name: studylogix-data
-      mountPath: /opt/render/project/src
-      sizeGB: 1
+      - key: SECRET_KEY
+        generateValue: true   # Render auto-generates a secure random value
+      - key: PYTHON_VERSION
+        value: "3.12"
     disk:
       name: studylogix-data
       mountPath: /opt/render/project/src

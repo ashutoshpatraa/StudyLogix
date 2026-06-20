@@ -1,302 +1,305 @@
-# StudyLogix - Nothing OS Design System
+<div align="center">
 
-![StudyLogix Logo](https://img.shields.io/badge/StudyLogix-Nothing%20OS-black?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiIHN0cm9rZT0iI0ZGRkZGRiIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Im04IDEybDIgMiA0LTQiIHN0cm9rZT0iI0ZGRkZGRiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+)
+# 📚 StudyLogix
 
-A comprehensive **Nothing OS-inspired** web application for tracking study sessions with advanced analytics, Pomodoro timer, and glassmorphism UI design.
+**Track • Analyse • Optimise Your Learning**
 
-## ✨ Features
+[![Python](https://img.shields.io/badge/Python-3.8%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/Flask-3.x-000000?logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
+[![SQLite](https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-### 🎯 Core Study Features
-- **User Management**: Secure login/signup system with bcrypt password hashing
-- **Study Session Logging**: Track subject, duration, mood, and productivity levels
-- **Analytics Dashboard**: Comprehensive study time analysis and subject breakdowns
-- **Goal Setting**: Set and track weekly study targets with visual progress indicators
-- **Pomodoro Timer**: Built-in focus timer with floating orb interface
+A beautifully designed, **Nothing OS-inspired** web application for tracking study sessions, managing Pomodoro focus timers, viewing analytics, and studying with friends — all wrapped in a glassmorphism UI with ambient animations.
 
-### 🎨 Nothing OS Design System
-- **Glassmorphism UI**: Frosted glass effects and ambient backgrounds
-- **DotGothic16 Typography**: Authentic Nothing OS font styling
-- **Floating Navigation**: Seamless orbital navigation system
-- **Ambient Animations**: Subtle floating elements and breathing effects
-- **Terminal Aesthetics**: Monospace inputs with glow effects
-- **Dark Theme**: Consistent Nothing OS black and white color palette
+[Getting Started](#-quick-start) · [Screenshots](#-screenshots) · [Deploy on Render](#-deploy-to-rendercom) · [Contributing](#-contributing)
 
-### 🚀 Technical Features
-- **SQLite Database**: Zero-configuration local database (no server required)
-- **Flask Web Framework**: Modern Python web application
-- **Responsive Design**: Mobile-friendly interface
-- **Real-time Updates**: Live session tracking and analytics
-- **Data Persistence**: Automatic database initialization
+</div>
 
-## 📋 Requirements
+---
 
-- **Python 3.7+**
-- **Modern Web Browser** (Chrome, Firefox, Safari, Edge)
-- **No external database server required** (uses SQLite)
+## ✨ Key Features
 
-## 🛠️ Quick Installation
+| Feature | Description |
+|---------|-------------|
+| 🔐 **Secure Auth** | User registration & login with **bcrypt** password hashing, session security, and HTTP security headers |
+| 📝 **Session Logging** | Record subject, duration, mood, and productivity for every study session |
+| 🍅 **Pomodoro Timer** | Immersive floating-orb focus timer with work/break cycles and live notifications |
+| 📊 **Analytics Dashboard** | Interactive Chart.js graphs showing daily trends, subject breakdowns, and productivity patterns |
+| 👥 **Friends & Live Timers** | Add friends, track weekly progress, and see who is studying right now |
+| 🎯 **Goal Tracking** | Set weekly study targets and monitor progress with visual indicators |
+| 🌗 **Dark / Light Theme** | Toggle between themes with `Alt + T` — preference saved locally |
+| 📱 **Responsive Design** | Mobile-first layout that works on phones, tablets, and desktops |
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/ashutoshpatraa/StudyLogix.git
-   cd StudyLogix
-   ```
+---
 
-2. **Install dependencies:**
-   ```bash
-   pip install flask bcrypt werkzeug
-   ```
+## 📸 Screenshots
 
-3. **Run the application:**
-   ```bash
-   python app.py
-   ```
+| Landing Page | Login |
+|:---:|:---:|
+| ![Landing](photos/index.png) | ![Login](photos/login.png) |
 
-4. **Open in browser:**
-   ```
-   http://localhost:5000
-   ```
+| Dashboard | Pomodoro Timer |
+|:---:|:---:|
+| ![Dashboard](photos/dashboard.png) | ![Timer](photos/timer.png) |
 
-That's it! The SQLite database will be created automatically on first run.
+---
 
-## � Screenshots
+## 🛠️ Tech Stack
 
-### 🏠 Landing Page
-![StudyLogix Landing Page](photos/index.png)
-*Nothing OS-inspired landing page with glassmorphism effects and floating navigation*
+| Layer | Technology |
+|-------|-----------|
+| **Backend** | Python · Flask · Gunicorn |
+| **Database** | SQLite (zero-config, file-based) |
+| **Auth** | bcrypt password hashing |
+| **Frontend** | Jinja2 templates · Bootstrap 5 · Chart.js · Font Awesome |
+| **Design** | Nothing OS glassmorphism · DotGothic16 / JetBrains Mono fonts |
+| **Deployment** | Render.com · Docker (optional) |
 
-### 🔐 Authentication
-![StudyLogix Login](photos/login.png)
-*Clean login interface with terminal-style inputs and ambient background*
+---
 
-### 📊 Dashboard
-![StudyLogix Dashboard](photos/dashboard.png)
-*Comprehensive dashboard showing study progress, analytics, and goal tracking*
+## 🚀 Quick Start
 
-### 🍅 Pomodoro Timer
-![StudyLogix Timer](photos/timer.png)
-*Floating orb Pomodoro timer with Nothing OS design aesthetics*
+### Prerequisites
 
-## �🗄️ Database Schema
+- **Python 3.8+** — [Download](https://www.python.org/downloads/)
+- **pip** (comes with Python)
+- A modern browser (Chrome, Firefox, Safari, Edge)
 
-StudyLogix uses SQLite with the following tables:
+### 1. Clone the repository
 
-### 👤 Users Table
-```sql
-CREATE TABLE users (
-    user_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    password_hash BLOB NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-### 📚 Study Sessions Table
-```sql
-CREATE TABLE study_sessions (
-    session_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    subject TEXT NOT NULL,
-    duration_minutes INTEGER NOT NULL,
-    mood TEXT CHECK(mood IN ('excellent', 'good', 'fair', 'poor')) NOT NULL,
-    productivity TEXT CHECK(productivity IN ('very_high', 'high', 'medium', 'low', 'very_low')) NOT NULL,
-    notes TEXT,
-    session_date DATE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-);
-```
-
-### 🎯 Study Goals Table
-```sql
-CREATE TABLE study_goals (
-    goal_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    subject TEXT NOT NULL,
-    weekly_target_minutes INTEGER NOT NULL,
-    week_start_date DATE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    UNIQUE(user_id, subject, week_start_date)
-);
-```
-
-### 🍅 Pomodoro Sessions Table
-```sql
-CREATE TABLE pomodoro_sessions (
-    session_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    subject TEXT NOT NULL,
-    duration_minutes INTEGER DEFAULT 25,
-    status TEXT CHECK(status IN ('active', 'completed', 'cancelled')) DEFAULT 'active',
-    started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    completed_at TIMESTAMP,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-);
-```
-
-## 🎮 Usage Guide
-
-### 🚀 Getting Started
-1. **Launch the app**: Run `python app.py` and visit `http://localhost:5000`
-2. **Create Account**: Register with username, email, and password
-3. **Login**: Access your personalized dashboard
-4. **Start Studying**: Use the Pomodoro timer or log manual sessions
-
-### 📊 Dashboard Features
-- **Today's Progress**: Real-time study time tracking
-- **Subject Breakdown**: Visual analysis of study distribution
-- **Goal Progress**: Weekly target tracking with progress bars
-- **Recent Sessions**: Quick overview of latest study activities
-
-### 🍅 Pomodoro Timer
-- **25-minute Focus Sessions**: Classic Pomodoro technique
-- **Floating Orb Interface**: Nothing OS-inspired timer design
-- **Subject Tracking**: Link sessions to specific subjects
-- **Break Reminders**: Automatic break suggestions
-
-### 📈 Analytics
-- **Total Study Time**: Lifetime and weekly summaries
-- **Subject Analysis**: Time distribution across subjects
-- **Productivity Trends**: Mood and productivity tracking
-- **Goal Achievement**: Weekly target progress monitoring
-
-## 📁 File Structure
-
-```
-StudyLogix/
-├── app.py                    # Main Flask application
-├── database.py               # SQLite database management
-├── managers.py               # User, Session, and Goal managers
-├── pomodoro_manager.py       # Pomodoro timer logic
-├── analytics.py              # Data analysis and insights
-├── requirements.txt          # Python dependencies
-├── study_tracker.db          # SQLite database (auto-created)
-├── static/
-│   ├── css/
-│   │   └── nothing-os.css    # Nothing OS design system
-│   └── js/
-│       ├── dashboard.js      # Dashboard functionality
-│       ├── pomodoro.js       # Timer functionality
-│       └── analytics.js      # Charts and analytics
-└── templates/
-    ├── base.html             # Base template
-    ├── index.html            # Landing page
-    ├── login.html            # User authentication
-    ├── register.html         # User registration
-    ├── dashboard.html        # Main dashboard
-    ├── pomodoro.html         # Pomodoro timer
-    ├── sessions.html         # Session history
-    ├── log_session.html      # Manual session logging
-    └── analytics.html        # Analytics and insights
-```
-
-## 🎨 Nothing OS Design Elements
-
-### 🌌 Visual Design
-- **Glassmorphism**: Frosted glass cards with backdrop blur
-- **Ambient Backgrounds**: Subtle gradient animations
-- **Floating Elements**: Orbital navigation and breathing effects
-- **Typography**: DotGothic16 font for authentic Nothing OS feel
-
-### 🎭 Interactive Elements
-- **Hover Effects**: Smooth transitions and glow effects
-- **Focus States**: Terminal-style input highlighting
-- **Button Animations**: Scale and glow transformations
-- **Loading States**: Elegant progress indicators
-
-### 📱 Responsive Design
-- **Mobile-First**: Optimized for all screen sizes
-- **Touch-Friendly**: Large tap targets and gestures
-- **Performance**: Lightweight CSS animations
-- **Accessibility**: High contrast and keyboard navigation
-
-## 🔧 Configuration
-
-### Environment Variables (Optional)
 ```bash
-# Database configuration
-FLASK_ENV=development
-FLASK_DEBUG=True
-
-# Security
-SECRET_KEY=your-secret-key-here
+git clone https://github.com/ashutoshpatraa/StudyLogix.git
+cd StudyLogix
 ```
 
-### Customization
-- **Timer Duration**: Modify Pomodoro duration in `pomodoro_manager.py`
-- **UI Colors**: Update CSS variables in `nothing-os.css`
-- **Database**: Extend schema in `database.py`
+### 2. Create a virtual environment (recommended)
 
-## 🚀 Deployment
+```bash
+python -m venv .venv
+source .venv/bin/activate      # macOS / Linux
+# .venv\Scripts\activate       # Windows
+```
 
-### Local Development
+### 3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configure environment variables
+
+```bash
+cp .env.example .env
+# Edit .env and set a strong SECRET_KEY
+```
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `SECRET_KEY` | **Yes** (production) | Random bytes | Signs session cookies. Generate with `python -c "import secrets; print(secrets.token_hex(32))"` |
+| `FLASK_ENV` | No | `development` | Set to `production` for secure cookies and no debug mode |
+| `PORT` | No | `5000` | Port the server listens on |
+
+### 5. Run the application
+
 ```bash
 python app.py
 ```
 
-### Production (Example with Waitress)
-```bash
-pip install waitress
-waitress-serve --host=0.0.0.0 --port=8080 app:app
+### 6. Open in your browser
+
+```
+http://localhost:5000
 ```
 
-### Docker (Optional)
+> The SQLite database (`study_tracker.db`) is created automatically on first run. No external database server required!
+
+---
+
+## 🌐 Deploy to Render.com
+
+StudyLogix includes a [`render.yaml`](render.yaml) blueprint for **one-click deployment** on [Render](https://render.com/).
+
+### Option A — Blueprint Deploy (Fastest)
+
+1. Push your repo to GitHub (or fork [this repo](https://github.com/ashutoshpatraa/StudyLogix)).
+2. Go to [Render Dashboard → **New** → **Blueprint**](https://dashboard.render.com/select-repo?type=blueprint).
+3. Connect your GitHub account and select the **StudyLogix** repo.
+4. Render reads `render.yaml` and auto-configures everything — just click **Apply**.
+5. Wait for the build to complete. Your app will be live at `https://studylogix.onrender.com` (or your custom subdomain).
+
+### Option B — Manual Setup
+
+1. Go to [Render Dashboard → **New** → **Web Service**](https://dashboard.render.com/).
+2. Connect your GitHub repo.
+3. Configure the service:
+
+| Setting | Value |
+|---------|-------|
+| **Environment** | Python 3 |
+| **Build Command** | `pip install -r requirements.txt` |
+| **Start Command** | `gunicorn app:app` |
+| **Plan** | Free (or higher) |
+
+4. Add **environment variables** in the Render dashboard:
+
+| Key | Value |
+|-----|-------|
+| `SECRET_KEY` | *(click "Generate" for a secure random value)* |
+| `FLASK_ENV` | `production` |
+| `PYTHON_VERSION` | `3.12` |
+
+5. Add a **Persistent Disk** (required for SQLite data to survive redeploys):
+
+| Setting | Value |
+|---------|-------|
+| **Name** | `studylogix-data` |
+| **Mount Path** | `/opt/render/project/src` |
+| **Size** | 1 GB |
+
+6. Click **Create Web Service** and wait for the deploy.
+
+> **Important**: Without a persistent disk, your SQLite database will be wiped on every deploy. Always attach a disk in production.
+
+---
+
+## 🐳 Docker (Alternative)
+
 ```dockerfile
-FROM python:3.9-slim
+FROM python:3.12-slim
 WORKDIR /app
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 EXPOSE 5000
-CMD ["python", "app.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
 ```
+
+```bash
+docker build -t studylogix .
+docker run -p 5000:5000 -e SECRET_KEY=$(python -c "import secrets;print(secrets.token_hex(32))") studylogix
+```
+
+---
+
+## 🔒 Security Practices
+
+StudyLogix follows these security measures:
+
+- **Passwords** are hashed with **bcrypt** (never stored in plaintext).
+- **Session cookies** are `HttpOnly`, `SameSite=Lax`, and `Secure` in production.
+- **Secret key** is loaded from the `SECRET_KEY` environment variable.
+- **Security HTTP headers** are set on every response:
+  - `X-Content-Type-Options: nosniff`
+  - `X-Frame-Options: DENY`
+  - `Content-Security-Policy` (script/style/font allowlists)
+  - `Referrer-Policy: strict-origin-when-cross-origin`
+- **Input validation** on all user-submitted fields (username, password, subjects, durations).
+- **IDOR protection** — Pomodoro session ownership is verified before completion or cancellation.
+- **No sensitive data in logs** — database errors are logged internally; users see generic messages.
+- **XSS prevention** — DOM manipulation uses `textContent` / `createElement` instead of `innerHTML`.
+
+> **Recommendation for production**: Use HTTPS (Render provides this automatically), rotate `SECRET_KEY` periodically, and consider a proper database (PostgreSQL) for multi-instance deployments.
+
+---
+
+## 📁 Project Structure
+
+```
+StudyLogix/
+├── app.py                    # Main Flask application & routes
+├── database.py               # SQLite database manager & password hashing
+├── pomodoro_manager.py       # Pomodoro timer session logic
+├── friend_manager.py         # Friend requests, progress, & live timers
+├── managers.py               # CLI managers (UserManager, GoalManager)
+├── analytics.py              # CLI chart generation & CSV export
+├── requirements.txt          # Pinned Python dependencies
+├── render.yaml               # Render.com deployment blueprint
+├── .env.example              # Environment variable template
+├── .gitignore                # Git ignore rules
+├── photos/                   # Screenshot images for README
+│   ├── index.png
+│   ├── login.png
+│   ├── dashboard.png
+│   └── timer.png
+├── static/
+│   └── css/
+│       └── style.css         # Nothing OS design system
+└── templates/
+    ├── base.html             # Base layout with navbar & theme toggle
+    ├── index.html            # Landing page
+    ├── login.html            # Login form
+    ├── register.html         # Registration form
+    ├── dashboard.html        # Main dashboard with stats
+    ├── pomodoro.html         # Floating orb Pomodoro timer
+    ├── log_session.html      # Manual session logging form
+    ├── sessions.html         # Session history archive
+    ├── analytics.html        # Analytics with Chart.js
+    └── friends.html          # Friends list & live timers
+```
+
+---
 
 ## 🤝 Contributing
 
-We welcome contributions! Here's how to get started:
+Contributions are welcome! Follow these steps:
 
-1. **Fork the repository**
-2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
-3. **Commit changes**: `git commit -m 'Add amazing feature'`
-4. **Push to branch**: `git push origin feature/amazing-feature`
-5. **Open a Pull Request**
+1. **Fork** the repository.
+2. **Create a branch**: `git checkout -b feature/my-feature`
+3. **Commit** your changes: `git commit -m 'Add my feature'`
+4. **Push**: `git push origin feature/my-feature`
+5. **Open a Pull Request** on GitHub.
 
-### 🐛 Bug Reports
-- Use GitHub Issues
-- Include steps to reproduce
-- Provide system information
+### Guidelines
 
-### 💡 Feature Requests
-- Describe the use case
-- Explain the expected behavior
-- Consider Nothing OS design principles
+- Follow existing code style and naming conventions.
+- Add or update docstrings for new functions.
+- Keep security in mind — validate inputs, avoid `innerHTML`, never commit secrets.
+- Test your changes locally before submitting.
+
+### Reporting Issues
+
+- Use [GitHub Issues](https://github.com/ashutoshpatraa/StudyLogix/issues) to report bugs or request features.
+- Include steps to reproduce, expected vs. actual behaviour, and your Python/OS version.
+
+---
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+---
 
-- **Nothing OS**: Design inspiration and aesthetic guidelines
-- **Flask Community**: Web framework and documentation
-- **Material Design**: UI/UX principles and patterns
-- **Open Source**: All the amazing libraries that make this possible
+## 🗺️ Roadmap / Future Improvements
 
-## 📞 Support
+- [ ] PostgreSQL support for multi-instance production deployments
+- [ ] OAuth login (Google, GitHub)
+- [ ] Export study data as CSV / PDF reports
+- [ ] Study group chat and shared goals
+- [ ] Spaced repetition flashcard integration
+- [ ] Progressive Web App (PWA) with offline support
+- [ ] REST API documentation (OpenAPI / Swagger)
+- [ ] Automated test suite (pytest)
+- [ ] Rate limiting on authentication endpoints
+- [ ] Email notifications for goal milestones
 
-- **GitHub Issues**: [Report bugs and request features](https://github.com/ashutoshpatraa/StudyLogix/issues)
-- **Documentation**: Check the code comments and docstrings
-- **Community**: Share your experience and help others
+---
+
+## 🙏 Acknowledgements
+
+- **[Nothing OS](https://nothing.tech/)** — Design inspiration and aesthetic guidelines
+- **[Flask](https://flask.palletsprojects.com/)** — Lightweight Python web framework
+- **[Chart.js](https://www.chartjs.org/)** — Beautiful client-side charts
+- **[Bootstrap](https://getbootstrap.com/)** — Responsive CSS framework
+- **[Font Awesome](https://fontawesome.com/)** — Icon library
+- All the amazing **open-source libraries** that power this project
 
 ---
 
 <div align="center">
 
-**StudyLogix Made with ❤️ By Ashu**
+**Made with ❤️ by [Ashu](https://github.com/ashutoshpatraa)**
 
-[⭐ Star this repo](https://github.com/ashutoshpatraa/StudyLogix) • [🐛 Report Bug](https://github.com/ashutoshpatraa/StudyLogix/issues) • [✨ Request Feature](https://github.com/ashutoshpatraa/StudyLogix/issues)
+[⭐ Star this repo](https://github.com/ashutoshpatraa/StudyLogix) · [🐛 Report Bug](https://github.com/ashutoshpatraa/StudyLogix/issues) · [✨ Request Feature](https://github.com/ashutoshpatraa/StudyLogix/issues)
 
 </div>
