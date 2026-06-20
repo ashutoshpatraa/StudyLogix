@@ -3,11 +3,11 @@
 {% block title %}Friends - StudyLogix{% endblock %}
 
 {% block content %}
-<div style="max-width: 1400px; margin: 0 auto; padding: 24px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
-        <h1 class="nothing-h1">FRIENDS & PROGRESS</h1>
+<div class="max-w-1400 mx-auto p-6">
+    <div class="d-flex justify-between align-center mb-8">
+        <h1 class="nothing-h1 m-0">FRIENDS & PROGRESS</h1>
         <button onclick="showAddFriendModal()" class="nothing-btn">
-            <span style="font-size: 1.2rem; margin-right: 8px;">+</span>
+            <span class="text-xl mr-2">+</span>
             ADD FRIEND
         </button>
     </div>
@@ -137,19 +137,21 @@
 </div>
 
 <!-- Add Friend Modal -->
-<div id="addFriendModal" class="modal-nothing" style="display: none;">
-    <div class="modal-content-nothing">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-            <h2 class="nothing-h2">ADD FRIEND</h2>
-            <button onclick="closeAddFriendModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--nothing-text-secondary);">&times;</button>
+<div id="addFriendModal" class="modal-backdrop-nothing" role="dialog" aria-modal="true" aria-labelledby="addFriendModalLabel">
+    <div class="glass-card max-w-500 p-8">
+        <div class="d-flex justify-between align-center mb-6">
+            <h2 id="addFriendModalLabel" class="nothing-h2 m-0">ADD FRIEND</h2>
+            <button onclick="closeAddFriendModal()" class="btn-icon-plain" aria-label="Close modal">
+                <i class="fas fa-times text-muted-nothing"></i>
+            </button>
         </div>
         
-        <div style="margin-bottom: 20px;">
-            <label class="nothing-label">Friend's Username</label>
-            <input type="text" id="friendUsername" class="nothing-input" placeholder="Enter username" autocomplete="off">
+        <div class="form-group-nothing mb-5">
+            <label for="friendUsername" class="nothing-label d-block mb-2">Friend's Username</label>
+            <input type="text" id="friendUsername" class="nothing-input w-100" placeholder="Enter username" autocomplete="off">
         </div>
         
-        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+        <div class="d-flex gap-3 justify-end">
             <button onclick="closeAddFriendModal()" class="nothing-btn-outline">Cancel</button>
             <button onclick="sendFriendRequest()" class="nothing-btn">Send Request</button>
         </div>
@@ -336,29 +338,4 @@ document.getElementById('addFriendModal').addEventListener('click', (e) => {
 });
 </script>
 
-<style>
-.modal-nothing {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(4px);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-content-nothing {
-    background: var(--nothing-bg);
-    border-radius: 20px;
-    padding: 32px;
-    max-width: 500px;
-    width: 90%;
-    border: 1px solid var(--nothing-border);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-}
-</style>
 {% endblock %}

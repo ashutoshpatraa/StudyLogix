@@ -4,20 +4,20 @@
 
 {% block content %}
 <!-- Nothing OS Sessions Interface -->
-<div class="glass-card" style="margin-bottom: 32px;">
-    <div style="padding: 24px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+<div class="glass-card mb-8">
+    <div class="p-6 border-bottom-glass d-flex justify-between align-center flex-wrap gap-4">
         <div>
-            <h1 style="font-family: 'DotGothic16', monospace; font-size: 28px; color: var(--nothing-white); margin: 0; display: flex; align-items: center; gap: 16px;">
-                <i class="fas fa-database" style="color: var(--nothing-cyan);"></i>
-                SESSION ARCHIVE
+            <h1 class="font-display text-4xl text-white m-0 d-flex align-center gap-4">
+                <i class="fas fa-database text-cyan"></i>
+                SESSION_ARCHIVE
             </h1>
-            <p style="color: var(--nothing-gray-400); margin: 8px 0 0 0; font-size: 14px;">
+            <p class="text-muted-nothing text-md mt-2 mb-0">
                 STUDY HISTORY • PERFORMANCE DATA • PROGRESS ANALYSIS
             </p>
         </div>
         <a href="{{ url_for('log_session') }}" class="btn-nothing btn-nothing-primary">
             <i class="fas fa-plus-circle"></i>
-            NEW SESSION
+            NEW_SESSION
         </a>
     </div>
 </div>
@@ -25,15 +25,15 @@
 {% if sessions %}
 <!-- Sessions Data Table -->
 <div class="glass-card ambient-card">
-    <div style="padding: 24px; border-bottom: 1px solid var(--glass-border);">
-        <h3 style="font-family: 'DotGothic16', monospace; color: var(--nothing-white); margin: 0; display: flex; align-items: center; gap: 12px;">
-            <i class="fas fa-list" style="color: var(--nothing-green);"></i>
-            SESSION DATA
+    <div class="p-6 border-bottom-glass">
+        <h3 class="font-display text-lg text-white m-0 d-flex align-center gap-3">
+            <i class="fas fa-list text-green"></i>
+            SESSION_DATA
         </h3>
     </div>
     
-    <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
+    <div class="table-responsive-wrapper" tabindex="0">
+        <table class="nothing-table">
             <thead>
                 <tr style="background: var(--glass-bg); border-bottom: 2px solid var(--nothing-cyan);">
                     <th style="padding: 16px; font-family: 'DotGothic16', monospace; color: var(--nothing-cyan); font-size: 14px; text-align: left; border-right: 1px solid var(--glass-border);">
@@ -108,16 +108,16 @@
 </div>
 
 <!-- Session Statistics -->
-<div class="glass-card ambient-card" style="margin-top: 32px; animation-delay: 0.2s;">
-    <div style="padding: 24px; border-bottom: 1px solid var(--glass-border);">
-        <h3 style="font-family: 'DotGothic16', monospace; color: var(--nothing-white); margin: 0; display: flex; align-items: center; gap: 12px;">
-            <i class="fas fa-chart-bar" style="color: var(--nothing-cyan);"></i>
-            SESSION ANALYTICS
+<div class="glass-card ambient-card mt-8" style="animation-delay: 0.2s;">
+    <div class="p-6 border-bottom-glass">
+        <h3 class="font-display text-lg text-white m-0 d-flex align-center gap-3">
+            <i class="fas fa-chart-bar text-cyan"></i>
+            SESSION_ANALYTICS
         </h3>
     </div>
     
-    <div style="padding: 32px;">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;">
+    <div class="p-8">
+        <div class="d-grid gap-6" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
             <div class="stat-card-nothing">
                 <div class="stats-value-nothing" style="color: var(--nothing-cyan);">{{ sessions|length }}</div>
                 <div class="stats-label-nothing">TOTAL SESSIONS</div>
@@ -145,19 +145,19 @@
 
 {% else %}
 <!-- Empty State -->
-<div class="glass-card ambient-card" style="text-align: center; padding: 80px 40px;">
-    <div style="opacity: 0.6; margin-bottom: 32px;">
-        <i class="fas fa-database" style="font-size: 80px; color: var(--nothing-gray-500);"></i>
+<div class="glass-card ambient-card text-center p-10">
+    <div class="mb-8" style="opacity: 0.6;">
+        <i class="fas fa-database text-muted-nothing" style="font-size: 80px;"></i>
     </div>
-    <h3 style="font-family: 'DotGothic16', monospace; color: var(--nothing-white); margin-bottom: 16px;">
-        NO SESSION DATA FOUND
+    <h3 class="font-display text-2xl text-white mb-4">
+        NO_SESSION_DATA_FOUND
     </h3>
-    <p style="color: var(--nothing-gray-400); margin-bottom: 32px; font-size: 16px;">
+    <p class="text-muted-nothing text-lg mb-8">
         INITIALIZE YOUR FIRST STUDY SESSION TO BEGIN TRACKING
     </p>
-    <a href="{{ url_for('log_session') }}" class="btn-nothing btn-nothing-primary" style="padding: 16px 32px; font-size: 18px;">
+    <a href="{{ url_for('log_session') }}" class="btn-nothing btn-nothing-primary text-lg p-4">
         <i class="fas fa-rocket"></i>
-        LOG FIRST SESSION
+        LOG_FIRST_SESSION
     </a>
 </div>
 {% endif %}

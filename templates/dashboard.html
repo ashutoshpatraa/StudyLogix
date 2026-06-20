@@ -3,61 +3,70 @@
 {% block title %}DASHBOARD - STUDYLOGIX{% endblock %}
 
 {% block content %}
-<!-- Nothing OS Welcome Section -->
-<div class="welcome-section-nothing ambient-card">
-    <h1 class="welcome-title-nothing">
-        <i class="fas fa-terminal me-3" style="color: var(--nothing-cyan);"></i>
-        WELCOME, {{ session.username.upper() }}
-    </h1>
-    <p class="welcome-subtitle-nothing">SYSTEM STATUS: READY • SESSION ACTIVE • LEARNING MODE ENABLED</p>
-    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 24px;">
-        <button onclick="openQuickStartModal()" class="btn-nothing btn-nothing-primary">
-            <i class="fas fa-plus"></i>
-            NEW SESSION
-        </button>
-        <a href="{{ url_for('pomodoro') }}" class="btn-nothing">
-            <i class="fas fa-stopwatch"></i>
-            FOCUS MODE
-        </a>
-        <a href="{{ url_for('analytics') }}" class="btn-nothing">
-            <i class="fas fa-chart-line"></i>
-            ANALYTICS
-        </a>
+<!-- Nothing OS Dashboard Interface -->
+<div class="glass-card mb-8">
+    <div class="p-6 border-bottom-glass d-flex justify-between align-center flex-wrap gap-4">
+        <div>
+            <h1 class="font-display text-4xl text-white m-0 d-flex align-center gap-4">
+                <i class="fas fa-th-large text-cyan"></i>
+                COMMAND_CENTER
+            </h1>
+            <p class="text-muted-nothing text-md mt-2 mb-0">
+                WELCOME BACK, USER // {{ session.username.upper() }}
+            </p>
+        </div>
+        <div class="d-flex gap-3">
+            <button onclick="openQuickStartModal()" class="btn-nothing btn-nothing-primary">
+                <i class="fas fa-rocket"></i>
+                QUICK_START
+            </button>
+            <a href="{{ url_for('pomodoro') }}" class="btn-nothing">
+                <i class="fas fa-stopwatch"></i>
+                FOCUS_MODE
+            </a>
+        </div>
     </div>
 </div>
 
 <!-- Quick Start Modal -->
-<div id="quickStartModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 9999; backdrop-filter: blur(10px); align-items: center; justify-content: center;">
-    <div class="glass-card" style="max-width: 500px; width: 90%; padding: 32px; animation: float 6s ease-in-out infinite;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-            <h2 style="font-family: 'DotGothic16', monospace; color: var(--text-primary); margin: 0;">
-                <i class="fas fa-rocket" style="color: var(--nothing-cyan);"></i>
-                QUICK START FOCUS SESSION
-            </h2>
-            <button onclick="closeQuickStartModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer; padding: 0; width: 32px; height: 32px;">×</button>
+<div id="quickStartModal" class="modal-backdrop-nothing" role="dialog" aria-modal="true" aria-labelledby="quickStartModalLabel">
+    <div class="glass-card max-w-500 p-8" style="animation: float 6s ease-in-out infinite;">
+        <div class="d-flex justify-between align-center mb-6 border-bottom-glass pb-4">
+            <h3 id="quickStartModalLabel" class="font-display text-xl text-white m-0 d-flex align-center gap-3">
+                <i class="fas fa-rocket text-orange"></i>
+                INITIALIZE_QUICK_START
+            </h3>
+            <button onclick="closeQuickStartModal()" class="btn-icon-plain" aria-label="Close modal">
+                <i class="fas fa-times text-muted-nothing"></i>
+            </button>
         </div>
         
-        <form id="quickStartForm" style="display: flex; flex-direction: column; gap: 20px;">
+        <form id="quickStartForm" class="d-flex flex-column gap-6">
             <div class="form-group-nothing">
-                <label style="display: flex; align-items: center; gap: 12px; color: var(--text-secondary); font-family: 'DotGothic16', monospace; font-size: 14px; margin-bottom: 8px;">
-                    <i class="fas fa-book" style="color: var(--nothing-cyan);"></i>
+                <label for="quickSubject" class="d-flex align-center gap-3 text-muted-nothing font-display text-md mb-2">
+                    <i class="fas fa-book text-cyan"></i>
                     SUBJECT
                 </label>
-                <input type="text" id="quickSubject" class="form-control-nothing" placeholder="ENTER_SUBJECT" required style="font-family: 'JetBrains Mono', monospace;">
+                <input type="text" id="quickSubject" class="form-control-nothing font-mono" placeholder="ENTER_SUBJECT" required>
             </div>
             
             <div class="form-group-nothing">
-                <label style="display: flex; align-items: center; gap: 12px; color: var(--text-secondary); font-family: 'DotGothic16', monospace; font-size: 14px; margin-bottom: 8px;">
-                    <i class="fas fa-clock" style="color: var(--nothing-orange);"></i>
-                    DURATION (MINUTES)
+                <label for="quickDuration" class="d-flex align-center gap-3 text-muted-nothing font-display text-md mb-2">
+                    <i class="fas fa-clock text-green"></i>
+                    DURATION (MIN)
                 </label>
-                <input type="number" id="quickDuration" class="form-control-nothing" placeholder="25" value="25" min="1" max="120" required style="font-family: 'JetBrains Mono', monospace;">
+                <input type="number" id="quickDuration" class="form-control-nothing font-mono" value="25" min="1" max="120" required>
             </div>
             
-            <button type="submit" class="btn-nothing btn-nothing-primary" style="margin-top: 16px; padding: 16px; font-size: 16px;">
-                <i class="fas fa-play"></i>
-                START FOCUS SESSION
-            </button>
+            <div class="d-flex gap-3 justify-end mt-4">
+                <button type="button" onclick="closeQuickStartModal()" class="btn-nothing">
+                    CANCEL
+                </button>
+                <button type="submit" class="btn-nothing btn-nothing-primary">
+                    <i class="fas fa-play"></i>
+                    EXECUTE
+                </button>
+            </div>
         </form>
     </div>
 </div>
@@ -132,7 +141,8 @@
     </div>
 </div>
 
-<div class="content-grid-2">
+<!-- Main Content Grid -->
+<div class="d-grid gap-6" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
     <!-- Subject Analysis Panel -->
     <div class="glass-card">
         <div style="padding: 24px; border-bottom: 1px solid var(--glass-border);">
@@ -174,16 +184,6 @@
         </div>
     </div>
 
-    <!-- Activity Timeline Panel -->
-    <div class="glass-card">
-        <div style="padding: 24px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="font-family: 'DotGothic16', monospace; font-size: 18px; color: var(--nothing-white); margin: 0; display: flex; align-items: center; gap: 12px;">
-                <i class="fas fa-history" style="color: var(--nothing-cyan);"></i>
-                RECENT ACTIVITY
-            </h3>
-            <a href="{{ url_for('sessions') }}" class="btn-nothing" style="padding: 8px 16px; font-size: 12px;">
-                VIEW ALL
-            </a>
         </div>
         <div style="padding: 24px;">
             {% if recent_sessions %}

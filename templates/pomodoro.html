@@ -4,13 +4,13 @@
 
 {% block content %}
 <!-- Nothing OS Pomodoro Interface -->
-<div class="glass-card" style="margin-bottom: 32px;">
-    <div style="padding: 20px; border-bottom: 1px solid var(--glass-border);">
-        <h1 style="font-family: 'DotGothic16', monospace; font-size: 24px; color: var(--nothing-white); margin: 0; display: flex; align-items: center; gap: 12px;">
-            <i class="fas fa-stopwatch" style="color: var(--nothing-red);"></i>
-            FOCUS MODE
+<div class="glass-card mb-8">
+    <div class="p-5 border-bottom-glass">
+        <h1 class="font-display text-2xl text-white m-0 d-flex align-center gap-3">
+            <i class="fas fa-stopwatch text-red"></i>
+            FOCUS_MODE
         </h1>
-        <p style="color: var(--nothing-gray-400); margin: 8px 0 0 0; font-size: 13px;">
+        <p class="text-muted-nothing text-sm mt-2 mb-0">
             DEEP WORK PROTOCOL • DISTRACTION ELIMINATION
         </p>
     </div>
@@ -49,16 +49,17 @@
             
             <!-- Custom Timer Card -->
             <div class="pomodoro-card-small ambient-card" style="animation-delay: 0.2s;">
-                <h3 style="font-family: 'DotGothic16', monospace; color: var(--nothing-blue); margin-bottom: 12px; display: flex; align-items: center; gap: 12px; font-size: 16px;">
+                <h3 class="font-display text-lg text-blue mb-3 d-flex align-center gap-3">
                     <i class="fas fa-cog"></i>
-                    CUSTOM TIMER
+                    CUSTOM_TIMER
                 </h3>
-                <div style="margin-bottom: 12px;">
+                <div class="mb-3">
+                    <label for="customMinutes" class="visually-hidden">Custom minutes</label>
                     <input type="number" id="customMinutes" class="form-control-nothing" placeholder="MINUTES" min="1" max="120">
                 </div>
-                <button onclick="startCustomTimer()" class="btn-nothing" style="width: 100%;">
-                    <i class="fas fa-timer"></i>
-                    CUSTOM SESSION
+                <button onclick="startCustomTimer()" class="btn-nothing w-100">
+                    <i class="fas fa-clock"></i>
+                    CUSTOM_SESSION
                 </button>
             </div>
         </div>
@@ -100,15 +101,15 @@
 
 <!-- Nothing OS Floating Orb Timer -->
 <div class="focus-mode-overlay" id="focusOverlay"></div>
-<div class="pomodoro-orb" id="pomodoroOrb">
+<div class="pomodoro-orb" id="pomodoroOrb" role="timer" aria-live="polite">
     <div class="pomodoro-progress" id="progressRing"></div>
-    <div class="pomodoro-time-display" id="timeDisplay">25:00</div>
+    <div class="pomodoro-time-display" id="timeDisplay" aria-atomic="true">25:00</div>
     <div class="pomodoro-label" id="sessionLabel">FOCUS SESSION</div>
     <div class="pomodoro-controls">
-        <button class="btn-nothing" onclick="pauseTimer()" id="pauseBtn">
+        <button class="btn-nothing" onclick="pauseTimer()" id="pauseBtn" aria-label="Pause timer">
             <i class="fas fa-pause"></i>
         </button>
-        <button class="btn-nothing btn-nothing-danger" onclick="stopTimer()" id="stopBtn">
+        <button class="btn-nothing btn-nothing-danger" onclick="stopTimer()" id="stopBtn" aria-label="Stop timer">
             <i class="fas fa-stop"></i>
         </button>
     </div>
@@ -120,13 +121,13 @@
 </audio>
 
 <!-- Custom Confirmation Modal -->
-<div id="confirmModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 99999; backdrop-filter: blur(10px); align-items: center; justify-content: center;">
-    <div class="glass-card" style="max-width: 500px; width: 90%; padding: 32px; animation: float 6s ease-in-out infinite;">
-        <div style="margin-bottom: 24px;">
-            <h3 id="confirmTitle" style="font-family: 'DotGothic16', monospace; color: var(--nothing-white); margin: 0 0 12px 0; font-size: 20px;"></h3>
-            <p id="confirmMessage" style="color: var(--nothing-gray-400); margin: 0; font-size: 14px; line-height: 1.6;"></p>
+<div id="confirmModal" class="modal-backdrop-nothing" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="glass-card max-w-500 p-8" style="animation: float 6s ease-in-out infinite;">
+        <div class="mb-6">
+            <h3 id="confirmTitle" class="font-display text-xl text-white m-0 mb-3"></h3>
+            <p id="confirmMessage" class="text-muted-nothing text-md m-0" style="line-height: 1.6;"></p>
         </div>
-        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+        <div class="d-flex gap-3 justify-end">
             <button id="confirmCancel" class="btn-nothing" onclick="closeConfirmModal(false)">
                 <i class="fas fa-times"></i>
                 CANCEL

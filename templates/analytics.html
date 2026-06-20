@@ -6,79 +6,96 @@
 <div class="row mb-4">
     <div class="col">
         <h2 class="mb-0">
-            <i class="fas fa-chart-bar me-2"></i>Analytics Dashboard
-        </h2>
-        <p class="text-muted">Visualize your study patterns and track your learning progress</p>
-    </div>
-</div>
-
-<!-- Summary Stats -->
-<div class="row mb-4">
-    <div class="col-lg-3 col-md-6 mb-3">
-        <div class="stats-card stats-card-primary">
-            <div class="stats-value">
-                <i class="fas fa-clock stats-icon"></i>
-                {{ (total_time // 60) }}h {{ (total_time % 60) }}m
-            </div>
-            <div class="stats-label">Total Study Time</div>
+<!-- Nothing OS Analytics Interface -->
+<div class="glass-card mb-8">
+    <div class="p-6 border-bottom-glass d-flex justify-between align-center flex-wrap gap-4">
+        <div>
+            <h1 class="font-display text-4xl text-white m-0 d-flex align-center gap-4">
+                <i class="fas fa-chart-network text-cyan"></i>
+                DATA_ANALYTICS
+            </h1>
+            <p class="text-muted-nothing text-md mt-2 mb-0">
+                SYSTEM METRICS • PATTERN RECOGNITION • PERFORMANCE OPTIMIZATION
+            </p>
         </div>
-    </div>
-    <div class="col-lg-3 col-md-6 mb-3">
-        <div class="stats-card stats-card-success">
-            <div class="stats-value">
-                <i class="fas fa-books stats-icon"></i>
-                {{ subjects_data|length }}
-            </div>
-            <div class="stats-label">Active Subjects</div>
-        </div>
-    </div>
-    <div class="col-lg-3 col-md-6 mb-3">
-        <div class="stats-card stats-card-info">
-            <div class="stats-value">
-                <i class="fas fa-graduation-cap stats-icon"></i>
-                {{ subjects_data|sum(attribute=2) or 0 }}
-            </div>
-            <div class="stats-label">Total Sessions</div>
-        </div>
-    </div>
-    <div class="col-lg-3 col-md-6 mb-3">
-        <div class="stats-card stats-card-warning">
-            <div class="stats-value">
-                <i class="fas fa-calendar-day stats-icon"></i>
-                {% if daily_data %}
-                    {{ (daily_data|sum(attribute=1) / daily_data|length / 60)|round(1) }}h
-                {% else %}
-                    0h
-                {% endif %}
-            </div>
-            <div class="stats-label">Daily Average</div>
+        <div class="d-flex gap-3">
+            <button onclick="exportData()" class="btn-nothing btn-nothing-primary">
+                <i class="fas fa-download"></i>
+                EXPORT_DATA
+            </button>
         </div>
     </div>
 </div>
 
-<!-- Charts Section -->
-<div class="row">
-    <!-- Subject Distribution Chart -->
-    <div class="col-lg-6 mb-4">
-        <div class="chart-container">
-            {% if subjects_data %}
-                <div class="w-100" style="height: 300px;">
-                    <canvas id="subjectChart"></canvas>
-                </div>
+<!-- Top Metrics Row -->
+<div class="d-grid gap-6 mb-8" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+    <!-- Total Time Node -->
+    <div class="glass-card ambient-card p-6">
+        <div class="d-flex justify-between align-center mb-4">
+            <h3 class="font-display text-sm text-muted-nothing m-0">TOTAL_FOCUS_TIME</h3>
+            <i class="fas fa-clock text-cyan"></i>
+        </div>
+        <div class="font-mono text-3xl text-white mb-2">
+            {{ (total_time // 60) }}H {{ (total_time % 60) }}M
+        </div>
+        <div class="d-flex align-center gap-2 text-green font-mono text-xs">
+            <i class="fas fa-arrow-up"></i>
+            SYSTEM OPTIMAL
+        </div>
+    </div>
+
+    <!-- Total Sessions Node -->
+    <div class="glass-card ambient-card p-6" style="animation-delay: 0.2s;">
+        <div class="d-flex justify-between align-center mb-4">
+            <h3 class="font-display text-sm text-muted-nothing m-0">TOTAL_SESSIONS</h3>
+            <i class="fas fa-layer-group text-purple"></i>
+        </div>
+        <div class="font-mono text-3xl text-white mb-2">
+            {{ subjects_data|sum(attribute=2) or 0 }}
+        </div>
+        <div class="d-flex align-center gap-2 text-purple font-mono text-xs">
+            <i class="fas fa-check-circle"></i>
+            CONSISTENCY METRIC
+        </div>
+    </div>
+
+    <div class="glass-card ambient-card p-6">
+        <div class="d-flex justify-between align-center mb-4">
+            <h3 class="font-display text-sm text-muted-nothing m-0">DAILY_AVERAGE</h3>
+            <i class="fas fa-calendar-day text-orange"></i>
+        </div>
+        <div class="font-mono text-3xl text-white mb-2">
+            {% if daily_data %}
+                {{ (daily_data|sum(attribute=1) / daily_data|length / 60)|round(1) }}H
             {% else %}
-                <div class="dummy-chart">
-                    <div class="dummy-pie"></div>
-                    <h6 class="mb-2">Subject Distribution</h6>
-                    <p class="mb-3 text-muted">Your study time distribution across different subjects will appear here.</p>
-                    <div class="d-flex justify-content-center gap-2 mt-3">
-                        <div class="badge bg-primary">Math</div>
-                        <div class="badge bg-success">Science</div>
-                        <div class="badge bg-warning">History</div>
-                        <div class="badge bg-info">Languages</div>
-                    </div>
-                    <a href="{{ url_for('log_session') }}" class="cta-button mt-3">
+                0H
+            {% endif %}
+        </div>
+        <div class="d-flex align-center gap-2 text-orange font-mono text-xs">
+            <i class="fas fa-chart-line"></i>
+            DAILY_TREND
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Visualization Grid -->
+<div class="d-grid gap-6 mb-8" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));">
+    <!-- Subject Distribution Chart -->
+    <div class="glass-card ambient-card p-6">
+        <h3 class="font-display text-lg text-white m-0 mb-6 d-flex align-center gap-3 border-bottom-glass pb-4">
+            <i class="fas fa-chart-pie text-cyan"></i>
+            SUBJECT_DISTRIBUTION
+        </h3>
+        <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
+            {% if subjects_data %}
+                <canvas id="subjectChart"></canvas>
+            {% else %}
+                <div class="text-center p-10 text-muted-nothing">
+                    <i class="fas fa-chart-pie text-4xl mb-4"></i>
+                    <p class="font-mono text-sm mb-6">NO_DATA_AVAILABLE</p>
+                    <a href="{{ url_for('log_session') }}" class="btn-nothing btn-nothing-primary" style="justify-content: center;">
                         <i class="fas fa-plus-circle"></i>
-                        Log First Session
+                        INITIALIZE_LOG
                     </a>
                 </div>
             {% endif %}
@@ -86,37 +103,21 @@
     </div>
 
     <!-- Daily Timeline Chart -->
-    <div class="col-lg-6 mb-4">
-        <div class="chart-container">
+    <div class="glass-card ambient-card p-6">
+        <h3 class="font-display text-lg text-white m-0 mb-6 d-flex align-center gap-3 border-bottom-glass pb-4">
+            <i class="fas fa-chart-line text-blue"></i>
+            STUDY_TIMELINE
+        </h3>
+        <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
             {% if daily_data %}
-                <div class="w-100" style="height: 300px;">
-                    <canvas id="timelineChart"></canvas>
-                </div>
+                <canvas id="timelineChart"></canvas>
             {% else %}
-                <div class="dummy-chart">
-                    <div class="dummy-chart-bars">
-                        <div class="dummy-bar"></div>
-                        <div class="dummy-bar"></div>
-                        <div class="dummy-bar"></div>
-                        <div class="dummy-bar"></div>
-                        <div class="dummy-bar"></div>
-                        <div class="dummy-bar"></div>
-                        <div class="dummy-bar"></div>
-                    </div>
-                    <h6 class="mb-2">Daily Study Timeline</h6>
-                    <p class="mb-3 text-muted">Track your daily study patterns and consistency over the last 30 days.</p>
-                    <div class="d-flex justify-content-center gap-2 mt-3">
-                        <small class="text-muted">Mon</small>
-                        <small class="text-muted">Tue</small>
-                        <small class="text-muted">Wed</small>
-                        <small class="text-muted">Thu</small>
-                        <small class="text-muted">Fri</small>
-                        <small class="text-muted">Sat</small>
-                        <small class="text-muted">Sun</small>
-                    </div>
-                    <a href="{{ url_for('log_session') }}" class="cta-button mt-3">
-                        <i class="fas fa-calendar-plus"></i>
-                        Start Tracking
+                <div class="text-center p-10 text-muted-nothing">
+                    <i class="fas fa-chart-line text-4xl mb-4"></i>
+                    <p class="font-mono text-sm mb-6">NO_TIMELINE_DATA</p>
+                    <a href="{{ url_for('log_session') }}" class="btn-nothing btn-nothing-primary" style="justify-content: center;">
+                        <i class="fas fa-plus-circle"></i>
+                        START_TRACKING
                     </a>
                 </div>
             {% endif %}
@@ -125,106 +126,68 @@
 </div>
 
 <!-- Subject Breakdown Table -->
-<div class="row">
-    <div class="col">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-table me-2"></i>Detailed Subject Breakdown
-                </h5>
-            </div>
-            <div class="card-body">
-                {% if subjects_data %}
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Subject</th>
-                                    <th>Total Time</th>
-                                    <th>Sessions</th>
-                                    <th>Average Session</th>
-                                    <th>Progress</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for subject, minutes, sessions in subjects_data %}
-                                <tr>
-                                    <td>
-                                        <div class="fw-bold">{{ subject }}</div>
-                                        <small class="text-muted">{{ sessions }} study sessions</small>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-primary fs-6">
-                                            {{ (minutes // 60) }}h {{ (minutes % 60) }}m
-                                        </span>
-                                    </td>
-                                    <td>{{ sessions }}</td>
-                                    <td>{{ ((minutes / sessions) // 60)|int }}h {{ ((minutes / sessions) % 60)|int }}m</td>
-                                    <td>
-                                        {% set percentage = (minutes / total_time * 100)|round(1) if total_time > 0 else 0 %}
-                                        <div class="progress" style="height: 24px; border-radius: 12px;">
-                                            <div class="progress-bar bg-gradient" role="progressbar" 
-                                                 style="width: {{ percentage }}%; border-radius: 12px;">
-                                                <span class="fw-bold">{{ percentage }}%</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <div class="chart-placeholder">
-                        <div class="chart-placeholder-icon">
-                            <i class="fas fa-table"></i>
-                        </div>
-                        <h6 class="mb-2">Subject Analysis</h6>
-                        <p class="mb-3">Detailed breakdown of your study time across different subjects will appear here.</p>
-                        <a href="{{ url_for('log_session') }}" class="cta-button">
-                            <i class="fas fa-chart-bar"></i>
-                            Start Analyzing
-                        </a>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
+<div class="glass-card ambient-card mb-8">
+    <div class="p-6 border-bottom-glass">
+        <h3 class="font-display text-lg text-white m-0 d-flex align-center gap-3">
+            <i class="fas fa-table text-green"></i>
+            DETAILED_SUBJECT_BREAKDOWN
+        </h3>
     </div>
-</div>
-
-<!-- Quick Actions -->
-<div class="row mt-4">
-    <div class="col">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-tools me-2"></i>Analytics Tools
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <a href="{{ url_for('sessions') }}" class="cta-button cta-secondary w-100 text-center">
-                            <i class="fas fa-list"></i>
-                            View All Sessions
-                        </a>
-                    </div>
-                    <div class="col-md-4">
-                        <a href="{{ url_for('log_session') }}" class="cta-button w-100 text-center">
-                            <i class="fas fa-plus-circle"></i>
-                            Log New Session
-                        </a>
-                    </div>
-                    <div class="col-md-4">
-                        <a href="#" class="cta-button cta-secondary w-100 text-center" onclick="alert('Export feature coming soon!')">
-                            <i class="fas fa-download"></i>
-                            Export Report
-                        </a>
-                    </div>
-                </div>
-            </div>
+    
+    {% if subjects_data %}
+        <div class="table-responsive-wrapper" tabindex="0">
+            <table class="nothing-table">
+                <thead>
+                    <tr style="background: var(--glass-bg); border-bottom: 2px solid var(--nothing-cyan);">
+                        <th style="padding: 16px; font-family: 'DotGothic16', monospace; color: var(--nothing-cyan); font-size: 14px; text-align: left; border-right: 1px solid var(--glass-border);">SUBJECT</th>
+                        <th style="padding: 16px; font-family: 'DotGothic16', monospace; color: var(--nothing-cyan); font-size: 14px; text-align: center; border-right: 1px solid var(--glass-border);">TOTAL_TIME</th>
+                        <th style="padding: 16px; font-family: 'DotGothic16', monospace; color: var(--nothing-cyan); font-size: 14px; text-align: center; border-right: 1px solid var(--glass-border);">SESSIONS</th>
+                        <th style="padding: 16px; font-family: 'DotGothic16', monospace; color: var(--nothing-cyan); font-size: 14px; text-align: center; border-right: 1px solid var(--glass-border);">AVG_SESSION</th>
+                        <th style="padding: 16px; font-family: 'DotGothic16', monospace; color: var(--nothing-cyan); font-size: 14px; text-align: left;">PROGRESS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for subject, minutes, sessions in subjects_data %}
+                    <tr style="border-bottom: 1px solid var(--glass-border); transition: all 0.3s ease;" onmouseover="this.style.background='var(--glass-hover)'" onmouseout="this.style.background='transparent'">
+                        <td style="padding: 16px; border-right: 1px solid var(--glass-border);">
+                            <div class="font-mono text-white">{{ subject }}</div>
+                            <div class="text-xs text-muted-nothing mt-1">{{ sessions }} LOGS</div>
+                        </td>
+                        <td style="padding: 16px; text-align: center; border-right: 1px solid var(--glass-border);">
+                            <span class="status-badge" style="background: var(--nothing-cyan); color: var(--nothing-black);">
+                                {{ (minutes // 60) }}H {{ (minutes % 60) }}M
+                            </span>
+                        </td>
+                        <td style="padding: 16px; text-align: center; border-right: 1px solid var(--glass-border);">
+                            <div class="font-mono text-white">{{ sessions }}</div>
+                        </td>
+                        <td style="padding: 16px; text-align: center; border-right: 1px solid var(--glass-border);">
+                            <div class="font-mono text-white">{{ ((minutes / sessions) // 60)|int }}H {{ ((minutes / sessions) % 60)|int }}M</div>
+                        </td>
+                        <td style="padding: 16px;">
+                            {% set percentage = (minutes / total_time * 100)|round(1) if total_time > 0 else 0 %}
+                            <div class="d-flex align-center gap-3">
+                                <div style="flex-grow: 1; height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; overflow: hidden;">
+                                    <div style="height: 100%; width: {{ percentage }}%; background: var(--nothing-green); box-shadow: 0 0 10px var(--nothing-green);"></div>
+                                </div>
+                                <span class="font-mono text-xs text-white">{{ percentage }}%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-    </div>
+    {% else %}
+        <div class="text-center p-10 text-muted-nothing">
+            <i class="fas fa-table text-4xl mb-4"></i>
+            <p class="font-mono text-sm mb-6">NO_SUBJECT_DATA</p>
+            <a href="{{ url_for('log_session') }}" class="btn-nothing btn-nothing-primary" style="justify-content: center; display: inline-flex;">
+                <i class="fas fa-plus-circle"></i>
+                START_ANALYZING
+            </a>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}
 

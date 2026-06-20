@@ -14,13 +14,13 @@
     <!-- Loading Screen -->
     <div class="loading-overlay" id="loadingScreen">
         <div class="loading-text">STUDYLOGIX</div>
-        <div style="margin-top: 20px; color: var(--nothing-gray-500); font-size: 14px;">INITIALIZING...</div>
+        <div class="mt-5 text-muted-nothing text-md">INITIALIZING...</div>
     </div>
 
     {% if session.user_id %}
     <!-- Nothing OS Floating Navbar -->
     <nav class="navbar-nothing" id="navbar">
-        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+        <div class="d-flex align-center justify-between w-100">
             <a href="{{ url_for('index') }}" class="navbar-brand-nothing">
                 <div class="brand-icon">
                     <i class="fas fa-cube"></i>
@@ -28,7 +28,7 @@
                 <span>STUDYLOGIX</span>
             </a>
             
-            <button class="navbar-toggle" id="navToggle">
+            <button class="navbar-toggle" id="navToggle" aria-label="Toggle navigation menu">
                 <i class="fas fa-bars"></i>
             </button>
             
@@ -70,14 +70,14 @@
                     </a>
                 </li>
                 <li>
-                    <button id="themeToggle" class="theme-toggle" title="Toggle Dark/Light Theme">
+                    <button id="themeToggle" class="theme-toggle" title="Toggle Dark/Light Theme" aria-label="Toggle theme">
                         <span class="theme-icon">
                             <i class="fas fa-moon" id="themeIcon"></i>
                         </span>
                     </button>
                 </li>
                 <li>
-                    <a href="{{ url_for('logout') }}" class="nav-link-nothing text-red" style="margin-left: 16px;">
+                    <a href="{{ url_for('logout') }}" class="nav-link-nothing text-red ml-4">
                         <i class="fas fa-power-off"></i>
                         <span>{{ session.username.upper() }}</span>
                     </a>
@@ -104,7 +104,7 @@
 
     <footer class="footer-nothing">
         <div class="container-nothing">
-            <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
+            <div class="d-flex align-center justify-center gap-3">
                 <i class="fas fa-heart" style="color: var(--nothing-red);"></i>
                 <span>STUDYLOGIX MADE WITH ❤️ BY ASHU</span>
             </div>

@@ -4,107 +4,88 @@
 
 {% block content %}
 <!-- Nothing OS Landing Page -->
-<div style="min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px;">
-    <div class="glass-card ambient-card" style="max-width: 800px; width: 100%; text-align: center;">
-        <!-- Hero Section -->
-        <div style="padding: 60px 40px 40px 40px;">
-            <div style="margin-bottom: 32px;">
-                <div style="width: 120px; height: 120px; margin: 0 auto 24px auto; display: flex; align-items: center; justify-content: center; border: 3px solid var(--nothing-cyan); border-radius: 50%; background: var(--glass-bg); animation: ambient-pulse 3s ease-in-out infinite;">
-                    <i class="fas fa-terminal" style="font-size: 48px; color: var(--nothing-cyan);"></i>
-                </div>
-                <h1 style="font-family: 'DotGothic16', monospace; font-size: 48px; color: var(--nothing-white); margin: 0 0 16px 0; text-shadow: 0 0 20px rgba(0, 255, 204, 0.3);">
-                    STUDYLOGIX
-                </h1>
-                <div style="height: 2px; width: 60px; background: linear-gradient(90deg, var(--nothing-cyan), var(--nothing-purple)); margin: 0 auto 24px auto; border-radius: 1px;"></div>
-                <p style="font-size: 18px; color: var(--nothing-gray-300); margin: 0 0 40px 0; max-width: 600px; margin-left: auto; margin-right: auto;">
-                    TRACK • ANALYZE • OPTIMIZE YOUR LEARNING PROTOCOL
-                </p>
-            </div>
+<div class="hero-wrapper">
+    <div class="max-w-800 w-100">
+        <div class="hero-icon-wrapper">
+            <i class="fas fa-cube" style="font-size: 48px; color: var(--nothing-cyan);"></i>
+        </div>
+        
+        <h1 class="font-display text-6xl text-center mb-4">
+            STUDY<span style="color: var(--nothing-cyan);">LOGIX</span>
+        </h1>
+        
+        <p class="text-xl text-muted-nothing max-w-600 mx-auto text-center mb-8 font-mono">
+            ELEVATE YOUR LEARNING THROUGH PRECISION DATA TRACKING
+        </p>
             
-            <!-- Action Buttons -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px;">
-                <a href="{{ url_for('login') }}" class="btn-nothing btn-nothing-primary" style="padding: 20px; font-size: 18px; text-decoration: none;">
-                    <i class="fas fa-sign-in-alt"></i>
-                    SYSTEM ACCESS
-                </a>
-                <a href="{{ url_for('register') }}" class="btn-nothing" style="padding: 20px; font-size: 18px; text-decoration: none;">
-                    <i class="fas fa-user-plus"></i>
-                    CREATE ACCOUNT
-                </a>
-            </div>
+        <!-- Action Buttons -->
+        <div class="d-flex gap-4 justify-center flex-wrap">
+            <a href="{{ url_for('register') }}" class="btn-nothing btn-nothing-primary" style="min-width: 200px; justify-content: center;" aria-label="Initialize System">
+                <i class="fas fa-power-off"></i>
+                INITIALIZE_SYSTEM
+            </a>
+            <a href="{{ url_for('login') }}" class="btn-nothing" style="min-width: 200px; justify-content: center;" aria-label="Authenticate">
+                <i class="fas fa-terminal"></i>
+                AUTHENTICATE
+            </a>
+        </div>
             
-            <!-- System Status -->
-            <div style="display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--glass-border);">
-                <div style="display: flex; align-items: center; gap: 8px; color: var(--nothing-green); font-family: 'JetBrains Mono', monospace; font-size: 12px;">
-                    <i class="fas fa-circle" style="font-size: 8px; animation: ambient-pulse 2s ease-in-out infinite;"></i>
-                    SYSTEM_ONLINE
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px; color: var(--nothing-cyan); font-family: 'JetBrains Mono', monospace; font-size: 12px;">
-                    <i class="fas fa-circle" style="font-size: 8px; animation: ambient-pulse 2s ease-in-out infinite 0.5s;"></i>
-                    DATABASE_READY
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px; color: var(--nothing-purple); font-family: 'JetBrains Mono', monospace; font-size: 12px;">
-                    <i class="fas fa-circle" style="font-size: 8px; animation: ambient-pulse 2s ease-in-out infinite 1s;"></i>
-                    ANALYTICS_ACTIVE
-                </div>
+        <!-- System Status -->
+        <div class="d-flex justify-center gap-8 mt-10 pt-8 border-top-glass flex-wrap">
+            <div class="d-flex align-items-center gap-2 text-green font-mono text-xs">
+                <i class="fas fa-circle" style="font-size: 8px; animation: ambient-pulse 2s ease-in-out infinite;"></i>
+                SYSTEM_ONLINE
+            </div>
+            <div class="d-flex align-items-center gap-2 text-cyan font-mono text-xs">
+                <i class="fas fa-circle" style="font-size: 8px; animation: ambient-pulse 2s ease-in-out infinite 0.5s;"></i>
+                DATABASE_READY
+            </div>
+            <div class="d-flex align-items-center gap-2 text-purple font-mono text-xs">
+                <i class="fas fa-circle" style="font-size: 8px; animation: ambient-pulse 2s ease-in-out infinite 1s;"></i>
+                ANALYTICS_ACTIVE
             </div>
         </div>
     </div>
 </div>
 
-<!-- Features Section -->
-<div style="margin-top: 60px;">
-    <div style="text-align: center; margin-bottom: 48px;">
-        <h2 style="font-family: 'DotGothic16', monospace; font-size: 32px; color: var(--nothing-white); margin-bottom: 16px;">
-            SYSTEM CAPABILITIES
-        </h2>
-        <div style="height: 2px; width: 80px; background: linear-gradient(90deg, var(--nothing-orange), var(--nothing-red)); margin: 0 auto; border-radius: 1px;"></div>
-    </div>
-    
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px;">
-        <!-- Feature 1: Time Tracking -->
-        <div class="glass-card ambient-card" style="text-align: center; animation-delay: 0.1s;">
-            <div style="padding: 40px 24px;">
-                <div style="width: 80px; height: 80px; margin: 0 auto 24px auto; display: flex; align-items: center; justify-content: center; border: 2px solid var(--nothing-orange); border-radius: 50%; background: var(--glass-bg);">
-                    <i class="fas fa-stopwatch" style="font-size: 32px; color: var(--nothing-orange);"></i>
-                </div>
-                <h3 style="font-family: 'DotGothic16', monospace; color: var(--nothing-white); margin-bottom: 16px; font-size: 20px;">
-                    POMODORO TIMER
-                </h3>
-                <p style="color: var(--nothing-gray-300); font-size: 14px; line-height: 1.6;">
-                    IMMERSIVE FOCUS MODE WITH FLOATING ORB TIMER • DISTRACTION ELIMINATION • PRODUCTIVITY TRACKING
-                </p>
+<!-- Features Grid -->
+<div class="px-5 pb-10">
+    <div class="d-grid gap-8 max-w-1400 mx-auto" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+        
+        <!-- Focus Protocol -->
+        <div class="glass-card ambient-card p-8 text-center">
+            <div class="feature-icon-wrapper orange">
+                <i class="fas fa-stopwatch text-3xl" style="color: var(--nothing-orange);"></i>
             </div>
+            <h3 class="font-display text-3xl mb-4">FOCUS_PROTOCOL</h3>
+            <div class="divider-line orange-red"></div>
+            <p class="text-muted-nothing mb-6" style="line-height: 1.6;">
+                ELIMINATE DISTRACTIONS WITH OUR PRECISION POMODORO TIMER. TRACK DEEP WORK CYCLES AUTOMATICALLY.
+            </p>
         </div>
         
-        <!-- Feature 2: Analytics -->
-        <div class="glass-card ambient-card" style="text-align: center; animation-delay: 0.2s;">
-            <div style="padding: 40px 24px;">
-                <div style="width: 80px; height: 80px; margin: 0 auto 24px auto; display: flex; align-items: center; justify-content: center; border: 2px solid var(--nothing-green); border-radius: 50%; background: var(--glass-bg);">
-                    <i class="fas fa-chart-line" style="font-size: 32px; color: var(--nothing-green);"></i>
-                </div>
-                <h3 style="font-family: 'DotGothic16', monospace; color: var(--nothing-white); margin-bottom: 16px; font-size: 20px;">
-                    VISUAL ANALYTICS
-                </h3>
-                <p style="color: var(--nothing-gray-300); font-size: 14px; line-height: 1.6;">
-                    PERFORMANCE GRAPHS • MOOD ANALYSIS • PRODUCTIVITY PATTERNS • DATA VISUALIZATION
-                </p>
+        <!-- Analytics Engine -->
+        <div class="glass-card ambient-card p-8 text-center" style="animation-delay: 0.1s;">
+            <div class="feature-icon-wrapper cyan">
+                <i class="fas fa-chart-line text-3xl" style="color: var(--nothing-cyan);"></i>
             </div>
+            <h3 class="font-display text-3xl mb-4">DATA_ANALYTICS</h3>
+            <div class="divider-line cyan-purple"></div>
+            <p class="text-muted-nothing mb-6" style="line-height: 1.6;">
+                VISUALIZE YOUR PERFORMANCE METRICS. IDENTIFY PATTERNS IN YOUR LEARNING HABITS.
+            </p>
         </div>
         
-        <!-- Feature 3: Goal Tracking -->
-        <div class="glass-card ambient-card" style="text-align: center; animation-delay: 0.3s;">
-            <div style="padding: 40px 24px;">
-                <div style="width: 80px; height: 80px; margin: 0 auto 24px auto; display: flex; align-items: center; justify-content: center; border: 2px solid var(--nothing-purple); border-radius: 50%; background: var(--glass-bg);">
-                    <i class="fas fa-target" style="font-size: 32px; color: var(--nothing-purple);"></i>
-                </div>
-                <h3 style="font-family: 'DotGothic16', monospace; color: var(--nothing-white); margin-bottom: 16px; font-size: 20px;">
-                    GOAL OPTIMIZATION
-                </h3>
-                <p style="color: var(--nothing-gray-300); font-size: 14px; line-height: 1.6;">
-                    WEEKLY TARGETS • PROGRESS MONITORING • ACHIEVEMENT TRACKING • PERFORMANCE METRICS
-                </p>
+        <!-- Social Sync -->
+        <div class="glass-card ambient-card p-8 text-center" style="animation-delay: 0.2s;">
+            <div class="feature-icon-wrapper purple">
+                <i class="fas fa-users text-3xl" style="color: var(--nothing-purple);"></i>
             </div>
+            <h3 class="font-display text-3xl mb-4">SOCIAL_SYNC</h3>
+            <div class="divider-line" style="background: var(--nothing-purple);"></div>
+            <p class="text-muted-nothing mb-6" style="line-height: 1.6;">
+                CONNECT WITH PEERS. MONITOR LIVE STUDY SESSIONS AND MAINTAIN ACCOUNTABILITY.
+            </p>
         </div>
     </div>
 </div>
