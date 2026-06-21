@@ -258,14 +258,14 @@
       <div class="flex items-center justify-between" style="font-size: 12px;">
         <span style="display: flex; align-items: center; gap: 6px; color: var(--c-ink-2);">
           <span style="width: 10px; height: 3px; background: var(--c-accent); border-radius: 2px; display: inline-block;"></span>
-          Daily goal (2h)
+          <span id="arcDailyLabel">Daily target</span>
         </span>
         <span class="mono" style="color: var(--c-ink-3);" id="arcDailyPct">–</span>
       </div>
       <div class="flex items-center justify-between" style="font-size: 12px;">
         <span style="display: flex; align-items: center; gap: 6px; color: var(--c-ink-2);">
           <span style="width: 10px; height: 2px; background: var(--c-ink-3); border-radius: 2px; display: inline-block;"></span>
-          Week (10h goal)
+          <span id="arcWeekLabel">7-day target</span>
         </span>
         <span class="mono" style="color: var(--c-ink-3);" id="arcWeekPct">–</span>
       </div>
@@ -459,13 +459,35 @@ RAW_DATA.forEach(([d, m]) => { dataMap[String(d)] = m; });
 
 // ─── Radial arc animation ────────────────────────────────
 (function initArc() {
-  const DAILY_GOAL  = 120; // minutes
-  const WEEKLY_GOAL = 600; // minutes
-
   const outer = document.getElementById('arcOuter');
   const inner = document.getElementById('arcInner');
   const dailyPct  = document.getElementById('arcDailyPct');
   const weeklyPct = document.getElementById('arcWeekPct');
+  const dailyLabel = document.getElementById('arcDailyLabel');
+  const weekLabel = document.getElementById('arcWeekLabel');
+
+  const today = new Date();
+
+  // Compute 30-day moving average to use as dynamic goal
+  let thirtyDayMins = 0;
+  for (let i = 1; i <= 30; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const key = d.toISOString().split('T')[0];
+    thirtyDayMins += (dataMap[key] || 0);
+  }
+  
+  // Base daily target is historical average (min 30m, max 4h)
+  let baseDailyGoal = Math.round(thirtyDayMins / 30);
+  if (baseDailyGoal < 30) baseDailyGoal = 30;
+  if (baseDailyGoal > 240) baseDailyGoal = 240;
+  
+  const DAILY_GOAL  = baseDailyGoal;
+  const WEEKLY_GOAL = baseDailyGoal * 5; // 5 days a week equivalent
+
+  // Update UI labels with computed goals
+  dailyLabel.textContent = `Daily target (${DAILY_GOAL >= 60 ? Math.floor(DAILY_GOAL/60)+'h ' : ''}${DAILY_GOAL%60>0 || DAILY_GOAL<60 ? (DAILY_GOAL%60)+'m' : ''})`;
+  weekLabel.textContent = `7-day target (${WEEKLY_GOAL >= 60 ? Math.floor(WEEKLY_GOAL/60)+'h ' : ''}${WEEKLY_GOAL%60>0 || WEEKLY_GOAL<60 ? (WEEKLY_GOAL%60)+'m' : ''})`;
 
   const outerCirc = 2 * Math.PI * 66;
   const innerCirc = 2 * Math.PI * 54;
@@ -473,8 +495,7 @@ RAW_DATA.forEach(([d, m]) => { dataMap[String(d)] = m; });
   // Today
   const dailyRatio  = Math.min(TODAY_MINS / DAILY_GOAL, 1);
 
-  // This week: sum last 7 days
-  const today = new Date();
+  // This week: sum last 7 days (including today)
   let weekMins = 0;
   for (let i = 0; i < 7; i++) {
     const d = new Date(today);
