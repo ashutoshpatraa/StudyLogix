@@ -262,6 +262,11 @@ def dashboard():
     subjects_data = session_manager.get_subject_breakdown(user_id)
     recent_sessions = session_manager.get_user_sessions(user_id, 5)
     pomodoro_stats = pomodoro_manager.get_user_pomodoro_stats(user_id)
+    heatmap_data = session_manager.get_daily_study_data(user_id, 365)
+
+    # Compute today's minutes for the radial arc
+    today_str = date.today().isoformat()
+    today_minutes = sum(row[1] for row in heatmap_data if str(row[0]) == today_str)
 
     total_hours = study_time_data['total_hours']
     total_mins = study_time_data['remaining_minutes']
@@ -274,6 +279,8 @@ def dashboard():
         pomodoro_stats=pomodoro_stats,
         subjects_data=subjects_data,
         recent_sessions=recent_sessions,
+        heatmap_data=heatmap_data,
+        today_minutes=today_minutes,
     )
 
 
