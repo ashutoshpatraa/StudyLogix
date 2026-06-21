@@ -1,706 +1,278 @@
 {% extends "base.html" %}
-{% block title %}Dashboard — StudyLogix{% endblock %}
+{% block title %}Today — StudyLogix{% endblock %}
 
 {% block head %}
 <style>
-/* ── Greeting ─────────────────────────────────────── */
-{% set hour = now.hour if now is defined else 12 %}
-{% if hour < 5 %}{% set period = "night" %}
-{% elif hour < 12 %}{% set period = "morning" %}
-{% elif hour < 17 %}{% set period = "afternoon" %}
-{% else %}{% set period = "evening" %}{% endif %}
-
-/* ── Radial arc ───────────────────────────────────── */
-.arc-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.arc-svg { transform: rotate(-90deg); overflow: visible; }
-.arc-track {
-  fill: none;
-  stroke: var(--c-line);
-  stroke-width: 6;
-  stroke-linecap: round;
-}
-.arc-fill {
-  fill: none;
-  stroke: var(--c-accent);
-  stroke-width: 6;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 1.2s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.arc-fill-inner {
-  fill: none;
-  stroke: var(--c-line-strong);
-  stroke-width: 3;
-  stroke-linecap: round;
-}
-.arc-fill-inner-active {
-  fill: none;
-  stroke: var(--c-ink-3);
-  stroke-width: 3;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 1.4s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.arc-center {
-  position: absolute;
-  text-align: center;
-  pointer-events: none;
-}
-.arc-number {
-  font-family: var(--f-display);
-  font-size: 2rem;
-  font-weight: 700;
-  letter-spacing: -0.05em;
-  line-height: 1;
-  color: var(--c-ink);
-}
-.arc-sub {
-  font-size: 11px;
-  color: var(--c-ink-3);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-top: 4px;
-}
-
-/* ── Heatmap ──────────────────────────────────────── */
-.heatmap-outer {
-  overflow-x: auto;
-  padding-bottom: 4px;
-}
-.heatmap-grid {
-  display: inline-grid;
-  grid-template-rows: repeat(7, 11px);
-  grid-auto-columns: 11px;
-  grid-auto-flow: column;
-  gap: 2px;
-}
-.hm-cell {
-  width: 11px;
-  height: 11px;
-  border-radius: 2px;
-  background: var(--c-line);
-  cursor: default;
-  transition: transform 80ms;
-  position: relative;
-}
-.hm-cell:hover { transform: scale(1.3); z-index: 10; }
-.hm-cell[data-level="1"] { background: rgba(212,168,67,0.22); }
-.hm-cell[data-level="2"] { background: rgba(212,168,67,0.44); }
-.hm-cell[data-level="3"] { background: rgba(212,168,67,0.68); }
-.hm-cell[data-level="4"] { background: rgba(212,168,67,0.90); }
-.hm-cell[data-today="true"] {
-  outline: 1.5px solid var(--c-ink);
-  outline-offset: 1px;
-}
-.hm-tooltip {
-  position: fixed;
-  background: var(--c-surface);
-  border: 1px solid var(--c-line-strong);
-  border-radius: 4px;
-  padding: 5px 9px;
-  font-size: 11px;
-  color: var(--c-ink);
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 9000;
-  opacity: 0;
-  transition: opacity 80ms;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
-}
-.hm-month-labels {
-  display: inline-grid;
-  grid-auto-columns: 11px;
-  grid-auto-flow: column;
-  gap: 2px;
-  margin-bottom: 4px;
-}
-.hm-month-label {
-  font-size: 10px;
-  color: var(--c-ink-3);
-  white-space: nowrap;
-  overflow: visible;
-  font-family: var(--f-mono);
-  letter-spacing: -0.02em;
-}
-.hm-day-labels {
+.study-header {
   display: grid;
-  grid-template-rows: repeat(7, 11px);
-  gap: 2px;
-  margin-right: 6px;
-  flex-shrink: 0;
-}
-.hm-day-label {
-  font-size: 9px;
-  color: var(--c-ink-3);
-  line-height: 11px;
-  font-family: var(--f-mono);
-  text-align: right;
-}
-
-/* ── Dashboard layout ─────────────────────────────── */
-.dash-top {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-.dash-mid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-.dash-bottom {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 16px;
-}
-
-/* Session row */
-.session-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 20px;
-  border-bottom: 1px solid var(--c-line);
-  transition: background 80ms;
-}
-.session-row:last-child { border-bottom: none; }
-.session-row:hover { background: var(--c-raised); }
-
-/* Subject bar row */
-.subject-row {
-  display: grid;
-  grid-template-columns: 120px 1fr 56px;
-  align-items: center;
-  gap: 12px;
-  padding: 9px 20px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 32px;
+  padding: 8px 0 28px;
   border-bottom: 1px solid var(--c-line);
 }
-.subject-row:last-child { border-bottom: none; }
+.study-date { color: var(--c-ink-3); font: 11px var(--f-mono); text-transform: uppercase; letter-spacing: .08em; }
+.study-heading { font-size: clamp(2.5rem, 6vw, 5rem); line-height: .92; margin-top: 10px; letter-spacing: -.065em; }
+.study-heading span { display: block; color: var(--c-ink-2); font-weight: 400; }
+.study-actions { display: flex; gap: 8px; }
 
-@media (max-width: 1100px) {
-  .dash-top { grid-template-columns: 1fr; }
-  .dash-mid { grid-template-columns: 1fr 1fr; }
-  .dash-bottom { grid-template-columns: 1fr; }
+.today-sheet {
+  display: grid;
+  grid-template-columns: minmax(300px, .8fr) minmax(420px, 1.4fr);
+  min-height: 390px;
+  border-bottom: 1px solid var(--c-line);
 }
-@media (max-width: 680px) {
-  .dash-mid { grid-template-columns: 1fr; }
+.goal-column { padding: 36px 36px 36px 0; border-right: 1px solid var(--c-line); }
+.history-column { padding: 36px 0 36px 40px; }
+.section-kicker { color: var(--c-ink-3); font: 10px var(--f-mono); letter-spacing: .11em; text-transform: uppercase; }
+.goal-time { font: 700 clamp(4rem, 9vw, 7.5rem)/.9 var(--f-display); letter-spacing: -.08em; margin: 28px 0 8px; }
+.goal-time small { font-size: .22em; letter-spacing: 0; color: var(--c-ink-3); font-weight: 500; }
+.goal-subject { font-size: 18px; color: var(--c-ink-2); margin-bottom: 30px; }
+.goal-rule { height: 7px; background: var(--c-raised); margin-bottom: 10px; overflow: hidden; }
+.goal-rule span { display: block; height: 100%; background: var(--c-accent); }
+.goal-detail { display: flex; justify-content: space-between; color: var(--c-ink-3); font: 11px var(--f-mono); }
+.goal-empty { margin: 48px 0 32px; max-width: 330px; }
+.goal-empty h2 { font-size: 1.65rem; margin-bottom: 10px; }
+.goal-empty p { font-size: 13px; }
+.text-link { color: var(--c-ink); border-bottom: 1px solid var(--c-line-strong); padding-bottom: 2px; }
+
+.next-action { display: grid; grid-template-columns: 34px 1fr auto; gap: 16px; align-items: center; padding: 18px 0 26px; border-bottom: 1px solid var(--c-line); }
+.next-number { color: var(--c-accent); font: 12px var(--f-mono); }
+.next-action h2 { font-size: 1.45rem; margin-bottom: 3px; }
+.next-action p { font-size: 12px; color: var(--c-ink-3); }
+.session-ledger { margin-top: 20px; }
+.session-line { display: grid; grid-template-columns: 1fr 80px 82px; gap: 16px; align-items: baseline; padding: 13px 0; border-bottom: 1px solid var(--c-line); }
+.session-line:last-child { border-bottom: 0; }
+.session-subject { font-weight: 500; }
+.session-date, .session-duration { font: 11px var(--f-mono); color: var(--c-ink-3); text-align: right; }
+.session-duration { color: var(--c-ink-2); }
+.ledger-empty { padding: 60px 0; max-width: 380px; }
+.ledger-empty h2 { margin-bottom: 8px; }
+
+.study-record { padding-top: 44px; }
+.record-head { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 24px; margin-bottom: 22px; }
+.record-head h2 { font-size: 1.8rem; margin-top: 6px; }
+.record-facts { display: flex; gap: 28px; }
+.record-fact { text-align: right; }
+.record-fact strong { display: block; font: 600 1.1rem var(--f-display); }
+.record-fact span { color: var(--c-ink-3); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+.heatmap-wrap { overflow-x: auto; padding: 10px 0 6px; }
+.heatmap-grid { display: grid; grid-template-rows: repeat(7, 10px); grid-auto-flow: column; grid-auto-columns: 10px; gap: 3px; width: max-content; }
+.hm-cell { width: 10px; height: 10px; background: var(--c-line); }
+.hm-cell[data-level="1"] { background: rgba(212,168,67,.25); }
+.hm-cell[data-level="2"] { background: rgba(212,168,67,.45); }
+.hm-cell[data-level="3"] { background: rgba(212,168,67,.68); }
+.hm-cell[data-level="4"] { background: var(--c-accent); }
+.hm-cell[data-today="true"] { outline: 1px solid var(--c-ink); outline-offset: 2px; }
+.hm-tooltip { position: fixed; opacity: 0; pointer-events: none; z-index: 100; padding: 6px 9px; background: var(--c-ink); color: var(--c-bg); font: 11px var(--f-mono); }
+.subject-list { display: grid; grid-template-columns: 1fr 1fr; column-gap: 40px; margin-top: 40px; border-top: 1px solid var(--c-line); }
+.subject-line { display: grid; grid-template-columns: minmax(90px, 1fr) 2fr 60px; gap: 12px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--c-line); }
+.subject-line .progress-track { height: 2px; }
+.subject-line .mono { color: var(--c-ink-3); font-size: 10px; text-align: right; }
+
+@media (max-width: 980px) {
+  .today-sheet { grid-template-columns: 1fr; }
+  .goal-column { border-right: 0; border-bottom: 1px solid var(--c-line); padding-right: 0; }
+  .history-column { padding-left: 0; }
+}
+@media (max-width: 640px) {
+  .study-header { grid-template-columns: 1fr; }
+  .study-actions { width: 100%; }
+  .study-actions .btn { flex: 1; }
+  .next-action { grid-template-columns: 26px 1fr; }
+  .next-action .btn { grid-column: 2; justify-self: start; }
+  .session-line { grid-template-columns: 1fr auto; }
+  .session-date { display: none; }
+  .record-head { grid-template-columns: 1fr; }
+  .record-facts { justify-content: space-between; }
+  .record-fact { text-align: left; }
+  .subject-list { grid-template-columns: 1fr; }
 }
 </style>
 {% endblock %}
 
 {% block content %}
+{% set target = daily_goal.target_minutes if daily_goal else 0 %}
+{% set remaining = [target - today_minutes, 0]|max %}
+{% set progress = [((today_minutes / target) * 100)|round, 100]|min if target else 0 %}
 
-{# ─── greeting ──────────────────────────────────── #}
-{% set hour = now.hour if now is defined else 12 %}
-{% if hour < 5 %}{% set greeting = "Good night" %}
-{% elif hour < 12 %}{% set greeting = "Good morning" %}
-{% elif hour < 17 %}{% set greeting = "Good afternoon" %}
-{% else %}{% set greeting = "Good evening" %}{% endif %}
-
-<!-- ── Header ─────────────────────────────────────────── -->
-<div class="page-header animate-fade-up">
+<header class="study-header animate-fade-up">
   <div>
-    <div class="eyebrow" style="margin-bottom: 6px;">{{ greeting }}, {{ session.username }}</div>
-    <h1 class="page-title">Dashboard</h1>
+    <div class="study-date">{{ now.strftime('%A · %d %B %Y') }}</div>
+    <h1 class="study-heading">Today, <span>{{ session.username }}</span></h1>
   </div>
-  <div class="flex gap-3">
-    <button onclick="openFocusModal()" class="btn btn-outline">
-      <i class="fa-regular fa-clock"></i> Start session
-    </button>
-    <a href="{{ url_for('log_session') }}" class="btn btn-primary">
-      <i class="fa-solid fa-plus"></i> Log manually
-    </a>
+  <div class="study-actions">
+    <button type="button" onclick="openGoalModal()" class="btn btn-ghost">{{ 'Revise goal' if daily_goal else 'Set today’s goal' }}</button>
+    <button type="button" onclick="openFocusModal()" class="btn btn-primary">Start studying</button>
   </div>
-</div>
+</header>
 
-<!-- ── Top row: Radial arc + Heatmap ─────────────────── -->
-<div class="dash-top animate-fade-up delay-1">
-
-  <!-- Radial arc: today's progress -->
-  <div class="card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 28px 20px; gap: 20px;">
-    <div class="card-label" style="text-align: center;">Today's study time</div>
-
-    <div class="arc-wrap">
-      <svg class="arc-svg" width="160" height="160" viewBox="0 0 160 160">
-        <!-- Outer track (daily goal: 120 min = 2h) -->
-        <circle class="arc-track" cx="80" cy="80" r="66"
-                stroke-dasharray="414.69"
-                stroke-dashoffset="0"/>
-        <!-- Outer fill (today's minutes vs 120 min goal) -->
-        <circle class="arc-fill" id="arcOuter" cx="80" cy="80" r="66"
-                stroke-dasharray="414.69"
-                stroke-dashoffset="414.69"/>
-        <!-- Inner track (weekly goal: 10h = 600 min) -->
-        <circle class="arc-fill-inner" cx="80" cy="80" r="54"
-                stroke-dasharray="339.29"
-                stroke-dashoffset="0"/>
-        <circle class="arc-fill-inner-active" id="arcInner" cx="80" cy="80" r="54"
-                stroke-dasharray="339.29"
-                stroke-dashoffset="339.29"/>
-      </svg>
-      <div class="arc-center">
-        <div class="arc-number" id="arcLabel">
-          {% set td_h = (today_minutes // 60)|int %}
-          {% set td_m = (today_minutes % 60)|int %}
-          {% if td_h > 0 %}{{ td_h }}h {{ '%02d'|format(td_m) }}m{% else %}{{ td_m }}m{% endif %}
-        </div>
-        <div class="arc-sub">Today</div>
+<section class="today-sheet animate-fade-up delay-1" aria-label="Today's study plan">
+  <div class="goal-column">
+    <div class="section-kicker">01 / Today’s goal</div>
+    {% if daily_goal %}
+      <div class="goal-time">{{ (remaining // 60)|int }}<small>h</small> {{ '%02d'|format((remaining % 60)|int) }}<small>m left</small></div>
+      <div class="goal-subject">{{ daily_goal.subject or 'Any subject' }}</div>
+      <div class="goal-rule" aria-label="{{ progress }} percent complete"><span style="width: {{ progress }}%"></span></div>
+      <div class="goal-detail">
+        <span>{{ today_minutes|int }}m studied</span>
+        <span>{{ target }}m target</span>
       </div>
-    </div>
-
-    <!-- Mini legend -->
-    <div style="display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 180px;">
-      <div class="flex items-center justify-between" style="font-size: 12px;">
-        <span style="display: flex; align-items: center; gap: 6px; color: var(--c-ink-2);">
-          <span style="width: 10px; height: 3px; background: var(--c-accent); border-radius: 2px; display: inline-block;"></span>
-          <span id="arcDailyLabel">Daily target</span>
-        </span>
-        <span class="mono" style="color: var(--c-ink-3);" id="arcDailyPct">–</span>
-      </div>
-      <div class="flex items-center justify-between" style="font-size: 12px;">
-        <span style="display: flex; align-items: center; gap: 6px; color: var(--c-ink-2);">
-          <span style="width: 10px; height: 2px; background: var(--c-ink-3); border-radius: 2px; display: inline-block;"></span>
-          <span id="arcWeekLabel">7-day target</span>
-        </span>
-        <span class="mono" style="color: var(--c-ink-3);" id="arcWeekPct">–</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Heatmap: 52-week study fingerprint -->
-  <div class="card" style="padding: 20px 24px;">
-    <div class="flex items-center justify-between" style="margin-bottom: 16px;">
-      <div class="card-label" style="margin: 0;">Activity — past year</div>
-      <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--c-ink-3);">
-        <span>Less</span>
-        <span style="display:flex; gap:2px;">
-          {% for l in [0,1,2,3,4] %}
-          <span style="width:10px;height:10px;border-radius:2px;
-            background:{% if l==0 %}var(--c-line){% elif l==1 %}rgba(212,168,67,0.22){% elif l==2 %}rgba(212,168,67,0.44){% elif l==3 %}rgba(212,168,67,0.68){% else %}rgba(212,168,67,0.90){% endif %};
-            display:inline-block;"></span>
-          {% endfor %}
-        </span>
-        <span>More</span>
-      </div>
-    </div>
-
-    <div style="display: flex; align-items: flex-start;">
-      <!-- Day labels -->
-      <div class="hm-day-labels">
-        <div class="hm-day-label"></div>
-        <div class="hm-day-label">Mon</div>
-        <div class="hm-day-label"></div>
-        <div class="hm-day-label">Wed</div>
-        <div class="hm-day-label"></div>
-        <div class="hm-day-label">Fri</div>
-        <div class="hm-day-label"></div>
-      </div>
-      <div style="overflow-x: auto; flex: 1;">
-        <!-- Month labels + grid rendered by JS -->
-        <div id="hmMonthRow" class="hm-month-labels"></div>
-        <div id="hmGrid" class="heatmap-grid"></div>
-      </div>
-    </div>
-
-    <!-- Total streak info -->
-    <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--c-line); display: flex; gap: 24px;">
-      <div>
-        <div class="card-label" style="margin-bottom: 2px;">Longest streak</div>
-        <div style="font-family: var(--f-display); font-size: 1.25rem; font-weight: 700; letter-spacing: -0.03em;" id="hmLongest">–</div>
-      </div>
-      <div>
-        <div class="card-label" style="margin-bottom: 2px;">Current streak</div>
-        <div style="font-family: var(--f-display); font-size: 1.25rem; font-weight: 700; letter-spacing: -0.03em;" id="hmCurrent">–</div>
-      </div>
-      <div>
-        <div class="card-label" style="margin-bottom: 2px;">Active days</div>
-        <div style="font-family: var(--f-display); font-size: 1.25rem; font-weight: 700; letter-spacing: -0.03em;" id="hmActive">–</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ── Stats row ──────────────────────────────────────── -->
-<div class="dash-mid animate-fade-up delay-2">
-  <div class="card">
-    <div class="card-label">Total study time</div>
-    <div class="flex items-end gap-2" style="margin-top: 4px;">
-      <span class="stat-number">{{ total_hours }}</span><span class="stat-unit" style="margin-bottom:4px;">h</span>
-      <span class="stat-number" style="font-size:1.6rem;">{{ '{:02d}'.format(total_mins) }}</span><span class="stat-unit" style="margin-bottom:4px;">m</span>
-    </div>
-    <div style="font-size:12px;color:var(--c-ink-3);margin-top:8px;">All sessions combined</div>
-  </div>
-  <div class="card">
-    <div class="card-label">Sessions logged</div>
-    <div class="flex items-end gap-2" style="margin-top: 4px;">
-      <span class="stat-number">{{ subjects_data|sum(attribute=2)|int if subjects_data else 0 }}</span>
-    </div>
-    <div style="font-size:12px;color:var(--c-ink-3);margin-top:8px;">Across all subjects</div>
-  </div>
-  <div class="card">
-    <div class="card-label">Subjects studied</div>
-    <div class="flex items-end gap-2" style="margin-top: 4px;">
-      <span class="stat-number">{{ subjects_data|length }}</span>
-    </div>
-    <div style="font-size:12px;color:var(--c-ink-3);margin-top:8px;">Distinct topics tracked</div>
-  </div>
-</div>
-
-<!-- ── Bottom row: Activity + Subjects ───────────────── -->
-<div class="dash-bottom animate-fade-up delay-3">
-
-  <!-- Recent sessions -->
-  <div class="card" style="padding: 0;">
-    <div class="flex items-center justify-between" style="padding: 14px 20px; border-bottom: 1px solid var(--c-line);">
-      <div class="card-label" style="margin: 0;">Recent activity</div>
-      <a href="{{ url_for('sessions') }}" class="btn btn-ghost btn-sm">View all</a>
-    </div>
-    {% if recent_sessions %}
-      {% for sess in recent_sessions %}
-      <div class="session-row">
-        <div class="flex items-center gap-3">
-          <div style="width:5px;height:5px;border-radius:50%;background:var(--c-line-strong);flex-shrink:0;"></div>
-          <div>
-            <div style="font-weight:500;font-size:14px;">{{ sess[1] }}</div>
-            <div style="font-size:11px;color:var(--c-ink-3);margin-top:2px;">{{ sess[6] }}</div>
-          </div>
-        </div>
-        <div class="flex items-center gap-3">
-          <div class="mono" style="font-size:12px;color:var(--c-ink-2);">
-            {{ (sess[2] // 60) }}h {{ '{:02d}'.format(sess[2] % 60) }}m
-          </div>
-          <span class="badge badge-neutral">{{ sess[3]|capitalize }}</span>
-        </div>
-      </div>
-      {% endfor %}
     {% else %}
-      <div style="padding: 52px 20px; text-align: center;">
-        <div style="font-size: 1.75rem; margin-bottom: 12px; opacity: 0.3;">📖</div>
-        <div style="font-weight: 500; margin-bottom: 6px;">No sessions yet</div>
-        <div style="font-size:13px;color:var(--c-ink-3);margin-bottom:20px;">Log your first study session to see activity here.</div>
-        <a href="{{ url_for('log_session') }}" class="btn btn-primary btn-sm">Log a session</a>
+      <div class="goal-empty">
+        <h2>Give today a finish line.</h2>
+        <p>No goal has been set for today. Choose a duration and, if useful, the subject that deserves your attention.</p>
       </div>
+      <button type="button" class="btn btn-outline" onclick="openGoalModal()">Set a real goal</button>
     {% endif %}
   </div>
 
-  <!-- Subjects -->
-  <div class="card" style="padding: 0;">
-    <div style="padding: 14px 20px; border-bottom: 1px solid var(--c-line);">
-      <div class="card-label" style="margin: 0;">By subject</div>
+  <div class="history-column">
+    <div class="section-kicker">02 / What to do next</div>
+    <div class="next-action">
+      <div class="next-number">→</div>
+      <div>
+        {% if next_subject %}
+          <h2>Continue {{ next_subject }}</h2>
+          <p>{{ 'Chosen for today’s goal' if daily_goal and daily_goal.subject else 'Based on your latest study session' }}</p>
+        {% else %}
+          <h2>Choose your first subject</h2>
+          <p>Your next action will become more specific as your study record grows.</p>
+        {% endif %}
+      </div>
+      <button type="button" class="btn btn-outline btn-sm" onclick='openFocusModal({{ (next_subject or "")|tojson }})'>Focus now</button>
     </div>
-    {% if subjects_data %}
-      {% set total_mins_all = subjects_data|sum(attribute=1)|int %}
-      {% for subject, minutes, sess_count in subjects_data[:7] %}
-      <div class="subject-row">
-        <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="{{ subject }}">{{ subject }}</div>
-        <div class="progress-track">
-          {% set pct = [(minutes / total_mins_all * 100)|round(1), 100]|min if total_mins_all > 0 else 0 %}
-          <div class="progress-fill accent" style="width:{{ pct }}%;"></div>
+
+    <div class="session-ledger">
+      <div class="section-kicker">Recent learning</div>
+      {% if recent_learning %}
+        {% for item in recent_learning %}
+        <div class="session-line">
+          <span class="session-subject">{{ item.subject }}</span>
+          <span class="session-date">{{ item.date }}</span>
+          <span class="session-duration">{{ item.minutes }} min</span>
         </div>
-        <div class="mono" style="font-size:11px;color:var(--c-ink-3);text-align:right;">{{ (minutes // 60) }}h{{ '%02d'|format(minutes % 60) }}m</div>
-      </div>
-      {% endfor %}
-      {% if subjects_data|length > 7 %}
-      <div style="padding: 10px 20px;">
-        <a href="{{ url_for('analytics') }}" class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;">
-          +{{ subjects_data|length - 7 }} more subjects
-        </a>
-      </div>
+        {% endfor %}
+        <a href="{{ url_for('sessions') }}" class="text-link" style="display:inline-block;margin-top:18px;font-size:12px;">Open full history</a>
+      {% else %}
+        <div class="ledger-empty">
+          <h2>Your record starts here.</h2>
+          <p>Completed focus blocks and manually logged study sessions will appear in this chronology.</p>
+        </div>
       {% endif %}
-    {% else %}
-      <div style="padding:40px 20px;text-align:center;color:var(--c-ink-3);font-size:13px;">No subject data yet.</div>
-    {% endif %}
-  </div>
-</div>
-
-<!-- ── Focus modal ────────────────────────────────────── -->
-<div id="focusModal" class="modal-backdrop" style="display:none;" onclick="if(event.target===this)closeFocusModal()">
-  <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title">Start a focus session</span>
-      <button class="modal-close" onclick="closeFocusModal()"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <form id="focusForm">
-      <div class="field">
-        <label class="field-label">Subject</label>
-        <input type="text" id="focusSubject" class="input" placeholder="e.g. Calculus, History…" required autofocus>
-      </div>
-      <div class="field">
-        <label class="field-label">Duration (minutes)</label>
-        <input type="number" id="focusDuration" class="input" value="25" min="1" max="120" required>
-        <div class="field-hint">Standard Pomodoro is 25 minutes.</div>
-      </div>
-      <div class="flex gap-3" style="margin-top: 8px;">
-        <button type="button" onclick="closeFocusModal()" class="btn btn-outline flex-1">Cancel</button>
-        <button type="submit" class="btn btn-primary flex-1">Begin focus</button>
-      </div>
+  </div>
+</section>
+
+<section class="study-record animate-fade-up delay-2">
+  <div class="record-head">
+    <div>
+      <div class="section-kicker">03 / Learning record</div>
+      <h2>Your year, one day at a time</h2>
+    </div>
+    <div class="record-facts">
+      <div class="record-fact"><strong id="activeDays">—</strong><span>active days</span></div>
+      <div class="record-fact"><strong>{{ total_hours }}h {{ total_mins }}m</strong><span>recorded</span></div>
+      <div class="record-fact"><strong>{{ subjects_data|length }}</strong><span>subjects</span></div>
+    </div>
+  </div>
+  <div class="heatmap-wrap"><div id="heatmap" class="heatmap-grid" aria-label="Study activity over the past year"></div></div>
+  <div id="hmTooltip" class="hm-tooltip"></div>
+
+  {% if subjects_data %}
+  <div class="subject-list">
+    {% set total_subject_minutes = subjects_data|sum(attribute=1) %}
+    {% for subject, minutes, session_count in subjects_data[:8] %}
+    <div class="subject-line">
+      <span>{{ subject }}</span>
+      <div class="progress-track"><div class="progress-fill accent" style="width: {{ (minutes / total_subject_minutes * 100)|round(1) if total_subject_minutes else 0 }}%"></div></div>
+      <span class="mono">{{ minutes }}m</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+
+<div id="goalModal" class="modal-backdrop" style="display:none" onclick="if(event.target===this)closeGoalModal()">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Today’s finish line</span><button type="button" class="modal-close" onclick="closeGoalModal()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+    <form method="post" action="{{ url_for('daily_goal') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field"><label class="field-label" for="targetMinutes">Target minutes</label><input class="input" id="targetMinutes" name="target_minutes" type="number" min="1" max="600" value="{{ target or '' }}" required></div>
+      <div class="field"><label class="field-label" for="goalSubject">Priority subject <span class="text-faint">(optional)</span></label><input class="input" id="goalSubject" name="subject" maxlength="100" value="{{ daily_goal.subject if daily_goal and daily_goal.subject else '' }}"></div>
+      <button class="btn btn-primary" type="submit">Save today’s goal</button>
     </form>
   </div>
 </div>
 
-<!-- Tooltip -->
-<div id="hmTooltip" class="hm-tooltip"></div>
+<div id="focusModal" class="modal-backdrop" style="display:none" onclick="if(event.target===this)closeFocusModal()">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Begin a focus block</span><button type="button" class="modal-close" onclick="closeFocusModal()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+    <form id="focusForm">
+      <div class="field"><label class="field-label" for="focusSubject">Subject</label><input class="input" id="focusSubject" maxlength="100" required></div>
+      <div class="field"><label class="field-label" for="focusDuration">Minutes</label><input class="input" id="focusDuration" type="number" min="1" max="120" value="25" required></div>
+      <button class="btn btn-primary" type="submit">Begin focus</button>
+    </form>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-// ─── Heatmap data from server ────────────────────────────
-const RAW_DATA = {{ heatmap_data | tojson }};
-const TODAY_MINS = {{ today_minutes | float }};
+const rawStudyData = {{ heatmap_data|tojson }};
+const studyByDate = Object.fromEntries(rawStudyData.map(([date, minutes]) => [String(date), Number(minutes)]));
 
-// Build a lookup: "YYYY-MM-DD" -> minutes
-const dataMap = {};
-RAW_DATA.forEach(([d, m]) => { dataMap[String(d)] = m; });
-
-// ─── Radial arc animation ────────────────────────────────
-(function initArc() {
-  const outer = document.getElementById('arcOuter');
-  const inner = document.getElementById('arcInner');
-  const dailyPct  = document.getElementById('arcDailyPct');
-  const weeklyPct = document.getElementById('arcWeekPct');
-  const dailyLabel = document.getElementById('arcDailyLabel');
-  const weekLabel = document.getElementById('arcWeekLabel');
-
-  const today = new Date();
-
-  // Compute 30-day moving average to use as dynamic goal
-  let thirtyDayMins = 0;
-  for (let i = 1; i <= 30; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
-    const key = d.toISOString().split('T')[0];
-    thirtyDayMins += (dataMap[key] || 0);
-  }
-  
-  // Base daily target is historical average (min 30m, max 4h)
-  let baseDailyGoal = Math.round(thirtyDayMins / 30);
-  if (baseDailyGoal < 30) baseDailyGoal = 30;
-  if (baseDailyGoal > 240) baseDailyGoal = 240;
-  
-  const DAILY_GOAL  = baseDailyGoal;
-  const WEEKLY_GOAL = baseDailyGoal * 5; // 5 days a week equivalent
-
-  // Update UI labels with computed goals
-  dailyLabel.textContent = `Daily target (${DAILY_GOAL >= 60 ? Math.floor(DAILY_GOAL/60)+'h ' : ''}${DAILY_GOAL%60>0 || DAILY_GOAL<60 ? (DAILY_GOAL%60)+'m' : ''})`;
-  weekLabel.textContent = `7-day target (${WEEKLY_GOAL >= 60 ? Math.floor(WEEKLY_GOAL/60)+'h ' : ''}${WEEKLY_GOAL%60>0 || WEEKLY_GOAL<60 ? (WEEKLY_GOAL%60)+'m' : ''})`;
-
-  const outerCirc = 2 * Math.PI * 66;
-  const innerCirc = 2 * Math.PI * 54;
-
-  // Today
-  const dailyRatio  = Math.min(TODAY_MINS / DAILY_GOAL, 1);
-
-  // This week: sum last 7 days (including today)
-  let weekMins = 0;
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
-    const key = d.toISOString().split('T')[0];
-    weekMins += (dataMap[key] || 0);
-  }
-  const weekRatio = Math.min(weekMins / WEEKLY_GOAL, 1);
-
-  // Animate after paint
-  requestAnimationFrame(() => {
-    setTimeout(() => {
-      outer.style.strokeDashoffset = outerCirc * (1 - dailyRatio);
-      inner.style.strokeDashoffset = innerCirc * (1 - weekRatio);
-    }, 120);
-  });
-
-  const dp = Math.round(dailyRatio * 100);
-  const wp = Math.round(weekRatio * 100);
-  dailyPct.textContent  = dp  + '%';
-  weeklyPct.textContent = wp + '%';
-})();
-
-// ─── Heatmap renderer ────────────────────────────────────
-(function initHeatmap() {
-  const grid       = document.getElementById('hmGrid');
-  const monthRow   = document.getElementById('hmMonthRow');
-  const tooltip    = document.getElementById('hmTooltip');
-  const longestEl  = document.getElementById('hmLongest');
-  const currentEl  = document.getElementById('hmCurrent');
-  const activeEl   = document.getElementById('hmActive');
-
-  // Build a full 52-week grid (364 days ending today)
-  const WEEKS = 52;
-  const DAYS  = 7; // Mon-Sun
-
-  // Find start date: the most recent Monday <= 364 days ago
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayKey = today.toISOString().split('T')[0];
-
-  // Align to Monday
-  const dow = (today.getDay() + 6) % 7; // 0=Mon,6=Sun
-  const startDate = new Date(today);
-  startDate.setDate(today.getDate() - dow - (WEEKS - 1) * 7);
-
-  // Compute intensity levels (percentiles)
-  const allVals = Object.values(dataMap).filter(v => v > 0).sort((a, b) => a - b);
-  function getLevel(mins) {
-    if (!mins || mins === 0) return 0;
-    const pct = allVals.filter(v => v <= mins).length / allVals.length;
-    if (pct < 0.25) return 1;
-    if (pct < 0.50) return 2;
-    if (pct < 0.75) return 3;
-    return 4;
-  }
-
-  // Build cells week-by-week, day-by-day (Mon=0 … Sun=6)
-  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  let prevMonth = -1;
-  let monthCols = []; // {col, label}
-
-  for (let w = 0; w < WEEKS; w++) {
-    for (let d = 0; d < DAYS; d++) {
-      const cellDate = new Date(startDate);
-      cellDate.setDate(startDate.getDate() + w * 7 + d);
-      const key = cellDate.toISOString().split('T')[0];
-      const mins = dataMap[key] || 0;
-      const level = getLevel(mins);
-      const isToday = key === todayKey;
-      const isFuture = cellDate > today;
-
-      const cell = document.createElement('div');
-      cell.className = 'hm-cell';
-      if (!isFuture) {
-        cell.dataset.level = level;
-        if (isToday) cell.dataset.today = 'true';
-      } else {
-        cell.style.opacity = '0.15';
-      }
-
-      // Tooltip on hover
-      if (!isFuture) {
-        const label = formatDate(cellDate);
-        const minsDisplay = mins > 0
-          ? `${Math.floor(mins / 60)}h ${Math.round(mins % 60)}m`
-          : 'No sessions';
-        cell.addEventListener('mousemove', (e) => {
-          tooltip.textContent = `${label} — ${minsDisplay}`;
-          tooltip.style.opacity = '1';
-          tooltip.style.left = (e.clientX + 12) + 'px';
-          tooltip.style.top  = (e.clientY - 28) + 'px';
-        });
-        cell.addEventListener('mouseleave', () => {
-          tooltip.style.opacity = '0';
-        });
-      }
-
-      grid.appendChild(cell);
-
-      // Track month label position
-      if (d === 0) {
-        const m = cellDate.getMonth();
-        if (m !== prevMonth) {
-          monthCols.push({ col: w, label: MONTHS[m] });
-          prevMonth = m;
-        }
-      }
-    }
-  }
-
-  // Render month labels
-  monthRow.style.gridAutoColumns = '11px';
-  for (let w = 0; w < WEEKS; w++) {
-    const span = document.createElement('div');
-    span.className = 'hm-month-label';
-    const mc = monthCols.find(mc => mc.col === w);
-    span.textContent = mc ? mc.label : '';
-    monthRow.appendChild(span);
-  }
-
-  // ─── Streak stats ────────────────────────────────
-  let currentStreak = 0, longestStreak = 0, tempStreak = 0, activeDays = 0;
-  for (let i = 0; i < WEEKS * DAYS; i++) {
-    const d = new Date(startDate);
-    d.setDate(startDate.getDate() + i);
-    if (d > today) break;
-    const key = d.toISOString().split('T')[0];
-    const active = (dataMap[key] || 0) > 0;
-    if (active) {
-      activeDays++;
-      tempStreak++;
-      longestStreak = Math.max(longestStreak, tempStreak);
-    } else {
-      tempStreak = 0;
-    }
-  }
-  // Current streak: count back from today
-  let cs = 0;
-  for (let i = 0; i < WEEKS * DAYS; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
-    const key = d.toISOString().split('T')[0];
-    if ((dataMap[key] || 0) > 0) { cs++; } else { break; }
-  }
-
-  longestEl.textContent = longestStreak ? longestStreak + (longestStreak === 1 ? ' day' : ' days') : '–';
-  currentEl.textContent = cs ? cs + (cs === 1 ? ' day' : ' days') : '–';
-  activeEl.textContent  = activeDays ? activeDays + (activeDays === 1 ? ' day' : ' days') : '–';
-
-  function formatDate(d) {
-    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-  }
-})();
-
-// ─── Focus modal ─────────────────────────────────────────
-const focusModal = document.getElementById('focusModal');
-window.openFocusModal = () => {
-  focusModal.style.display = 'flex';
-  setTimeout(() => document.getElementById('focusSubject').focus(), 60);
-};
-window.closeFocusModal = () => {
-  focusModal.style.display = 'none';
-  document.getElementById('focusForm').reset();
-};
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && focusModal.style.display === 'flex') closeFocusModal();
-});
-document.getElementById('focusForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const subject  = document.getElementById('focusSubject').value.trim();
-  const duration = parseInt(document.getElementById('focusDuration').value);
-  if (!subject) return showToast('Subject is required', 'error');
-  if (duration < 1 || duration > 120) return showToast('Duration must be 1–120 minutes', 'error');
-
-  const btn = e.target.querySelector('button[type="submit"]');
-  btn.disabled = true;
-  btn.textContent = 'Starting…';
-
-  try {
-    const res = await fetch('/api/pomodoro/start', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
-      },
-      body: JSON.stringify({ subject })
+(function renderStudyRecord() {
+  const grid = document.getElementById('heatmap');
+  const tooltip = document.getElementById('hmTooltip');
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const start = new Date(today); start.setDate(today.getDate() - 363);
+  const values = Object.values(studyByDate).filter(Boolean).sort((a, b) => a - b);
+  let active = 0;
+  for (let i = 0; i < 364; i++) {
+    const day = new Date(start); day.setDate(start.getDate() + i);
+    const key = day.toISOString().slice(0, 10);
+    const minutes = studyByDate[key] || 0;
+    if (minutes) active++;
+    const rank = minutes ? values.filter(value => value <= minutes).length / values.length : 0;
+    const level = !minutes ? 0 : rank <= .25 ? 1 : rank <= .5 ? 2 : rank <= .75 ? 3 : 4;
+    const cell = document.createElement('span');
+    cell.className = 'hm-cell'; cell.dataset.level = level;
+    if (key === today.toISOString().slice(0, 10)) cell.dataset.today = 'true';
+    cell.addEventListener('mousemove', event => {
+      tooltip.textContent = `${day.toLocaleDateString(undefined, {month:'short', day:'numeric'})} · ${minutes ? minutes + ' min' : 'no study logged'}`;
+      tooltip.style.cssText = `opacity:1;left:${event.clientX + 12}px;top:${event.clientY - 30}px`;
     });
-    const data = await res.json();
-    if (res.ok && data.success) {
-      sessionStorage.setItem('activeSessionId', data.session_id);
-      sessionStorage.setItem('activeSessionDuration', duration);
-      sessionStorage.setItem('activeSessionSubject', subject);
-      showToast('Starting focus session…', 'info');
-      setTimeout(() => { window.location.href = `/pomodoro?autostart=true&duration=${duration}`; }, 400);
-    } else {
-      showToast(data.error || 'Failed to start session', 'error');
-      btn.disabled = false;
-      btn.textContent = 'Begin focus';
-    }
-  } catch {
-    showToast('Connection error', 'error');
-    btn.disabled = false;
-    btn.textContent = 'Begin focus';
+    cell.addEventListener('mouseleave', () => tooltip.style.opacity = 0);
+    grid.appendChild(cell);
   }
+  document.getElementById('activeDays').textContent = active;
+})();
+
+const goalModal = document.getElementById('goalModal');
+function openGoalModal() { goalModal.style.display = 'flex'; document.getElementById('targetMinutes').focus(); }
+function closeGoalModal() { goalModal.style.display = 'none'; }
+
+const focusModal = document.getElementById('focusModal');
+function openFocusModal(subject = '') { focusModal.style.display = 'flex'; const field = document.getElementById('focusSubject'); field.value = subject; field.focus(); }
+function closeFocusModal() { focusModal.style.display = 'none'; }
+document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeGoalModal(); closeFocusModal(); } });
+
+document.getElementById('focusForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const subject = document.getElementById('focusSubject').value.trim();
+  const duration = Number(document.getElementById('focusDuration').value);
+  if (!subject || duration < 1 || duration > 120) return showToast('Add a subject and a duration from 1–120 minutes.', 'error');
+  const button = event.submitter; button.disabled = true;
+  try {
+    const response = await fetch('/api/pomodoro/start', { method: 'POST', headers: {'Content-Type':'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content}, body: JSON.stringify({subject}) });
+    const data = await response.json();
+    if (!response.ok || !data.success) throw new Error(data.error || 'Could not start the timer.');
+    sessionStorage.setItem('activeSessionId', data.session_id);
+    sessionStorage.setItem('activeSessionDuration', duration);
+    sessionStorage.setItem('activeSessionSubject', subject);
+    location.href = `/pomodoro?autostart=true&duration=${duration}`;
+  } catch (error) { showToast(error.message, 'error'); button.disabled = false; }
 });
 </script>
 {% endblock %}

@@ -16,3 +16,4 @@ def test_database_initialization():
     assert 'study_sessions' in tables
     assert 'pomodoro_sessions' in tables
     assert 'friendships' in tables
+    assert 'daily_goals' in tables

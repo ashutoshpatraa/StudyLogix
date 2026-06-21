@@ -124,6 +124,8 @@ a { color: inherit; text-decoration: none; }
   min-height: 100vh;
 }
 
+.mobile-nav { display: none; }
+
 /* ─── Sidebar ────────────────────────────────────────────── */
 .sidebar {
   width: var(--sidebar-w);
@@ -148,20 +150,26 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: var(--s-5);
 }
 
-.brand-mark {
-  width: 28px;
-  height: 28px;
-  background: var(--c-ink);
-  color: var(--c-bg);
+.ledger-mark {
+  width: 30px;
+  height: 32px;
+  padding: 7px 5px 6px 8px;
+  border: 1px solid var(--c-line-strong);
+  border-left: 3px solid var(--c-accent);
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--f-display);
-  font-weight: 700;
-  font-size: 14px;
-  border-radius: var(--r-sm);
+  flex-direction: column;
+  justify-content: space-between;
   flex-shrink: 0;
+  transform: skewY(-2deg);
 }
+.ledger-mark span {
+  display: block;
+  height: 1px;
+  background: var(--c-ink-2);
+}
+.ledger-mark span:nth-child(1) { width: 100%; }
+.ledger-mark span:nth-child(2) { width: 68%; }
+.ledger-mark span:nth-child(3) { width: 84%; background: var(--c-ink); }
 
 .brand-name {
   font-family: var(--f-display);
@@ -169,6 +177,7 @@ a { color: inherit; text-decoration: none; }
   font-size: 15px;
   letter-spacing: -0.02em;
 }
+.brand-name span { color: var(--c-ink-3); font-weight: 500; }
 
 .nav-section {
   display: flex;
@@ -669,10 +678,31 @@ textarea.input { resize: vertical; min-height: 90px; }
 
 /* ─── Responsive ─────────────────────────────────────────── */
 @media (max-width: 900px) {
+  .mobile-nav {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 45;
+    height: 54px;
+    padding: 0 var(--s-4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--c-bg);
+    border-bottom: 1px solid var(--c-line);
+  }
+  .mobile-brand { font: 600 14px var(--f-display); }
+  .mobile-menu-button {
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--c-line-strong);
+    background: var(--c-surface);
+    color: var(--c-ink);
+    cursor: pointer;
+  }
   .sidebar {
     transform: translateX(-100%);
     transition: transform var(--t-mid) var(--ease);
   }
   .sidebar.is-open { transform: translateX(0); }
-  .main { margin-left: 0; padding: var(--s-5) var(--s-4); }
+  .main { margin-left: 0; padding: calc(54px + var(--s-5)) var(--s-4) var(--s-5); }
 }

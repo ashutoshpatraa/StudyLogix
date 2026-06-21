@@ -77,6 +77,19 @@ class DatabaseManager:
             """)
 
             cursor.execute("""
+                CREATE TABLE IF NOT EXISTS daily_goals (
+                    goal_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    goal_date DATE NOT NULL,
+                    target_minutes INTEGER NOT NULL CHECK(target_minutes BETWEEN 1 AND 600),
+                    subject TEXT,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+                    UNIQUE(user_id, goal_date)
+                )
+            """)
+
+            cursor.execute("""
                 CREATE TABLE IF NOT EXISTS pomodoro_sessions (
                     session_id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
@@ -164,6 +177,9 @@ class DatabaseManager:
             """)
             cursor.execute("""
                 CREATE INDEX IF NOT EXISTS idx_study_goals_user_id ON study_goals(user_id);
+            """)
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_daily_goals_user_date ON daily_goals(user_id, goal_date);
             """)
             cursor.execute("""
                 CREATE INDEX IF NOT EXISTS idx_active_timers_user_id ON active_timers(user_id);

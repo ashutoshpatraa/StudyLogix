@@ -27,42 +27,48 @@
 <div class="app-shell">
 
   {% if session.get('user_id') %}
+  <header class="mobile-nav">
+    <a href="{{ url_for('dashboard') }}" class="mobile-brand">StudyLogix</a>
+    <button class="mobile-menu-button" id="mobileMenuButton" type="button" aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+  </header>
   <!-- ── Sidebar ───────────────────────────────────────── -->
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-      <div class="brand-mark">S</div>
-      <span class="brand-name">StudyLogix</span>
+      <div class="ledger-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+      <span class="brand-name">Study<span>/Logix</span></span>
     </div>
 
     <div class="nav-section">
       <span class="nav-label">Overview</span>
       <a href="{{ url_for('dashboard') }}"
          class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
-        <i class="fa-regular fa-square-poll-vertical"></i> Dashboard
+        <i class="fa-solid fa-book-open"></i> Dashboard
       </a>
       <a href="{{ url_for('analytics') }}"
          class="nav-link {% if request.endpoint == 'analytics' %}active{% endif %}">
-        <i class="fa-regular fa-chart-bar"></i> Analytics
+        <i class="fa-solid fa-chart-simple"></i> Analytics
       </a>
 
       <span class="nav-label">Sessions</span>
       <a href="{{ url_for('log_session') }}"
          class="nav-link {% if request.endpoint == 'log_session' %}active{% endif %}">
-        <i class="fa-regular fa-pen-to-square"></i> Log Session
+        <i class="fa-solid fa-pen"></i> Log Session
       </a>
       <a href="{{ url_for('pomodoro') }}"
          class="nav-link {% if request.endpoint == 'pomodoro' %}active{% endif %}">
-        <i class="fa-regular fa-clock"></i> Focus Timer
+        <i class="fa-solid fa-clock"></i> Focus Timer
       </a>
       <a href="{{ url_for('sessions') }}"
          class="nav-link {% if request.endpoint == 'sessions' %}active{% endif %}">
-        <i class="fa-regular fa-folder-open"></i> History
+        <i class="fa-solid fa-folder-open"></i> History
       </a>
 
       <span class="nav-label">Community</span>
       <a href="{{ url_for('friends') }}"
          class="nav-link {% if request.endpoint == 'friends' %}active{% endif %}">
-        <i class="fa-regular fa-users"></i> Study Group
+        <i class="fa-solid fa-user-group"></i> Study Group
       </a>
     </div>
 
@@ -141,6 +147,21 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => t.remove(), 200);
     }, 4000 + i * 400);
   });
+
+  const menuButton = document.getElementById('mobileMenuButton');
+  const sidebar = document.getElementById('sidebar');
+  if (menuButton && sidebar) {
+    menuButton.addEventListener('click', () => {
+      const isOpen = sidebar.classList.toggle('is-open');
+      menuButton.setAttribute('aria-expanded', String(isOpen));
+      menuButton.setAttribute('aria-label', isOpen ? 'Close navigation' : 'Open navigation');
+      menuButton.innerHTML = `<i class="fa-solid ${isOpen ? 'fa-xmark' : 'fa-bars'}"></i>`;
+    });
+    sidebar.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
+      sidebar.classList.remove('is-open');
+      menuButton.setAttribute('aria-expanded', 'false');
+    }));
+  }
 });
 
 // Keyboard shortcuts

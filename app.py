@@ -261,12 +261,23 @@ def dashboard():
     study_time_data = pomodoro_manager.get_total_study_time_including_pomodoros(user_id)
     subjects_data = session_manager.get_subject_breakdown(user_id)
     recent_sessions = session_manager.get_user_sessions(user_id, 5)
+    recent_learning = session_manager.get_recent_learning(user_id, 5)
     pomodoro_stats = pomodoro_manager.get_user_pomodoro_stats(user_id)
     heatmap_data = session_manager.get_daily_study_data(user_id, 365)
+    heatmap_data = [(str(row[0]), row[1]) for row in heatmap_data]
 
     # Compute today's minutes for the radial arc
     today_str = date.today().isoformat()
     today_minutes = sum(row[1] for row in heatmap_data if str(row[0]) == today_str)
+    daily_goal = session_manager.get_daily_goal(user_id)
+
+    # A next action must be grounded in the user's own record. Prefer the
+    # subject they chose for today, then the most recently studied subject.
+    next_subject = None
+    if daily_goal and daily_goal.get('subject'):
+        next_subject = daily_goal['subject']
+    elif recent_learning:
+        next_subject = recent_learning[0]['subject']
 
     total_hours = study_time_data['total_hours']
     total_mins = study_time_data['remaining_minutes']
@@ -279,9 +290,34 @@ def dashboard():
         pomodoro_stats=pomodoro_stats,
         subjects_data=subjects_data,
         recent_sessions=recent_sessions,
+        recent_learning=recent_learning,
         heatmap_data=heatmap_data,
         today_minutes=today_minutes,
+        daily_goal=daily_goal,
+        next_subject=next_subject,
     )
+
+
+@app.route('/daily-goal', methods=['POST'])
+@login_required
+def daily_goal():
+    target_minutes, err = _validate_duration(request.form.get('target_minutes', ''))
+    if err:
+        flash(err, 'error')
+        return redirect(url_for('dashboard'))
+
+    subject = request.form.get('subject', '').strip()
+    if subject:
+        err = _validate_subject(subject)
+        if err:
+            flash(err, 'error')
+            return redirect(url_for('dashboard'))
+
+    if session_manager.set_daily_goal(session['user_id'], target_minutes, subject):
+        flash("Today's goal was saved.", 'success')
+    else:
+        flash("Today's goal could not be saved.", 'error')
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/log_session', methods=['GET', 'POST'])
