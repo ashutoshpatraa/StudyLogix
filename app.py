@@ -202,7 +202,6 @@ def register():
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '')
-        confirm_password = request.form.get('confirm_password', '')
 
         # Validation
         err = _validate_username(username)
@@ -213,10 +212,6 @@ def register():
         err = _validate_password(password)
         if err:
             flash(err, 'error')
-            return render_template('register.html')
-
-        if password != confirm_password:
-            flash('Passwords do not match!', 'error')
             return render_template('register.html')
 
         success, message = user_manager.register_user(username, password)

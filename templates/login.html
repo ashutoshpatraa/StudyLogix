@@ -13,7 +13,7 @@
             <p style="color: var(--text-secondary); font-size: 0.95rem;">Enter your credentials to access your account</p>
         </div>
         
-        <form method="POST" action="{{ url_for('login') }}">
+        <form method="POST" action="{{ url_for('login') }}" id="loginForm">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div style="margin-bottom: var(--space-4);">
                 <label for="username" class="form-label">Username</label>
