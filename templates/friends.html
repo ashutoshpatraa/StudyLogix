@@ -3,165 +3,173 @@
 {% block title %}Friends - StudyLogix{% endblock %}
 
 {% block content %}
-<div class="max-w-1400 mx-auto p-6">
-    <div class="d-flex justify-between align-center mb-8">
-        <h1 class="nothing-h1 m-0">FRIENDS & PROGRESS</h1>
-        <button onclick="showAddFriendModal()" class="nothing-btn">
-            <span class="text-xl mr-2">+</span>
-            ADD FRIEND
-        </button>
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: var(--space-5);">
+    <div>
+        <h1 class="hero-title" style="font-size: 2rem; margin-bottom: var(--space-1);">Network</h1>
+        <p style="color: var(--text-secondary); margin: 0;">Connect with peers and maintain mutual accountability.</p>
     </div>
+    <button onclick="showAddFriendModal()" class="btn btn-primary">
+        <i class="fas fa-user-plus"></i> Add Friend
+    </button>
+</div>
 
-    <!-- Pending Friend Requests -->
-    {% if pending_requests %}
-    <div class="glass-card" style="margin-bottom: 24px; padding: 24px;">
-        <h3 class="nothing-h3" style="margin-bottom: 16px; color: var(--nothing-orange);">
-            PENDING REQUESTS ({{ pending_requests|length }})
-        </h3>
-        <div style="display: grid; gap: 12px;">
-            {% for request in pending_requests %}
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background: var(--nothing-bg-secondary); border-radius: 12px; border-left: 3px solid var(--nothing-orange);">
-                <div>
-                    <div style="font-weight: 600; font-size: 1.1rem;">{{ request.username }}</div>
-                    <div class="stats-label-nothing">Requested {{ request.requested_at }}</div>
-                </div>
-                <div style="display: flex; gap: 8px;">
-                    <button onclick="respondToRequest({{ request.friendship_id }}, true)" class="nothing-btn" style="background: var(--nothing-green);">
-                        Accept
-                    </button>
-                    <button onclick="respondToRequest({{ request.friendship_id }}, false)" class="nothing-btn-outline">
-                        Decline
-                    </button>
-                </div>
+<!-- Pending Requests -->
+{% if pending_requests %}
+<div class="card" style="margin-bottom: var(--space-5); border-left: 3px solid var(--warning-base);">
+    <h3 style="font-size: 1.1rem; margin-bottom: var(--space-3); color: var(--warning-base);">Pending Requests ({{ pending_requests|length }})</h3>
+    <div style="display: flex; flex-direction: column; gap: var(--space-2);">
+        {% for request in pending_requests %}
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--bg-surface-elevated); border-radius: var(--radius-md);">
+            <div>
+                <div style="font-weight: 500;">{{ request.username }}</div>
+                <div style="font-size: 0.8rem; color: var(--text-tertiary);">Requested {{ request.requested_at }}</div>
             </div>
-            {% endfor %}
+            <div style="display: flex; gap: 8px;">
+                <button onclick="respondToRequest({{ request.friendship_id }}, false)" class="btn btn-secondary btn-sm" style="padding: 6px 12px;">Decline</button>
+                <button onclick="respondToRequest({{ request.friendship_id }}, true)" class="btn btn-primary btn-sm" style="padding: 6px 12px;">Accept</button>
+            </div>
         </div>
+        {% endfor %}
     </div>
-    {% endif %}
+</div>
+{% endif %}
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
-        <!-- Friends List -->
-        <div class="glass-card" style="padding: 24px;">
-            <h3 class="nothing-h3" style="margin-bottom: 16px; color: var(--nothing-cyan);">
-                MY FRIENDS ({{ friends|length }})
-            </h3>
-            {% if friends %}
-            <div style="display: grid; gap: 12px;">
-                {% for friend in friends %}
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--nothing-bg-secondary); border-radius: 12px;">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: var(--space-5); margin-bottom: var(--space-5);">
+    
+    <!-- Friends List -->
+    <div class="card" style="padding: var(--space-4);">
+        <h3 style="font-size: 1.1rem; margin-bottom: var(--space-4); display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-user-friends text-muted"></i> My Friends ({{ friends|length }})
+        </h3>
+        
+        {% if friends %}
+        <div class="data-list">
+            {% for friend in friends %}
+            <div class="data-row" style="background: var(--bg-surface-elevated); padding: 12px 16px; border: 1px solid var(--border-subtle);">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--accent-light); color: var(--accent-base); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.8rem;">
+                        {{ friend.username[0]|upper }}
+                    </div>
                     <div>
-                        <div style="font-weight: 600;">{{ friend.username }}</div>
-                        <div class="stats-label-nothing">Member since {{ friend.member_since[:10] }}</div>
-                    </div>
-                    <button class="nothing-btn-outline remove-friend-btn" data-friend-id="{{ friend.user_id }}" data-friend-name="{{ friend.username }}" style="font-size: 0.9rem; padding: 6px 12px;">
-                        Remove
-                    </button>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div style="text-align: center; padding: 40px; color: var(--nothing-text-secondary);">
-                <div style="font-size: 3rem; margin-bottom: 16px;">👥</div>
-                <div>No friends yet. Add friends to see their progress!</div>
-            </div>
-            {% endif %}
-        </div>
-
-        <!-- Active Timers -->
-        <div class="glass-card" style="padding: 24px;">
-            <h3 class="nothing-h3" style="margin-bottom: 16px; color: var(--nothing-purple);">
-                LIVE TIMERS
-            </h3>
-            <div id="activeTimersList">
-                {% if active_timers %}
-                {% for timer in active_timers %}
-                <div class="timer-card" style="padding: 16px; background: var(--nothing-bg-secondary); border-radius: 12px; border-left: 3px solid var(--nothing-purple); margin-bottom: 12px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <div style="font-weight: 600; font-size: 1.1rem;">{{ timer.username }}</div>
-                            <div style="color: var(--nothing-cyan); margin-top: 4px;">
-                                {% if timer.is_break %}
-                                    🧘 BREAK TIME
-                                {% else %}
-                                    📚 {{ timer.subject }}
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div style="text-align: right;">
-                            <div class="pomodoro-timer" style="font-size: 1.5rem; font-weight: 700; color: var(--nothing-purple);">
-                                {{ (timer.time_remaining // 60)|string|zfill(2) }}:{{ (timer.time_remaining % 60)|string|zfill(2) }}
-                            </div>
-                            <div class="stats-label-nothing">{{ timer.duration_minutes }} min session</div>
-                        </div>
+                        <div style="font-weight: 500; font-size: 0.95rem;">{{ friend.username }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-tertiary);">Connected since {{ friend.member_since[:10] }}</div>
                     </div>
                 </div>
-                {% endfor %}
-                {% else %}
-                <div style="text-align: center; padding: 40px; color: var(--nothing-text-secondary);">
-                    <div style="font-size: 3rem; margin-bottom: 16px;">⏱️</div>
-                    <div>No friends are currently studying</div>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
-    <!-- Friends Progress -->
-    <div class="glass-card" style="padding: 24px;">
-        <h3 class="nothing-h3" style="margin-bottom: 16px; color: var(--nothing-green);">
-            WEEKLY PROGRESS
-        </h3>
-        {% if friends_progress %}
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px;">
-            {% for progress in friends_progress %}
-            <div style="padding: 20px; background: var(--nothing-bg-secondary); border-radius: 12px; border-left: 3px solid var(--nothing-green);">
-                <div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 12px;">{{ progress.username }}</div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span class="stats-label-nothing">This Week:</span>
-                    <span style="font-weight: 600; color: var(--nothing-green);">{{ progress.weekly_minutes }} min</span>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span class="stats-label-nothing">Today:</span>
-                    <span style="font-weight: 600; color: var(--nothing-cyan);">{{ progress.today_sessions }} sessions</span>
-                </div>
+                <button class="btn btn-ghost remove-friend-btn" data-friend-id="{{ friend.user_id }}" data-friend-name="{{ friend.username }}" style="padding: 4px; color: var(--text-tertiary);" title="Remove Friend">
+                    <i class="fas fa-user-minus"></i>
+                </button>
             </div>
             {% endfor %}
         </div>
         {% else %}
-        <div style="text-align: center; padding: 40px; color: var(--nothing-text-secondary);">
-            <div style="font-size: 3rem; margin-bottom: 16px;">📊</div>
-            <div>Add friends to see their study progress!</div>
+        <div style="text-align: center; padding: var(--space-5) 0; color: var(--text-tertiary);">
+            <i class="fas fa-user-friends" style="font-size: 2.5rem; margin-bottom: var(--space-2); opacity: 0.5;"></i>
+            <p>No friends added yet.</p>
         </div>
         {% endif %}
     </div>
-</div>
 
-<!-- Add Friend Modal -->
-<div id="addFriendModal" class="modal-backdrop-nothing" role="dialog" aria-modal="true" aria-labelledby="addFriendModalLabel">
-    <div class="glass-card max-w-500 p-8">
-        <div class="d-flex justify-between align-center mb-6">
-            <h2 id="addFriendModalLabel" class="nothing-h2 m-0">ADD FRIEND</h2>
-            <button onclick="closeAddFriendModal()" class="btn-icon-plain" aria-label="Close modal">
-                <i class="fas fa-times text-muted-nothing"></i>
-            </button>
-        </div>
+    <!-- Live Timers -->
+    <div class="card" style="padding: var(--space-4);">
+        <h3 style="font-size: 1.1rem; margin-bottom: var(--space-4); display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-satellite-dish" style="color: var(--accent-base);"></i> Live Activity
+        </h3>
         
-        <div class="form-group-nothing mb-5">
-            <label for="friendUsername" class="nothing-label d-block mb-2">Friend's Username</label>
-            <input type="text" id="friendUsername" class="nothing-input w-100" placeholder="Enter username" autocomplete="off">
-        </div>
-        
-        <div class="d-flex gap-3 justify-end">
-            <button onclick="closeAddFriendModal()" class="nothing-btn-outline">Cancel</button>
-            <button onclick="sendFriendRequest()" class="nothing-btn">Send Request</button>
+        <div id="activeTimersList" class="data-list">
+            {% if active_timers %}
+                {% for timer in active_timers %}
+                <div class="data-row" style="background: var(--bg-surface-elevated); padding: 16px; border: 1px solid var(--border-subtle); border-left: 3px solid var(--accent-base);">
+                    <div>
+                        <div style="font-weight: 600; margin-bottom: 2px;">{{ timer.username }}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                            {% if timer.is_break %}
+                                <i class="fas fa-coffee" style="color: var(--success-base); margin-right: 4px;"></i> Resting
+                            {% else %}
+                                <i class="fas fa-book" style="color: var(--accent-base); margin-right: 4px;"></i> {{ timer.subject }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">
+                            {{ (timer.time_remaining // 60)|string|zfill(2) }}:{{ (timer.time_remaining % 60)|string|zfill(2) }}
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-tertiary);">of {{ timer.duration_minutes }}m</div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="text-align: center; padding: var(--space-5) 0; color: var(--text-tertiary);">
+                    <i class="fas fa-bed" style="font-size: 2.5rem; margin-bottom: var(--space-2); opacity: 0.5;"></i>
+                    <p>No one is currently studying.</p>
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>
 
+<!-- Weekly Progress -->
+<div class="card" style="padding: var(--space-4);">
+    <h3 style="font-size: 1.1rem; margin-bottom: var(--space-4); display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-chart-bar text-muted"></i> Weekly Leaderboard
+    </h3>
+    
+    {% if friends_progress %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--space-3);">
+        {% for progress in friends_progress %}
+        <div style="padding: 16px; background: var(--bg-surface-elevated); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="font-weight: 600; font-size: 1.05rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--bg-surface); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: var(--text-secondary);">
+                    {{ loop.index }}
+                </div>
+                {{ progress.username }}
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.9rem;">
+                <span style="color: var(--text-secondary);">This Week</span>
+                <span style="font-weight: 600; color: var(--text-primary);">{{ progress.weekly_minutes }}m</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                <span style="color: var(--text-secondary);">Today</span>
+                <span style="font-weight: 600; color: var(--text-primary);">{{ progress.today_sessions }} sessions</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: var(--space-4) 0; color: var(--text-tertiary);">
+        <p>No activity recorded yet.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add Friend Modal -->
+<div id="addFriendModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-content" style="padding: var(--space-4);">
+        <div class="card-header" style="margin-bottom: var(--space-4);">
+            <h3 style="font-size: 1.2rem; margin: 0;">Add Friend</h3>
+            <button onclick="closeAddFriendModal()" class="btn btn-ghost" style="padding: 4px;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: var(--space-5);">
+            <label for="friendUsername" class="form-label">Username</label>
+            <input type="text" id="friendUsername" class="form-control" placeholder="Enter their exact username" autocomplete="off">
+        </div>
+        
+        <div style="display: flex; justify-content: flex-end; gap: var(--space-2);">
+            <button onclick="closeAddFriendModal()" class="btn btn-ghost">Cancel</button>
+            <button onclick="sendFriendRequest()" class="btn btn-primary">Send Request</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
 <script>
 function showAddFriendModal() {
     document.getElementById('addFriendModal').style.display = 'flex';
-    document.getElementById('friendUsername').focus();
+    setTimeout(() => document.getElementById('friendUsername').focus(), 100);
 }
 
 function closeAddFriendModal() {
@@ -169,21 +177,29 @@ function closeAddFriendModal() {
     document.getElementById('friendUsername').value = '';
 }
 
+document.getElementById('addFriendModal').addEventListener('click', (e) => {
+    if (e.target.id === 'addFriendModal') closeAddFriendModal();
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('addFriendModal').style.display === 'flex') {
+        closeAddFriendModal();
+    }
+});
+
 async function sendFriendRequest() {
     const username = document.getElementById('friendUsername').value.trim();
-    
-    if (!username) {
-        showToast('Please enter a username', 'warning');
-        return;
-    }
+    if (!username) return showToast('Please enter a username', 'warning');
     
     try {
         const response = await fetch('/api/friends/send_request', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
             body: JSON.stringify({ username })
         });
-        
         const data = await response.json();
         
         if (response.ok) {
@@ -191,11 +207,10 @@ async function sendFriendRequest() {
             closeAddFriendModal();
             setTimeout(() => location.reload(), 1000);
         } else {
-            showToast(data.error || 'Failed to send friend request', 'error');
+            showToast(data.error || 'Failed to send request', 'error');
         }
-    } catch (error) {
-        console.error('Error:', error);
-        showToast('Failed to send friend request', 'error');
+    } catch (e) {
+        showToast('Connection error', 'error');
     }
 }
 
@@ -203,139 +218,87 @@ async function respondToRequest(friendshipId, accept) {
     try {
         const response = await fetch('/api/friends/respond', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
             body: JSON.stringify({ friendship_id: friendshipId, accept })
         });
-        
         const data = await response.json();
         
         if (response.ok) {
             showToast(data.message, 'success');
             setTimeout(() => location.reload(), 1000);
         } else {
-            showToast(data.error || 'Failed to respond to request', 'error');
+            showToast(data.error || 'Failed to respond', 'error');
         }
-    } catch (error) {
-        console.error('Error:', error);
-        showToast('Failed to respond to request', 'error');
+    } catch (e) {
+        showToast('Connection error', 'error');
     }
 }
 
-// Attach remove-friend handlers via data attributes (XSS-safe)
 document.querySelectorAll('.remove-friend-btn').forEach(btn => {
     btn.addEventListener('click', async function() {
-        const friendId = this.dataset.friendId;
-        const username = this.dataset.friendName;
-        if (!confirm('Remove ' + username + ' from your friends?')) {
-            return;
-        }
+        const id = this.dataset.friendId;
+        const name = this.dataset.friendName;
+        if (!confirm(`Remove ${name} from your friends?`)) return;
+        
         try {
             const response = await fetch('/api/friends/remove', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ friend_id: parseInt(friendId) })
+                headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+                body: JSON.stringify({ friend_id: parseInt(id) })
             });
             const data = await response.json();
             if (response.ok) {
-                showToast(username + ' removed from friends', 'success');
+                showToast(`Removed ${name}`, 'success');
                 setTimeout(() => location.reload(), 1000);
             } else {
-                showToast(data.error || 'Failed to remove friend', 'error');
+                showToast(data.error || 'Failed to remove', 'error');
             }
-        } catch (error) {
-            console.error('Error:', error);
-            showToast('Failed to remove friend', 'error');
+        } catch (e) {
+            showToast('Connection error', 'error');
         }
     });
 });
 
-// Auto-refresh active timers every 5 seconds
 setInterval(async () => {
     try {
         const response = await fetch('/api/friends/active_timers');
         const data = await response.json();
-        
-        if (data.timers && data.timers.length > 0) {
-            updateTimersDisplay(data.timers);
-        }
-    } catch (error) {
-        console.error('Error fetching timers:', error);
-    }
+        if (data.timers) updateTimersDisplay(data.timers);
+    } catch (e) { console.error('Timer refresh failed'); }
 }, 5000);
 
 function updateTimersDisplay(timers) {
     const container = document.getElementById('activeTimersList');
-    container.textContent = ''; // Clear safely
-    
     if (timers.length === 0) {
-        const empty = document.createElement('div');
-        empty.style.cssText = 'text-align: center; padding: 40px; color: var(--nothing-text-secondary);';
-        const emoji = document.createElement('div');
-        emoji.style.cssText = 'font-size: 3rem; margin-bottom: 16px;';
-        emoji.textContent = '\u23F1\uFE0F';
-        const label = document.createElement('div');
-        label.textContent = 'No friends are currently studying';
-        empty.appendChild(emoji);
-        empty.appendChild(label);
-        container.appendChild(empty);
+        container.innerHTML = `<div style="text-align: center; padding: var(--space-5) 0; color: var(--text-tertiary);"><i class="fas fa-bed" style="font-size: 2.5rem; margin-bottom: var(--space-2); opacity: 0.5;"></i><p>No one is currently studying.</p></div>`;
         return;
     }
     
-    timers.forEach(timer => {
-        const minutes = Math.floor(timer.time_remaining / 60);
-        const seconds = timer.time_remaining % 60;
-        const timeStr = String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
-        const activity = timer.is_break ? '\uD83E\uDDD8 BREAK TIME' : '\uD83D\uDCDA ' + timer.subject;
+    let html = '';
+    timers.forEach(t => {
+        const m = Math.floor(t.time_remaining / 60);
+        const s = t.time_remaining % 60;
+        const timeStr = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        const act = t.is_break ? `<i class="fas fa-coffee" style="color: var(--success-base); margin-right: 4px;"></i> Resting` : `<i class="fas fa-book" style="color: var(--accent-base); margin-right: 4px;"></i> ${t.subject}`;
         
-        const card = document.createElement('div');
-        card.className = 'timer-card';
-        card.style.cssText = 'padding: 16px; background: var(--nothing-bg-secondary); border-radius: 12px; border-left: 3px solid var(--nothing-purple); margin-bottom: 12px;';
-        
-        const row = document.createElement('div');
-        row.style.cssText = 'display: flex; justify-content: space-between; align-items: center;';
-        
-        const left = document.createElement('div');
-        const nameEl = document.createElement('div');
-        nameEl.style.cssText = 'font-weight: 600; font-size: 1.1rem;';
-        nameEl.textContent = timer.username;
-        const activityEl = document.createElement('div');
-        activityEl.style.cssText = 'color: var(--nothing-cyan); margin-top: 4px;';
-        activityEl.textContent = activity;
-        left.appendChild(nameEl);
-        left.appendChild(activityEl);
-        
-        const right = document.createElement('div');
-        right.style.textAlign = 'right';
-        const timeEl = document.createElement('div');
-        timeEl.className = 'pomodoro-timer';
-        timeEl.style.cssText = 'font-size: 1.5rem; font-weight: 700; color: var(--nothing-purple);';
-        timeEl.textContent = timeStr;
-        const durationEl = document.createElement('div');
-        durationEl.className = 'stats-label-nothing';
-        durationEl.textContent = timer.duration_minutes + ' min session';
-        right.appendChild(timeEl);
-        right.appendChild(durationEl);
-        
-        row.appendChild(left);
-        row.appendChild(right);
-        card.appendChild(row);
-        container.appendChild(card);
+        html += `<div class="data-row" style="background: var(--bg-surface-elevated); padding: 16px; border: 1px solid var(--border-subtle); border-left: 3px solid ${t.is_break ? 'var(--success-base)' : 'var(--accent-base)'};">
+            <div>
+                <div style="font-weight: 600; margin-bottom: 2px;">${t.username}</div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary);">${act}</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">${timeStr}</div>
+                <div style="font-size: 0.75rem; color: var(--text-tertiary);">of ${t.duration_minutes}m</div>
+            </div>
+        </div>`;
     });
+    container.innerHTML = html;
 }
-
-// Close modal on escape key
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        closeAddFriendModal();
-    }
-});
-
-// Close modal on outside click
-document.getElementById('addFriendModal').addEventListener('click', (e) => {
-    if (e.target.id === 'addFriendModal') {
-        closeAddFriendModal();
-    }
-});
 </script>
-
 {% endblock %}

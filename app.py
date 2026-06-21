@@ -9,21 +9,18 @@ import re
 import threading
 from datetime import date, datetime, timedelta
 from functools import wraps
-from io import BytesIO
-
-import matplotlib
-matplotlib.use('Agg')  # Use non-interactive backend before importing pyplot
-import matplotlib.pyplot as plt
-import numpy as np
 
 from flask import (
     Flask, flash, jsonify, redirect, render_template, request,
-    send_file, session, url_for,
+    session, url_for,
 )
+from flask_wtf.csrf import CSRFProtect
 
 from database import initialize_database
-from friend_manager import FriendManager
-from pomodoro_manager import PomodoroManager
+from services.user_manager import UserManager
+from services.session_manager import SessionManager
+from services.friend_manager import FriendManager
+from services.pomodoro_manager import PomodoroManager
 
 # ---------------------------------------------------------------------------
 # Application factory & configuration
@@ -53,6 +50,9 @@ app.config.update(
 # In production, enforce secure cookies
 if os.environ.get('FLASK_ENV') == 'production':
     app.config['SESSION_COOKIE_SECURE'] = True
+
+# Initialize CSRF Protection
+csrf = CSRFProtect(app)
 
 # Configure logging
 logging.basicConfig(
@@ -166,9 +166,6 @@ def api_login_required(f):
 # Database & manager initialisation
 # ---------------------------------------------------------------------------
 
-# Thread safety lock shared across web-layer managers
-db_lock = threading.Lock()
-
 # Global manager instances
 db = None
 user_manager = None
@@ -177,190 +174,15 @@ pomodoro_manager = None
 friend_manager = None
 
 
-class WebUserManager:
-    """Handles user registration and authentication for the web app."""
-
-    def __init__(self, db_manager):
-        self.db = db_manager
-
-    def register_user(self, username, password):
-        """Register a new user. Returns (success, message)."""
-        with db_lock:
-            cursor = None
-            try:
-                cursor = self.db.connection.cursor()
-                cursor.execute(
-                    "SELECT username FROM users WHERE username = ?",
-                    (username,),
-                )
-                if cursor.fetchone():
-                    return False, "Username already exists."
-
-                password_hash = self.db.hash_password(password)
-                cursor.execute(
-                    "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-                    (username, password_hash),
-                )
-                self.db.connection.commit()
-                return True, "Account created successfully!"
-            except Exception:
-                logger.exception("Error registering user")
-                return False, "An unexpected error occurred. Please try again."
-            finally:
-                if cursor:
-                    cursor.close()
-
-    def login_user(self, username, password):
-        """Authenticate a user. Returns (success, user_data|None, message)."""
-        with db_lock:
-            cursor = None
-            try:
-                cursor = self.db.connection.cursor()
-                cursor.execute(
-                    "SELECT user_id, username, password_hash FROM users WHERE username = ?",
-                    (username,),
-                )
-                user = cursor.fetchone()
-                if user and self.db.verify_password(password, user[2]):
-                    return True, {"user_id": user[0], "username": user[1]}, "Login successful"
-                return False, None, "Invalid username or password."
-            except Exception:
-                logger.exception("Error during login")
-                return False, None, "An unexpected error occurred. Please try again."
-            finally:
-                if cursor:
-                    cursor.close()
-
-
-class WebSessionManager:
-    """Handles study session CRUD for the web app."""
-
-    def __init__(self, db_manager):
-        self.db = db_manager
-
-    def log_study_session(self, user_id, subject, duration_minutes, mood, productivity, notes="", session_date=None):
-        """Log a new study session."""
-        with db_lock:
-            cursor = None
-            try:
-                cursor = self.db.connection.cursor()
-                if session_date is None:
-                    session_date = date.today()
-                cursor.execute("""
-                    INSERT INTO study_sessions
-                        (user_id, subject, duration_minutes, mood, productivity, notes, session_date)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (user_id, subject, duration_minutes, mood, productivity, notes, session_date))
-                self.db.connection.commit()
-                return True, "Study session logged successfully!"
-            except Exception:
-                logger.exception("Error logging study session")
-                return False, "Failed to log session. Please try again."
-            finally:
-                if cursor:
-                    cursor.close()
-
-    def get_user_sessions(self, user_id, limit=None):
-        """Retrieve study sessions for a user, most recent first."""
-        with db_lock:
-            cursor = None
-            try:
-                cursor = self.db.connection.cursor()
-                query = """
-                    SELECT session_id, subject, duration_minutes, mood,
-                           productivity, notes, session_date, created_at
-                    FROM study_sessions
-                    WHERE user_id = ?
-                    ORDER BY session_date DESC, created_at DESC
-                """
-                if limit:
-                    query += " LIMIT ?"
-                    cursor.execute(query, (user_id, limit))
-                else:
-                    cursor.execute(query, (user_id,))
-                return cursor.fetchall()
-            except Exception:
-                logger.exception("Error fetching user sessions")
-                return []
-            finally:
-                if cursor:
-                    cursor.close()
-
-    def get_total_study_time(self, user_id):
-        """Return total study minutes for a user."""
-        with db_lock:
-            cursor = None
-            try:
-                cursor = self.db.connection.cursor()
-                cursor.execute(
-                    "SELECT SUM(duration_minutes) FROM study_sessions WHERE user_id = ?",
-                    (user_id,),
-                )
-                result = cursor.fetchone()
-                return result[0] if result[0] else 0
-            except Exception:
-                logger.exception("Error fetching total study time")
-                return 0
-            finally:
-                if cursor:
-                    cursor.close()
-
-    def get_subject_breakdown(self, user_id):
-        """Return study time grouped by subject."""
-        with db_lock:
-            cursor = None
-            try:
-                cursor = self.db.connection.cursor()
-                cursor.execute("""
-                    SELECT subject, SUM(duration_minutes) AS total_minutes, COUNT(*) AS session_count
-                    FROM study_sessions
-                    WHERE user_id = ?
-                    GROUP BY subject
-                    ORDER BY total_minutes DESC
-                """, (user_id,))
-                return cursor.fetchall()
-            except Exception:
-                logger.exception("Error fetching subject breakdown")
-                return []
-            finally:
-                if cursor:
-                    cursor.close()
-
-    def get_daily_study_data(self, user_id, days=30):
-        """Return daily aggregated study data for charts."""
-        with db_lock:
-            cursor = None
-            try:
-                cursor = self.db.connection.cursor()
-                cutoff_date = date.today() - timedelta(days=days)
-                cursor.execute("""
-                    SELECT session_date, SUM(duration_minutes) AS total_minutes
-                    FROM study_sessions
-                    WHERE user_id = ? AND session_date >= ?
-                    GROUP BY session_date
-                    ORDER BY session_date
-                """, (user_id, cutoff_date))
-                return cursor.fetchall()
-            except Exception:
-                logger.exception("Error fetching daily study data")
-                return []
-            finally:
-                if cursor:
-                    cursor.close()
-
-
 def init_managers():
     """Initialise database and all manager instances."""
     global db, user_manager, session_manager, pomodoro_manager, friend_manager
     db = initialize_database()
     if db:
-        user_manager = WebUserManager(db)
-        session_manager = WebSessionManager(db)
+        user_manager = UserManager(db)
+        session_manager = SessionManager(db)
         pomodoro_manager = PomodoroManager(db)
         friend_manager = FriendManager(db)
-
-        charts_dir = os.path.join('static', 'charts')
-        os.makedirs(charts_dir, exist_ok=True)
         return True
     return False
 
@@ -541,74 +363,48 @@ def analytics():
     )
 
 # ---------------------------------------------------------------------------
-# Routes — Chart generation (served from memory, not filesystem)
+# API — Analytics
 # ---------------------------------------------------------------------------
 
-@app.route('/chart/<chart_type>')
-@login_required
-def generate_chart(chart_type):
+@app.route('/api/analytics/subject_distribution')
+@api_login_required
+def api_subject_distribution():
+    """Return subject distribution data as JSON for Chart.js."""
     user_id = session['user_id']
-    if chart_type == 'subject_pie':
-        return _generate_subject_pie_chart(user_id)
-    elif chart_type == 'daily_timeline':
-        return _generate_daily_timeline_chart(user_id)
-    return jsonify({'error': 'Chart type not found'}), 404
-
-
-def _generate_subject_pie_chart(user_id):
-    """Generate and serve a subject-distribution pie chart from memory."""
     subjects_data = session_manager.get_subject_breakdown(user_id)
     if not subjects_data:
-        return jsonify({'error': 'No data available'}), 404
+        return jsonify({'success': False, 'error': 'No data available'}), 404
 
     subjects = [item[0] for item in subjects_data]
-    minutes = [item[1] for item in subjects_data]
-    hours = [m / 60 for m in minutes]
-
-    fig, ax = plt.subplots(figsize=(10, 8))
-    colors = plt.cm.Set3(np.linspace(0, 1, len(subjects)))
-    ax.pie(hours, labels=subjects, autopct='%1.1f%%', colors=colors, startangle=90)
-    ax.set_title('Study Time Distribution by Subject', fontsize=16, fontweight='bold')
-    ax.axis('equal')
-
-    buf = BytesIO()
-    fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')
-    plt.close(fig)
-    buf.seek(0)
-    return send_file(buf, mimetype='image/png')
+    hours = [item[1] / 60 for item in subjects_data]
+    return jsonify({
+        'success': True,
+        'data': {
+            'labels': subjects,
+            'values': hours
+        }
+    })
 
 
-def _generate_daily_timeline_chart(user_id):
-    """Generate and serve a daily-study-time line chart from memory."""
-    daily_data = session_manager.get_daily_study_data(user_id, 30)
+@app.route('/api/analytics/daily_timeline')
+@api_login_required
+def api_daily_timeline():
+    """Return daily timeline data as JSON for Chart.js."""
+    user_id = session['user_id']
+    days = request.args.get('days', 30, type=int)
+    daily_data = session_manager.get_daily_study_data(user_id, days)
     if not daily_data:
-        return jsonify({'error': 'No data available'}), 404
+        return jsonify({'success': False, 'error': 'No data available'}), 404
 
     dates = [item[0] for item in daily_data]
-    minutes = [item[1] for item in daily_data]
-    hours = [m / 60 for m in minutes]
-
-    fig, ax = plt.subplots(figsize=(12, 6))
-    ax.plot(dates, hours, marker='o', linewidth=2, markersize=6, color='#2E86AB')
-    ax.fill_between(dates, hours, alpha=0.3, color='#2E86AB')
-    ax.set_xlabel('Date', fontsize=12)
-    ax.set_ylabel('Study Hours', fontsize=12)
-    ax.set_title('Daily Study Time — Last 30 Days', fontsize=16, fontweight='bold')
-    plt.xticks(rotation=45)
-    ax.grid(True, alpha=0.3)
-
-    if hours:
-        avg_hours = sum(hours) / len(hours)
-        ax.axhline(y=avg_hours, color='red', linestyle='--', alpha=0.7,
-                   label=f'Average: {avg_hours:.1f}h')
-        ax.legend()
-
-    fig.tight_layout()
-    buf = BytesIO()
-    fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')
-    plt.close(fig)
-    buf.seek(0)
-    return send_file(buf, mimetype='image/png')
+    hours = [item[1] / 60 for item in daily_data]
+    return jsonify({
+        'success': True,
+        'data': {
+            'labels': dates,
+            'values': hours
+        }
+    })
 
 # ---------------------------------------------------------------------------
 # API — Subject data

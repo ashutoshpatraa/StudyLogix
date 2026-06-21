@@ -1,141 +1,217 @@
 {% extends "base.html" %}
 
-{% block title %}FOCUS MODE - STUDYLOGIX{% endblock %}
+{% block title %}Focus Mode - StudyLogix{% endblock %}
 
 {% block content %}
-<!-- Nothing OS Pomodoro Interface -->
-<div class="glass-card mb-8">
-    <div class="p-5 border-bottom-glass">
-        <h1 class="font-display text-2xl text-white m-0 d-flex align-center gap-3">
-            <i class="fas fa-stopwatch text-red"></i>
-            FOCUS_MODE
-        </h1>
-        <p class="text-muted-nothing text-sm mt-2 mb-0">
-            DEEP WORK PROTOCOL • DISTRACTION ELIMINATION
-        </p>
+<style>
+/* Focus Mode Specific Styles */
+.focus-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-base);
+    z-index: 9000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.focus-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.timer-container {
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    transform: scale(0.95);
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.focus-overlay.active .timer-container {
+    transform: scale(1);
+}
+
+.timer-display {
+    font-family: var(--font-display);
+    font-size: 15vw;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    color: var(--text-primary);
+    margin-bottom: var(--space-2);
+    font-variant-numeric: tabular-nums;
+}
+
+.timer-label {
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 500;
+    margin-bottom: var(--space-6);
+}
+
+.timer-controls {
+    display: flex;
+    gap: var(--space-3);
+    justify-content: center;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.5s ease-out;
+}
+
+.focus-overlay.active .timer-controls {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 0.3s;
+}
+
+.timer-btn {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-surface-elevated);
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-spring);
+}
+
+.timer-btn:hover {
+    background: var(--bg-surface-hover);
+    transform: scale(1.05);
+}
+
+.timer-btn.danger:hover {
+    background: var(--error-base);
+    color: white;
+    border-color: var(--error-base);
+}
+
+.focus-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60vw;
+    height: 60vw;
+    background: radial-gradient(circle, var(--accent-base) 0%, transparent 70%);
+    opacity: 0.05;
+    filter: blur(100px);
+    z-index: 1;
+    border-radius: 50%;
+    animation: pulse 8s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+    from { opacity: 0.03; transform: translate(-50%, -50%) scale(0.9); }
+    to { opacity: 0.08; transform: translate(-50%, -50%) scale(1.1); }
+}
+
+.shortcuts-hint {
+    position: absolute;
+    bottom: var(--space-4);
+    color: var(--text-tertiary);
+    font-size: 0.85rem;
+    display: flex;
+    gap: var(--space-4);
+}
+
+.shortcuts-hint kbd {
+    background: var(--bg-surface-elevated);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--border-subtle);
+    font-family: monospace;
+    font-size: 0.75rem;
+}
+</style>
+
+<!-- Setup Interface -->
+<div class="card" style="max-width: 800px; margin: 0 auto; padding: var(--space-5);">
+    <div style="text-align: center; margin-bottom: var(--space-6);">
+        <div style="width: 64px; height: 64px; border-radius: var(--radius-lg); background: var(--accent-light); color: var(--accent-base); display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto var(--space-3);">
+            <i class="fas fa-stopwatch"></i>
+        </div>
+        <h1 class="hero-title" style="font-size: 2rem; margin-bottom: var(--space-1);">Focus Protocol</h1>
+        <p style="color: var(--text-secondary);">Eliminate distractions. Enter the flow state.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-3);">
+        <!-- Standard Focus -->
+        <div class="card" style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); cursor: pointer;" onclick="startPomodoro()">
+            <h3 style="display: flex; align-items: center; gap: 8px; font-size: 1.1rem; color: var(--accent-base); margin-bottom: var(--space-2);">
+                <i class="fas fa-brain"></i> Deep Work
+            </h3>
+            <div style="font-family: var(--font-display); font-size: 2rem; font-weight: 700; margin-bottom: var(--space-2);">25m</div>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">Standard pomodoro session</p>
+        </div>
+
+        <!-- Break -->
+        <div class="card" style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); cursor: pointer;" onclick="startBreak()">
+            <h3 style="display: flex; align-items: center; gap: 8px; font-size: 1.1rem; color: var(--success-base); margin-bottom: var(--space-2);">
+                <i class="fas fa-coffee"></i> Rest
+            </h3>
+            <div style="font-family: var(--font-display); font-size: 2rem; font-weight: 700; margin-bottom: var(--space-2);">5m</div>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">Short mental reset</p>
+        </div>
+
+        <!-- Custom -->
+        <div class="card" style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle);">
+            <h3 style="display: flex; align-items: center; gap: 8px; font-size: 1.1rem; color: var(--text-primary); margin-bottom: var(--space-2);">
+                <i class="fas fa-sliders-h"></i> Custom
+            </h3>
+            <div style="display: flex; gap: 8px; margin-bottom: var(--space-2);">
+                <input type="number" id="customMinutes" class="form-control" style="background: var(--bg-base); font-family: var(--font-display); font-size: 1.2rem; padding: 4px 8px; text-align: center;" placeholder="Min" min="1" max="120">
+            </div>
+            <button onclick="startCustomTimer()" class="btn btn-secondary" style="width: 100%; padding: 4px;">Start</button>
+        </div>
+    </div>
+</div>
+
+<!-- Immersive Full-Screen Timer -->
+<div class="focus-overlay" id="focusOverlay">
+    <div class="focus-glow" id="focusGlow"></div>
+    <div class="timer-container">
+        <div class="timer-label" id="sessionLabel">Focus Session</div>
+        <div class="timer-display" id="timeDisplay">25:00</div>
+        <div class="timer-controls">
+            <button class="timer-btn" onclick="pauseTimer()" id="pauseBtn" aria-label="Pause timer">
+                <i class="fas fa-pause"></i>
+            </button>
+            <button class="timer-btn danger" onclick="stopTimer()" id="stopBtn" aria-label="Stop timer">
+                <i class="fas fa-stop"></i>
+            </button>
+        </div>
     </div>
     
-    <div style="padding: 24px;">
-        <div class="pomodoro-grid">
-            <!-- Start Pomodoro Card -->
-            <div class="pomodoro-card-small ambient-card">
-                <h3 style="font-family: 'DotGothic16', monospace; color: var(--nothing-red); margin-bottom: 12px; display: flex; align-items: center; gap: 12px; font-size: 16px;">
-                    <i class="fas fa-play"></i>
-                    WORK SESSION
-                </h3>
-                <p style="color: var(--nothing-gray-300); margin-bottom: 16px; font-size: 13px; line-height: 1.5;">
-                    25 MIN • FULL FOCUS
-                </p>
-                <button onclick="startPomodoro()" class="btn-nothing btn-nothing-primary" style="width: 100%;">
-                    <i class="fas fa-rocket"></i>
-                    START FOCUS
-                </button>
-            </div>
-            
-            <!-- Break Session Card -->
-            <div class="pomodoro-card-small ambient-card" style="animation-delay: 0.1s;">
-                <h3 style="font-family: 'DotGothic16', monospace; color: var(--nothing-green); margin-bottom: 12px; display: flex; align-items: center; gap: 12px; font-size: 16px;">
-                    <i class="fas fa-pause"></i>
-                    BREAK SESSION
-                </h3>
-                <p style="color: var(--nothing-gray-300); margin-bottom: 16px; font-size: 13px; line-height: 1.5;">
-                    5 MIN • MENTAL RESET
-                </p>
-                <button onclick="startBreak()" class="btn-nothing" style="width: 100%;">
-                    <i class="fas fa-coffee"></i>
-                    START BREAK
-                </button>
-            </div>
-            
-            <!-- Custom Timer Card -->
-            <div class="pomodoro-card-small ambient-card" style="animation-delay: 0.2s;">
-                <h3 class="font-display text-lg text-blue mb-3 d-flex align-center gap-3">
-                    <i class="fas fa-cog"></i>
-                    CUSTOM_TIMER
-                </h3>
-                <div class="mb-3">
-                    <label for="customMinutes" class="visually-hidden">Custom minutes</label>
-                    <input type="number" id="customMinutes" class="form-control-nothing" placeholder="MINUTES" min="1" max="120">
-                </div>
-                <button onclick="startCustomTimer()" class="btn-nothing w-100">
-                    <i class="fas fa-clock"></i>
-                    CUSTOM_SESSION
-                </button>
-            </div>
-        </div>
-        
-        <!-- Session Stats -->
-        <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--glass-border);">
-            <h3 style="font-family: 'DotGothic16', monospace; color: var(--nothing-white); margin-bottom: 16px; text-align: center; font-size: 16px;">
-                SESSION STATS
-            </h3>
-            <div class="stats-grid-mini">
-                <div style="text-align: center;">
-                    <div class="stats-value-nothing" style="font-size: 1.5rem; color: var(--nothing-cyan);">
-                        {% if pomodoro_stats %}{{ pomodoro_stats.total_sessions }}{% else %}0{% endif %}
-                    </div>
-                    <div class="stats-label-nothing" style="font-size: 11px;">SESSIONS</div>
-                </div>
-                <div style="text-align: center;">
-                    <div class="stats-value-nothing" style="font-size: 1.5rem; color: var(--nothing-green);">
-                        {% if pomodoro_stats %}{{ pomodoro_stats.total_focus_time }}{% else %}0{% endif %}
-                    </div>
-                    <div class="stats-label-nothing" style="font-size: 11px;">MINUTES</div>
-                </div>
-                <div style="text-align: center;">
-                    <div class="stats-value-nothing" style="font-size: 1.5rem; color: var(--nothing-orange);">
-                        {% if pomodoro_stats %}{{ pomodoro_stats.today_sessions }}{% else %}0{% endif %}
-                    </div>
-                    <div class="stats-label-nothing" style="font-size: 11px;">TODAY</div>
-                </div>
-                <div style="text-align: center;">
-                    <div class="stats-value-nothing" style="font-size: 1.5rem; color: var(--nothing-purple);">
-                        {% if pomodoro_stats %}{{ pomodoro_stats.average_session_length }}{% else %}0{% endif %}
-                    </div>
-                    <div class="stats-label-nothing" style="font-size: 11px;">AVG</div>
-                </div>
-            </div>
-        </div>
+    <div class="shortcuts-hint">
+        <span><kbd>Space</kbd> Pause</span>
+        <span><kbd>Esc</kbd> Stop</span>
     </div>
 </div>
 
-<!-- Nothing OS Floating Orb Timer -->
-<div class="focus-mode-overlay" id="focusOverlay"></div>
-<div class="pomodoro-orb" id="pomodoroOrb" role="timer" aria-live="polite">
-    <div class="pomodoro-progress" id="progressRing"></div>
-    <div class="pomodoro-time-display" id="timeDisplay" aria-atomic="true">25:00</div>
-    <div class="pomodoro-label" id="sessionLabel">FOCUS SESSION</div>
-    <div class="pomodoro-controls">
-        <button class="btn-nothing" onclick="pauseTimer()" id="pauseBtn" aria-label="Pause timer">
-            <i class="fas fa-pause"></i>
-        </button>
-        <button class="btn-nothing btn-nothing-danger" onclick="stopTimer()" id="stopBtn" aria-label="Stop timer">
-            <i class="fas fa-stop"></i>
-        </button>
-    </div>
-</div>
-
-<!-- Audio for notifications -->
 <audio id="notificationSound" preload="auto">
-    <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbByRrZE2MXPKBqLOpRSZXeD1jgNP8hAL0fKnMjdoFfzHWFLyHj7bCiTv1hZJvOHt+fJPJ6sHuL+KjQFWJ8LT1gNB4Z4Qk8Hb5jLqHpKStnK8mZHldnC6pnXwdBnf4VCr0yWTrZZnSJ7rXsLaKlMTyTHlJJ3TvKRn1GhKo1+1H8UE1wjJYCyPeF8SdM/qvs+Q5P/XC2hOJ9nM6Gx8rZL4y9jA+FtQ1TUwmvJJ9ljX9nO3OMSLPQlOCzMHFnGF8H9YMzYHqaHYL1hQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYAAA=" type="audio/wav">
+    <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbByRrZE2MXPKBqLOpRSZXeD1jgNP8hAL0fKnMjdoFfzHWFLyHj7bCiTv1hZJvOHt+fJPJ6sHuL+KjQFWJ8LT1gNB4Z4Qk8Hb5jLqHpKStnK8mZHldnC6pnXwdBnf4VCr0yWTrZZnSJ7rXsLaKlMTyTHlJJ3TvKRn1GhKo1+1H8UE1wjJYCyPeF8SdM/qvs+Q5P/XC2hOJ9nM6Gx8rZL4y9jA+FtQ1TUwmvJJ9ljX9nO3OMSLPQlOCzMHFnGF8H9YMzYHqaHYL1hQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYAAA=" type="audio/wav">
 </audio>
 
-<!-- Custom Confirmation Modal -->
-<div id="confirmModal" class="modal-backdrop-nothing" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
-    <div class="glass-card max-w-500 p-8" style="animation: float 6s ease-in-out infinite;">
-        <div class="mb-6">
-            <h3 id="confirmTitle" class="font-display text-xl text-white m-0 mb-3"></h3>
-            <p id="confirmMessage" class="text-muted-nothing text-md m-0" style="line-height: 1.6;"></p>
-        </div>
-        <div class="d-flex gap-3 justify-end">
-            <button id="confirmCancel" class="btn-nothing" onclick="closeConfirmModal(false)">
-                <i class="fas fa-times"></i>
-                CANCEL
-            </button>
-            <button id="confirmOk" class="btn-nothing btn-nothing-primary" onclick="closeConfirmModal(true)">
-                <i class="fas fa-check"></i>
-                CONFIRM
-            </button>
+<!-- Custom Modal -->
+<div id="confirmModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-content" style="padding: var(--space-4);">
+        <h3 id="confirmTitle" style="margin-bottom: var(--space-2); font-size: 1.25rem;"></h3>
+        <p id="confirmMessage" style="color: var(--text-secondary); margin-bottom: var(--space-4);"></p>
+        <div style="display: flex; justify-content: flex-end; gap: var(--space-2);">
+            <button id="confirmCancel" class="btn btn-ghost" onclick="closeConfirmModal(false)">Cancel</button>
+            <button id="confirmOk" class="btn btn-primary" onclick="closeConfirmModal(true)">Confirm</button>
         </div>
     </div>
 </div>
@@ -144,9 +220,8 @@
 
 {% block scripts %}
 <script>
-// Custom Confirm Modal
+// Confirm Modal logic
 let confirmResolve;
-
 function showConfirm(title, message) {
     return new Promise((resolve) => {
         confirmResolve = resolve;
@@ -155,16 +230,12 @@ function showConfirm(title, message) {
         document.getElementById('confirmModal').style.display = 'flex';
     });
 }
-
 function closeConfirmModal(result) {
     document.getElementById('confirmModal').style.display = 'none';
-    if (confirmResolve) {
-        confirmResolve(result);
-        confirmResolve = null;
-    }
+    if (confirmResolve) { confirmResolve(result); confirmResolve = null; }
 }
 
-// Nothing OS Pomodoro Timer System
+// Timer Logic
 let timerInterval;
 let isRunning = false;
 let isPaused = false;
@@ -172,74 +243,51 @@ let currentTime = 0;
 let totalTime = 0;
 let isBreakTime = false;
 let currentSessionId = null;
+let currentSubject = 'STUDY';
 
 function formatTime(seconds) {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-}
-
-function updateProgress(current, total) {
-    const percentage = ((total - current) / total) * 360;
-    const progressRing = document.getElementById('progressRing');
-    progressRing.style.setProperty('--progress-angle', `${percentage}deg`);
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
 function playNotification() {
     const audio = document.getElementById('notificationSound');
-    audio.play().catch(e => console.log('Audio play failed:', e));
-    
-    // System notification if available
-    if ('Notification' in window && Notification.permission === 'granted') {
-        const title = isBreakTime ? 'BREAK COMPLETE' : 'FOCUS SESSION COMPLETE';
-        const body = isBreakTime ? 'Ready for next focus session!' : 'Time for a well-deserved break!';
-        new Notification(title, {
-            body: body,
-            icon: '/static/favicon.ico',
-            tag: 'pomodoro'
-        });
-    }
+    audio.play().catch(e => console.log('Audio error', e));
 }
 
 function enterFocusMode() {
     document.getElementById('focusOverlay').classList.add('active');
-    document.getElementById('pomodoroOrb').classList.add('active');
     document.body.style.overflow = 'hidden';
+    
+    // Change glow color based on mode
+    const glow = document.getElementById('focusGlow');
+    if (isBreakTime) {
+        glow.style.background = 'radial-gradient(circle, var(--success-base) 0%, transparent 70%)';
+    } else {
+        glow.style.background = 'radial-gradient(circle, var(--accent-base) 0%, transparent 70%)';
+    }
 }
 
 function exitFocusMode() {
     document.getElementById('focusOverlay').classList.remove('active');
-    document.getElementById('pomodoroOrb').classList.remove('active');
     document.body.style.overflow = '';
     isRunning = false;
     isPaused = false;
     currentSessionId = null;
+    document.title = "Focus Mode - StudyLogix";
 }
 
-function startPomodoro() {
-    startTimer(25, false, 'FOCUS SESSION');
-}
-
-function startBreak() {
-    startTimer(5, true, 'BREAK TIME');
-}
-
+function startPomodoro() { startTimer(25, false, 'DEEP WORK'); }
+function startBreak() { startTimer(5, true, 'REST'); }
 function startCustomTimer() {
-    const minutes = parseInt(document.getElementById('customMinutes').value);
-    if (minutes && minutes > 0) {
-        startTimer(minutes, false, 'CUSTOM SESSION');
-    } else {
-        alert('PLEASE ENTER VALID MINUTES (1-120)');
-    }
+    const m = parseInt(document.getElementById('customMinutes').value);
+    if (m > 0 && m <= 120) startTimer(m, false, 'CUSTOM FOCUS');
+    else showToast('Enter valid minutes (1-120)', 'warning');
 }
 
-function startTimer(minutes, breakMode, label, skipBackendCall = false) {
+function startTimer(minutes, breakMode, label, skipBackend = false) {
     if (isRunning) return;
-    
-    // Request notification permission
-    if ('Notification' in window && Notification.permission === 'default') {
-        Notification.requestPermission();
-    }
     
     isBreakTime = breakMode;
     totalTime = minutes * 60;
@@ -252,244 +300,122 @@ function startTimer(minutes, breakMode, label, skipBackendCall = false) {
     
     enterFocusMode();
     
-    // Start session in backend if not break and not skipping
-    if (!isBreakTime && !skipBackendCall) {
+    if (!isBreakTime && !skipBackend) {
         fetch('/api/pomodoro/start', {
             method: 'POST',
-            headers: {
+            headers: { 
                 'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
-            body: JSON.stringify({ 
-                subject: label,
-                duration: minutes,
-                session_type: 'work'
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                currentSessionId = data.session_id;
-                console.log('Session started:', currentSessionId);
-            }
-        })
-        .catch(error => console.error('Error starting session:', error));
+            body: JSON.stringify({ subject: label })
+        }).then(res => res.json()).then(data => {
+            if (data.success) currentSessionId = data.session_id;
+        }).catch(e => console.error(e));
     }
     
     timerInterval = setInterval(() => {
         if (!isPaused) {
             currentTime--;
-            document.getElementById('timeDisplay').textContent = formatTime(currentTime);
-            updateProgress(currentTime, totalTime);
+            const fTime = formatTime(currentTime);
+            document.getElementById('timeDisplay').textContent = fTime;
+            document.title = `${fTime} - ${label}`;
             
-            // Update live timer status every 10 seconds
-            if (!isBreakTime && currentSessionId && currentTime % 10 === 0) {
-                updateLiveTimer();
-            }
-            
-            if (currentTime <= 0) {
-                timerComplete();
-            }
+            if (currentTime <= 0) timerComplete();
         }
     }, 1000);
-}
-
-function updateLiveTimer() {
-    // Send timer status to backend for friends to see
-    if (!currentSessionId) return;
-    
-    fetch('/api/timer/update', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            session_id: currentSessionId,
-            subject: currentSubject || 'STUDY',
-            duration_minutes: Math.floor(totalTime / 60),
-            time_remaining: currentTime,
-            is_break: isBreakTime
-        })
-    }).catch(error => console.error('Error updating live timer:', error));
 }
 
 function timerComplete() {
     clearInterval(timerInterval);
     playNotification();
     
-    // Complete session in backend if not break
     if (!isBreakTime && currentSessionId) {
-        const elapsedSeconds = totalTime - currentTime;
-        const elapsedMinutes = Math.max(1, Math.ceil(elapsedSeconds / 60));
-        
-        console.log(`DEBUG - Timer completed. Elapsed: ${elapsedSeconds}s, Minutes: ${elapsedMinutes}`);
-        
+        const elapsedMinutes = Math.max(1, Math.ceil((totalTime - currentTime) / 60));
         fetch('/api/pomodoro/complete', {
             method: 'POST',
-            headers: {
+            headers: { 
                 'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
-            body: JSON.stringify({ 
-                session_id: currentSessionId, 
-                duration: elapsedMinutes 
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Session completed:', data);
-            setTimeout(async () => {
-                exitFocusMode();
-                // Auto-suggest break
-                const startBreakNow = await showConfirm('FOCUS SESSION COMPLETE!', 'Start a 5-minute break?');
-                if (startBreakNow) {
-                    setTimeout(() => startBreak(), 1000);
-                }
-            }, 2000);
-        })
-        .catch(error => {
-            console.error('Error completing session:', error);
-            setTimeout(exitFocusMode, 2000);
-        });
-    } else {
-        setTimeout(async () => {
+            body: JSON.stringify({ session_id: currentSessionId, duration: elapsedMinutes })
+        }).then(() => {
             exitFocusMode();
-            if (isBreakTime) {
-                const startFocus = await showConfirm('BREAK COMPLETE!', 'Ready for another focus session?');
-                if (startFocus) {
-                    setTimeout(() => startPomodoro(), 1000);
-                }
-            }
-        }, 2000);
+            showConfirm('Focus Complete!', 'Start a 5-minute break?').then(res => {
+                if (res) setTimeout(() => startBreak(), 500);
+            });
+        }).catch(() => exitFocusMode());
+    } else {
+        exitFocusMode();
+        if (isBreakTime) {
+            showConfirm('Break Complete!', 'Ready for another session?').then(res => {
+                if (res) setTimeout(() => startPomodoro(), 500);
+            });
+        }
     }
 }
 
 function pauseTimer() {
     isPaused = !isPaused;
-    const pauseBtn = document.getElementById('pauseBtn');
-    const icon = pauseBtn.querySelector('i');
-    
-    if (isPaused) {
-        icon.className = 'fas fa-play';
-        pauseBtn.style.borderColor = 'var(--nothing-green)';
-        pauseBtn.style.color = 'var(--nothing-green)';
-    } else {
-        icon.className = 'fas fa-pause';
-        pauseBtn.style.borderColor = 'var(--nothing-gray-400)';
-        pauseBtn.style.color = 'var(--nothing-white)';
-    }
+    const btn = document.getElementById('pauseBtn');
+    btn.innerHTML = isPaused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
 }
 
 async function stopTimer() {
-    const confirmStop = await showConfirm('STOP TIMER', 'Are you sure you want to stop the timer? This will save your current progress.');
-    if (confirmStop) {
+    const res = await showConfirm('Stop Timer', 'Are you sure you want to stop? Progress will be saved.');
+    if (res) {
         clearInterval(timerInterval);
         isRunning = false;
         
-        // Calculate elapsed time and save as a completed session
-        const elapsedSeconds = totalTime - currentTime;
-        const elapsedMinutes = Math.max(1, Math.ceil(elapsedSeconds / 60));
+        const elapsedMinutes = Math.max(1, Math.ceil((totalTime - currentTime) / 60));
         
-        console.log(`DEBUG - Timer stopped. Elapsed: ${elapsedSeconds}s, Minutes: ${elapsedMinutes}`);
-        console.log(`DEBUG - Current Session ID: ${currentSessionId}, Is Break: ${isBreakTime}`);
-        
-        // Complete the session with actual elapsed time
         if (currentSessionId && !isBreakTime) {
-            console.log('DEBUG - Calling complete API...');
             fetch('/api/pomodoro/complete', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ 
-                    session_id: currentSessionId, 
-                    duration: elapsedMinutes 
-                })
-            })
-            .then(response => {
-                console.log('DEBUG - Complete API response status:', response.status);
-                return response.json();
-            })
-            .then(data => {
-                console.log('DEBUG - Stop complete response:', data);
-                exitFocusMode();
-            })
-            .catch(error => {
-                console.error('DEBUG - Error completing session:', error);
-                exitFocusMode();
-            });
+                headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+                body: JSON.stringify({ session_id: currentSessionId, duration: elapsedMinutes })
+            }).then(() => exitFocusMode()).catch(() => exitFocusMode());
+        } else if (currentSessionId) {
+            fetch('/api/pomodoro/cancel', {
+                method: 'POST',
+                headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+                body: JSON.stringify({ session_id: currentSessionId })
+            }).then(() => exitFocusMode()).catch(() => exitFocusMode());
         } else {
-            console.log('DEBUG - Cancelling session (break time or no session ID)');
-            // If it's break time or no session ID, just cancel
-            if (currentSessionId) {
-                fetch('/api/pomodoro/cancel', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ session_id: currentSessionId })
-                })
-                .then(() => exitFocusMode())
-                .catch(() => exitFocusMode());
-            } else {
-                exitFocusMode();
-            }
+            exitFocusMode();
         }
     }
 }
 
-// Keyboard shortcuts
-document.addEventListener('keydown', function(e) {
+document.addEventListener('keydown', (e) => {
     if (isRunning) {
-        if (e.code === 'Space') {
-            e.preventDefault();
-            pauseTimer();
-        } else if (e.code === 'Escape') {
-            e.preventDefault();
-            stopTimer();
-        }
-    } else {
-        if (e.code === 'KeyF') {
-            e.preventDefault();
-            startPomodoro();
-        } else if (e.code === 'KeyB') {
-            e.preventDefault();
-            startBreak();
-        }
+        if (e.code === 'Space') { e.preventDefault(); pauseTimer(); }
+        else if (e.code === 'Escape') { e.preventDefault(); stopTimer(); }
     }
 });
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('FOCUS MODE INITIALIZED');
-    console.log('SHORTCUTS: F=Focus, B=Break, SPACE=Pause, ESC=Stop');
-    
-    // Check for autostart from quick start modal
+// Autostart logic
+window.onload = () => {
     const urlParams = new URLSearchParams(window.location.search);
-    const autostart = urlParams.get('autostart');
-    const duration = urlParams.get('duration');
-    
-    if (autostart === 'true') {
-        // Get session info from sessionStorage
-        const sessionId = sessionStorage.getItem('activeSessionId');
-        const sessionDuration = sessionStorage.getItem('activeSessionDuration');
-        const sessionSubject = sessionStorage.getItem('activeSessionSubject');
+    if (urlParams.get('autostart') === 'true') {
+        const id = sessionStorage.getItem('activeSessionId');
+        const dur = sessionStorage.getItem('activeSessionDuration');
+        const sub = sessionStorage.getItem('activeSessionSubject');
         
-        console.log('Autostart detected:', { sessionId, sessionDuration, sessionSubject });
-        
-        if (sessionId && sessionDuration && sessionSubject) {
-            // Clear the sessionStorage
+        if (id && dur && sub) {
             sessionStorage.removeItem('activeSessionId');
             sessionStorage.removeItem('activeSessionDuration');
             sessionStorage.removeItem('activeSessionSubject');
-            
-            // Set current session
-            currentSessionId = sessionId;
-            currentSubject = sessionSubject;
-            
-            // Start the timer with custom duration (skip backend call since session already created)
-            const durationMins = parseInt(sessionDuration) || 25;
-            startTimer(durationMins, false, sessionSubject.toUpperCase(), true);
+            currentSessionId = id;
+            currentSubject = sub;
+            startTimer(parseInt(dur), false, sub.toUpperCase(), true);
         }
     }
-});
+};
 </script>
 {% endblock %}

@@ -1,435 +1,157 @@
 <!DOCTYPE html>
-<html lang="en" class="bootstrap-override">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}StudyLogix{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+    <!-- Fonts: Inter for UI, JetBrains Mono for data/metrics -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons (Minimal usage) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
 </head>
 <body>
-    <!-- Loading Screen -->
-    <div class="loading-overlay" id="loadingScreen">
-        <div class="loading-text">STUDYLOGIX</div>
-        <div class="mt-5 text-muted-nothing text-md">INITIALIZING...</div>
-    </div>
-
-    {% if session.user_id %}
-    <!-- Nothing OS Floating Navbar -->
-    <nav class="navbar-nothing" id="navbar">
-        <div class="d-flex align-center justify-between w-100">
-            <a href="{{ url_for('index') }}" class="navbar-brand-nothing">
-                <div class="brand-icon">
-                    <i class="fas fa-cube"></i>
-                </div>
-                <span>STUDYLOGIX</span>
-            </a>
+    <div class="app-container">
+        
+        <!-- Sidebar Navigation (Only visible when logged in) -->
+        {% if session.get('user_id') %}
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-icon">S</div>
+                <div class="logo-text">StudyLogix</div>
+            </div>
             
-            <button class="navbar-toggle" id="navToggle" aria-label="Toggle navigation menu">
-                <i class="fas fa-bars"></i>
-            </button>
-            
-            <ul class="navbar-nav-nothing" id="navMenu">
+            <ul class="nav-links">
                 <li>
-                    <a href="{{ url_for('dashboard') }}" class="nav-link-nothing">
-                        <i class="fas fa-th-large"></i>
-                        <span>DASHBOARD</span>
+                    <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                        Dashboard
                     </a>
                 </li>
                 <li>
-                    <a href="{{ url_for('pomodoro') }}" class="nav-link-nothing">
-                        <i class="fas fa-stopwatch"></i>
-                        <span>FOCUS</span>
+                    <a href="{{ url_for('pomodoro') }}" class="nav-item {% if request.endpoint == 'pomodoro' %}active{% endif %}">
+                        Focus
                     </a>
                 </li>
                 <li>
-                    <a href="{{ url_for('log_session') }}" class="nav-link-nothing">
-                        <i class="fas fa-plus"></i>
-                        <span>LOG</span>
+                    <a href="{{ url_for('log_session') }}" class="nav-item {% if request.endpoint == 'log_session' %}active{% endif %}">
+                        Log Session
                     </a>
                 </li>
                 <li>
-                    <a href="{{ url_for('sessions') }}" class="nav-link-nothing">
-                        <i class="fas fa-history"></i>
-                        <span>SESSIONS</span>
+                    <a href="{{ url_for('sessions') }}" class="nav-item {% if request.endpoint == 'sessions' %}active{% endif %}">
+                        Archive
                     </a>
                 </li>
                 <li>
-                    <a href="{{ url_for('analytics') }}" class="nav-link-nothing">
-                        <i class="fas fa-chart-line"></i>
-                        <span>ANALYTICS</span>
+                    <a href="{{ url_for('analytics') }}" class="nav-item {% if request.endpoint == 'analytics' %}active{% endif %}">
+                        Analytics
                     </a>
                 </li>
                 <li>
-                    <a href="{{ url_for('friends') }}" class="nav-link-nothing">
-                        <i class="fas fa-users"></i>
-                        <span>FRIENDS</span>
-                    </a>
-                </li>
-                <li>
-                    <button id="themeToggle" class="theme-toggle" title="Toggle Dark/Light Theme" aria-label="Toggle theme">
-                        <span class="theme-icon">
-                            <i class="fas fa-moon" id="themeIcon"></i>
-                        </span>
-                    </button>
-                </li>
-                <li>
-                    <a href="{{ url_for('logout') }}" class="nav-link-nothing text-red ml-4">
-                        <i class="fas fa-power-off"></i>
-                        <span>{{ session.username.upper() }}</span>
+                    <a href="{{ url_for('friends') }}" class="nav-item {% if request.endpoint == 'friends' %}active{% endif %}">
+                        Network
                     </a>
                 </li>
             </ul>
-        </div>
-    </nav>
-    {% endif %}
+            
+            <div class="user-profile">
+                <div class="avatar">{{ session.get('username', 'U')[0]|upper }}</div>
+                <div class="user-info">
+                    <div class="user-name">{{ session.get('username') }}</div>
+                    <a href="{{ url_for('logout') }}" style="color: var(--text-tertiary); font-size: 11px; text-decoration: none;">Sign Out</a>
+                </div>
+            </div>
+        </nav>
+        {% endif %}
+        
+        <!-- Main Content -->
+        <main class="main-content" style="{% if not session.get('user_id') %}margin-left: 0; max-width: 100%; display: flex; align-items: center; justify-content: center;{% endif %}">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
 
-    <main class="container-nothing">
+    <!-- Toast Notification System -->
+    <div id="toast-container" class="toast-container">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert-nothing alert-{{ 'danger' if category == 'error' else 'success' }}-nothing" role="alert">
-                        <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' }} me-2"></i>
+                    <div class="toast toast-{{ category }}">
+                        <i class="fas {% if category == 'success' %}fa-check{% elif category == 'error' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"></i>
                         {{ message }}
                     </div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
+    </div>
 
-        {% block content %}{% endblock %}
-    </main>
-
-    <footer class="footer-nothing">
-        <div class="container-nothing">
-            <div class="d-flex align-center justify-center gap-3">
-                <i class="fas fa-heart" style="color: var(--nothing-red);"></i>
-                <span>STUDYLOGIX MADE WITH ❤️ BY ASHU</span>
-            </div>
-        </div>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- Nothing OS Scripts -->
+    <!-- Global Scripts -->
     <script>
-        // Loading Screen Animation
-        document.addEventListener('DOMContentLoaded', function() {
+        // Set Chart.js global defaults for the stark dark theme
+        Chart.defaults.color = '#a1a1aa';
+        Chart.defaults.font.family = "'JetBrains Mono', monospace";
+        Chart.defaults.borderColor = '#27272a';
+        
+        function showToast(message, category = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${category}`;
+            
+            let iconClass = 'fa-info-circle';
+            if (category === 'success') iconClass = 'fa-check';
+            if (category === 'error') iconClass = 'fa-exclamation-triangle';
+            
+            toast.innerHTML = `<i class="fas ${iconClass}"></i> ${message}`;
+            container.appendChild(toast);
+            
             setTimeout(() => {
-                const loadingScreen = document.getElementById('loadingScreen');
-                if (loadingScreen) {
-                    loadingScreen.style.opacity = '0';
-                    setTimeout(() => {
-                        loadingScreen.style.display = 'none';
-                    }, 500);
-                }
-            }, 1500);
-        });
-
-        // Mobile Navigation Toggle
-        document.addEventListener('DOMContentLoaded', function() {
-            const navToggle = document.getElementById('navToggle');
-            const navMenu = document.getElementById('navMenu');
-            const navbar = document.getElementById('navbar');
-            
-            if (navToggle && navMenu) {
-                // Toggle menu on button click
-                navToggle.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    navMenu.classList.toggle('active');
-                    const icon = navToggle.querySelector('i');
-                    icon.classList.toggle('fa-bars');
-                    icon.classList.toggle('fa-times');
-                });
-                
-                // Close menu when clicking outside
-                document.addEventListener('click', function(e) {
-                    if (!navbar.contains(e.target) && navMenu.classList.contains('active')) {
-                        navMenu.classList.remove('active');
-                        const icon = navToggle.querySelector('i');
-                        icon.classList.remove('fa-times');
-                        icon.classList.add('fa-bars');
-                    }
-                });
-                
-                // Close menu when clicking on a nav link
-                const navLinks = navMenu.querySelectorAll('.nav-link-nothing');
-                navLinks.forEach(link => {
-                    link.addEventListener('click', function() {
-                        navMenu.classList.remove('active');
-                        const icon = navToggle.querySelector('i');
-                        icon.classList.remove('fa-times');
-                        icon.classList.add('fa-bars');
-                    });
-                });
-            }
-            
-            // Active link highlighting
-            const currentPath = window.location.pathname;
-            const allNavLinks = document.querySelectorAll('.nav-link-nothing');
-            allNavLinks.forEach(link => {
-                if (link.getAttribute('href') === currentPath) {
-                    link.classList.add('active');
-                }
-            });
-        });
-
-        // Ambient Background Effects
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add subtle mouse tracking effect
-            document.addEventListener('mousemove', function(e) {
-                const cursor = {
-                    x: e.clientX / window.innerWidth,
-                    y: e.clientY / window.innerHeight
-                };
-                
-                document.body.style.setProperty('--mouse-x', cursor.x);
-                document.body.style.setProperty('--mouse-y', cursor.y);
-            });
-            
-            // Parallax effect for floating elements
-            const floatingElements = document.querySelectorAll('.float, .ambient-card');
-            window.addEventListener('scroll', function() {
-                const scrolled = window.pageYOffset;
-                floatingElements.forEach(element => {
-                    const rate = scrolled * -0.5;
-                    element.style.transform = `translateY(${rate}px)`;
-                });
-            });
-        });
-
-        // Chart.js Nothing OS Theme
-        if (typeof Chart !== 'undefined') {
-            Chart.defaults.color = '#cccccc';
-            Chart.defaults.backgroundColor = 'rgba(0, 255, 204, 0.1)';
-            Chart.defaults.borderColor = 'rgba(0, 255, 204, 0.3)';
-            Chart.defaults.font.family = 'JetBrains Mono, monospace';
-            Chart.defaults.font.size = 12;
-            Chart.defaults.plugins.legend.labels.usePointStyle = true;
-            Chart.defaults.plugins.legend.labels.pointStyle = 'circle';
-            Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.1)';
-            Chart.defaults.scale.ticks.color = '#999999';
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 200);
+            }, 4000);
         }
 
-        // Keyboard Shortcuts
-        document.addEventListener('keydown', function(e) {
-            // Alt + D for Dashboard
-            if (e.altKey && e.key === 'd') {
-                e.preventDefault();
-                window.location.href = "{{ url_for('dashboard') }}";
-            }
-            // Alt + P for Pomodoro
-            if (e.altKey && e.key === 'p') {
+        // Auto-remove initial flashed messages
+        document.addEventListener('DOMContentLoaded', () => {
+            const initialToasts = document.querySelectorAll('.toast');
+            initialToasts.forEach((toast, index) => {
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(100%)';
+                    setTimeout(() => toast.remove(), 200);
+                }, 4000 + (index * 500));
+            });
+        });
+
+        // Global Keyboard Shortcuts (Tool-first UX)
+        {% if session.get('user_id') %}
+        document.addEventListener('keydown', (e) => {
+            // Ignore if in an input field
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            // Ctrl/Cmd + K -> Jump to Focus Mode
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
                 e.preventDefault();
                 window.location.href = "{{ url_for('pomodoro') }}";
             }
-            // Alt + L for Log Session
-            if (e.altKey && e.key === 'l') {
+            // Ctrl/Cmd + D -> Jump to Dashboard
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
                 e.preventDefault();
-                window.location.href = "{{ url_for('log_session') }}";
-            }            // Alt + T for Theme Toggle
-            if (e.altKey && e.key === 't') {
-                e.preventDefault();
-                document.getElementById('themeToggle').click();
+                window.location.href = "{{ url_for('dashboard') }}";
             }
         });
-
-        // Theme Toggle Script
-        document.addEventListener('DOMContentLoaded', function() {
-            const themeToggle = document.getElementById('themeToggle');
-            const themeIcon = document.getElementById('themeIcon');
-            const html = document.documentElement;
-
-            // Load saved theme preference or detect system preference
-            const savedTheme = localStorage.getItem('studylogix-theme');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
-
-            // Set initial theme
-            if (initialTheme === 'light') {
-                html.classList.add('light-theme');
-                themeIcon.classList.remove('fa-moon');
-                themeIcon.classList.add('fa-sun');
-            }
-
-            // Theme toggle handler
-            if (themeToggle) {
-                themeToggle.addEventListener('click', function() {
-                    const isLightTheme = html.classList.toggle('light-theme');
-                    
-                    // Update icon
-                    if (isLightTheme) {
-                        themeIcon.classList.remove('fa-moon');
-                        themeIcon.classList.add('fa-sun');
-                        localStorage.setItem('studylogix-theme', 'light');
-                    } else {
-                        themeIcon.classList.remove('fa-sun');
-                        themeIcon.classList.add('fa-moon');
-                        localStorage.setItem('studylogix-theme', 'dark');
-                    }
-                });
-            }        });
+        {% endif %}
     </script>
-    
-    <!-- Toast Notification System -->
-    <div id="toastContainer" style="position: fixed; top: 80px; right: 24px; z-index: 10000; display: flex; flex-direction: column; gap: 12px;"></div>
-    
-    <style>
-        .toast-notification {
-            background: var(--nothing-bg);
-            border: 1px solid var(--nothing-border);
-            border-radius: 12px;
-            padding: 16px 20px;
-            min-width: 300px;
-            max-width: 400px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(10px);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            animation: slideInRight 0.3s ease-out;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 14px;
-        }
-        
-        .toast-notification.success {
-            border-left: 4px solid var(--nothing-green);
-        }
-        
-        .toast-notification.error {
-            border-left: 4px solid var(--nothing-red);
-        }
-        
-        .toast-notification.info {
-            border-left: 4px solid var(--nothing-cyan);
-        }
-        
-        .toast-notification.warning {
-            border-left: 4px solid var(--nothing-orange);
-        }
-        
-        .toast-icon {
-            font-size: 20px;
-            flex-shrink: 0;
-        }
-        
-        .toast-notification.success .toast-icon {
-            color: var(--nothing-green);
-        }
-        
-        .toast-notification.error .toast-icon {
-            color: var(--nothing-red);
-        }
-        
-        .toast-notification.info .toast-icon {
-            color: var(--nothing-cyan);
-        }
-        
-        .toast-notification.warning .toast-icon {
-            color: var(--nothing-orange);
-        }
-        
-        .toast-message {
-            flex: 1;
-            color: var(--nothing-text);
-        }
-        
-        .toast-close {
-            background: none;
-            border: none;
-            color: var(--nothing-text-secondary);
-            cursor: pointer;
-            font-size: 18px;
-            padding: 0;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px;
-            transition: all 0.2s;
-        }
-        
-        .toast-close:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--nothing-white);
-        }
-        
-        @keyframes slideInRight {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        
-        @keyframes slideOutRight {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-        }
-        
-        .toast-notification.removing {
-            animation: slideOutRight 0.3s ease-out;
-        }
-    </style>
-    
-    <script>
-        // Global toast notification function (XSS-safe: uses textContent)
-        function showToast(message, type = 'info', duration = 4000) {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast-notification ${type}`;
-            
-            const icons = {
-                success: 'fa-check-circle',
-                error: 'fa-exclamation-circle',
-                info: 'fa-info-circle',
-                warning: 'fa-exclamation-triangle'
-            };
-            
-            const icon = document.createElement('i');
-            icon.className = `fas ${icons[type]} toast-icon`;
-            
-            const msg = document.createElement('div');
-            msg.className = 'toast-message';
-            msg.textContent = message;
-            
-            const closeBtn = document.createElement('button');
-            closeBtn.className = 'toast-close';
-            closeBtn.textContent = '\u00d7';
-            closeBtn.addEventListener('click', function() { removeToast(toast); });
-            
-            toast.appendChild(icon);
-            toast.appendChild(msg);
-            toast.appendChild(closeBtn);
-            container.appendChild(toast);
-            
-            // Auto-remove after duration
-            setTimeout(() => {
-                removeToast(toast);
-            }, duration);
-        }
-        
-        function removeToast(toast) {
-            toast.classList.add('removing');
-            setTimeout(() => {
-                toast.remove();
-            }, 300);
-        }
-    </script>
-    
     {% block scripts %}{% endblock %}
 </body>
 </html>

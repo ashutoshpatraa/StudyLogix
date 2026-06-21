@@ -1,104 +1,75 @@
 {% extends "base.html" %}
 
-{% block title %}SESSION ARCHIVE - STUDYLOGIX{% endblock %}
+{% block title %}History - StudyLogix{% endblock %}
 
 {% block content %}
-<!-- Nothing OS Sessions Interface -->
-<div class="glass-card mb-8">
-    <div class="p-6 border-bottom-glass d-flex justify-between align-center flex-wrap gap-4">
-        <div>
-            <h1 class="font-display text-4xl text-white m-0 d-flex align-center gap-4">
-                <i class="fas fa-database text-cyan"></i>
-                SESSION_ARCHIVE
-            </h1>
-            <p class="text-muted-nothing text-md mt-2 mb-0">
-                STUDY HISTORY • PERFORMANCE DATA • PROGRESS ANALYSIS
-            </p>
-        </div>
-        <a href="{{ url_for('log_session') }}" class="btn-nothing btn-nothing-primary">
-            <i class="fas fa-plus-circle"></i>
-            NEW_SESSION
-        </a>
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: var(--space-5);">
+    <div>
+        <h1 class="hero-title" style="font-size: 2rem; margin-bottom: var(--space-1);">Session History</h1>
+        <p style="color: var(--text-secondary); margin: 0;">Review your past study records and track your consistency.</p>
     </div>
+    <a href="{{ url_for('log_session') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> New Session
+    </a>
 </div>
 
 {% if sessions %}
-<!-- Sessions Data Table -->
-<div class="glass-card ambient-card">
-    <div class="p-6 border-bottom-glass">
-        <h3 class="font-display text-lg text-white m-0 d-flex align-center gap-3">
-            <i class="fas fa-list text-green"></i>
-            SESSION_DATA
-        </h3>
+<!-- Stats Overview -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: var(--space-5);">
+    <div class="stat-card">
+        <div class="stat-label">Total Sessions</div>
+        <div class="stat-value" style="color: var(--text-primary);">{{ sessions|length }}</div>
     </div>
-    
-    <div class="table-responsive-wrapper" tabindex="0">
-        <table class="nothing-table">
+    <div class="stat-card">
+        <div class="stat-label">Total Time</div>
+        <div class="stat-value" style="color: var(--text-primary);">
+            {{ (sessions|sum(attribute=2) // 60) }}<span style="font-size: 1rem; color: var(--text-tertiary);">h</span> 
+            {{ (sessions|sum(attribute=2) % 60) }}<span style="font-size: 1rem; color: var(--text-tertiary);">m</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Avg Session</div>
+        <div class="stat-value" style="color: var(--text-primary);">
+            {% set avg_duration = (sessions|sum(attribute=2) / sessions|length)|round|int if sessions else 0 %}
+            {{ (avg_duration // 60) }}<span style="font-size: 1rem; color: var(--text-tertiary);">h</span> 
+            {{ (avg_duration % 60) }}<span style="font-size: 1rem; color: var(--text-tertiary);">m</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Unique Subjects</div>
+        <div class="stat-value" style="color: var(--text-primary);">{{ sessions|map(attribute=1)|unique|list|length }}</div>
+    </div>
+</div>
+
+<!-- Sessions List -->
+<div class="card" style="padding: 0; overflow: hidden;">
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 800px;">
             <thead>
-                <tr style="background: var(--glass-bg); border-bottom: 2px solid var(--nothing-cyan);">
-                    <th style="padding: 16px; font-family: 'DotGothic16', monospace; color: var(--nothing-cyan); font-size: 14px; text-align: left; border-right: 1px solid var(--glass-border);">
-                        <i class="fas fa-book"></i> SUBJECT
-                    </th>
-                    <th style="padding: 16px; font-family: 'DotGothic16', monospace; color: var(--nothing-orange); font-size: 14px; text-align: left; border-right: 1px solid var(--glass-border);">
-                        <i class="fas fa-clock"></i> DURATION
-                    </th>
-                    <th style="padding: 16px; font-family: 'DotGothic16', monospace; color: var(--nothing-purple); font-size: 14px; text-align: left; border-right: 1px solid var(--glass-border);">
-                        <i class="fas fa-smile"></i> MOOD
-                    </th>
-                    <th style="padding: 16px; font-family: 'DotGothic16', monospace; color: var(--nothing-green); font-size: 14px; text-align: left; border-right: 1px solid var(--glass-border);">
-                        <i class="fas fa-chart-line"></i> PRODUCTIVITY
-                    </th>
-                    <th style="padding: 16px; font-family: 'DotGothic16', monospace; color: var(--nothing-blue); font-size: 14px; text-align: left; border-right: 1px solid var(--glass-border);">
-                        <i class="fas fa-calendar"></i> DATE
-                    </th>
-                    <th style="padding: 16px; font-family: 'DotGothic16', monospace; color: var(--nothing-gray-300); font-size: 14px; text-align: left;">
-                        <i class="fas fa-sticky-note"></i> NOTES
-                    </th>
+                <tr style="background: var(--bg-surface-elevated); border-bottom: 1px solid var(--border-subtle);">
+                    <th style="padding: 16px 24px; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Subject</th>
+                    <th style="padding: 16px 24px; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Date</th>
+                    <th style="padding: 16px 24px; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Duration</th>
+                    <th style="padding: 16px 24px; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Metrics</th>
+                    <th style="padding: 16px 24px; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Notes</th>
                 </tr>
             </thead>
             <tbody>
                 {% for session in sessions %}
-                <tr style="border-bottom: 1px solid var(--glass-border); transition: all 0.3s ease;" onmouseover="this.style.background='var(--glass-hover)'" onmouseout="this.style.background='transparent'">
-                    <td style="padding: 16px; font-family: 'JetBrains Mono', monospace; color: var(--nothing-white); font-weight: bold; border-right: 1px solid var(--glass-border);">
-                        {{ session[1] }}
+                <tr style="border-bottom: 1px solid var(--border-subtle); transition: background var(--transition-fast);" onmouseover="this.style.background='var(--bg-surface-hover)'" onmouseout="this.style.background='transparent'">
+                    <td style="padding: 16px 24px; font-weight: 500;">{{ session[1] }}</td>
+                    <td style="padding: 16px 24px; color: var(--text-secondary); font-variant-numeric: tabular-nums;">{{ session[6] }}</td>
+                    <td style="padding: 16px 24px; font-variant-numeric: tabular-nums;">
+                        {{ (session[2] // 60) }}h {{ '{:02d}'.format(session[2] % 60) }}m
                     </td>
-                    <td style="padding: 16px; border-right: 1px solid var(--glass-border);">
-                        <span class="status-badge" style="background: var(--nothing-orange); color: var(--nothing-black);">
-                            {{ (session[2] // 60) }}H {{ (session[2] % 60) }}M
-                        </span>
+                    <td style="padding: 16px 24px;">
+                        <div style="display: flex; gap: 8px;">
+                            <span class="badge badge-neutral" style="font-size: 0.7rem;">Mood: {{ session[3]|title }}</span>
+                            <span class="badge badge-neutral" style="font-size: 0.7rem;">Prod: {{ session[4].replace('_', ' ')|title }}</span>
+                        </div>
                     </td>
-                    <td style="padding: 16px; border-right: 1px solid var(--glass-border);">
-                        {% set mood_data = {
-                            'excellent': {'emoji': '😄', 'color': 'var(--nothing-green)'},
-                            'good': {'emoji': '😊', 'color': 'var(--nothing-cyan)'},
-                            'fair': {'emoji': '😐', 'color': 'var(--nothing-orange)'},
-                            'poor': {'emoji': '😟', 'color': 'var(--nothing-red)'}
-                        } %}
-                        <span style="color: {{ mood_data[session[3]]['color'] }}; font-family: 'DotGothic16', monospace;">
-                            {{ mood_data[session[3]]['emoji'] }} {{ session[3]|upper }}
-                        </span>
-                    </td>
-                    <td style="padding: 16px; border-right: 1px solid var(--glass-border);">
-                        {% set prod_data = {
-                            'very_high': {'color': 'var(--nothing-green)', 'text': 'VERY_HIGH'},
-                            'high': {'color': 'var(--nothing-cyan)', 'text': 'HIGH'},
-                            'medium': {'color': 'var(--nothing-orange)', 'text': 'MEDIUM'},
-                            'low': {'color': 'var(--nothing-purple)', 'text': 'LOW'},
-                            'very_low': {'color': 'var(--nothing-red)', 'text': 'VERY_LOW'}
-                        } %}
-                        <span class="status-badge" style="background: {{ prod_data[session[4]]['color'] }}; color: var(--nothing-black);">
-                            {{ prod_data[session[4]]['text'] }}
-                        </span>
-                    </td>
-                    <td style="padding: 16px; font-family: 'JetBrains Mono', monospace; color: var(--nothing-gray-300); font-size: 14px; border-right: 1px solid var(--glass-border);">
-                        {{ session[6] }}
-                    </td>
-                    <td style="padding: 16px; font-family: 'JetBrains Mono', monospace; color: var(--nothing-gray-400); font-size: 12px;">
-                        {% if session[5] %}
-                            {{ session[5][:40] }}{% if session[5]|length > 40 %}...{% endif %}
-                        {% else %}
-                            NO_DATA
-                        {% endif %}
+                    <td style="padding: 16px 24px; color: var(--text-secondary); font-size: 0.9rem; max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        {% if session[5] %}{{ session[5] }}{% else %}<span style="opacity: 0.5;">-</span>{% endif %}
                     </td>
                 </tr>
                 {% endfor %}
@@ -107,71 +78,18 @@
     </div>
 </div>
 
-<!-- Session Statistics -->
-<div class="glass-card ambient-card mt-8" style="animation-delay: 0.2s;">
-    <div class="p-6 border-bottom-glass">
-        <h3 class="font-display text-lg text-white m-0 d-flex align-center gap-3">
-            <i class="fas fa-chart-bar text-cyan"></i>
-            SESSION_ANALYTICS
-        </h3>
-    </div>
-    
-    <div class="p-8">
-        <div class="d-grid gap-6" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
-            <div class="stat-card-nothing">
-                <div class="stats-value-nothing" style="color: var(--nothing-cyan);">{{ sessions|length }}</div>
-                <div class="stats-label-nothing">TOTAL SESSIONS</div>
-            </div>
-            <div class="stat-card-nothing">
-                <div class="stats-value-nothing" style="color: var(--nothing-green);">
-                    {{ (sessions|sum(attribute=2) // 60) }}H {{ (sessions|sum(attribute=2) % 60) }}M
-                </div>
-                <div class="stats-label-nothing">TOTAL TIME</div>
-            </div>
-            <div class="stat-card-nothing">
-                <div class="stats-value-nothing" style="color: var(--nothing-orange);">
-                    {% set avg_duration = (sessions|sum(attribute=2) / sessions|length)|round|int if sessions else 0 %}
-                    {{ (avg_duration // 60) }}H {{ (avg_duration % 60) }}M
-                </div>
-                <div class="stats-label-nothing">AVERAGE SESSION</div>
-            </div>
-            <div class="stat-card-nothing">
-                <div class="stats-value-nothing" style="color: var(--nothing-purple);">{{ sessions|map(attribute=1)|unique|list|length }}</div>
-                <div class="stats-label-nothing">UNIQUE SUBJECTS</div>
-            </div>
-        </div>
-    </div>
-</div>
-
 {% else %}
-<!-- Empty State -->
-<div class="glass-card ambient-card text-center p-10">
-    <div class="mb-8" style="opacity: 0.6;">
-        <i class="fas fa-database text-muted-nothing" style="font-size: 80px;"></i>
+<div class="card" style="text-align: center; padding: var(--space-8); display: flex; flex-direction: column; align-items: center;">
+    <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--bg-surface-elevated); display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--text-tertiary); margin-bottom: var(--space-4);">
+        <i class="fas fa-folder-open"></i>
     </div>
-    <h3 class="font-display text-2xl text-white mb-4">
-        NO_SESSION_DATA_FOUND
-    </h3>
-    <p class="text-muted-nothing text-lg mb-8">
-        INITIALIZE YOUR FIRST STUDY SESSION TO BEGIN TRACKING
+    <h3 style="font-size: 1.5rem; margin-bottom: var(--space-1);">No History Found</h3>
+    <p style="color: var(--text-secondary); margin-bottom: var(--space-4); max-width: 400px;">
+        You haven't logged any study sessions yet. Start your journey by recording your first session.
     </p>
-    <a href="{{ url_for('log_session') }}" class="btn-nothing btn-nothing-primary text-lg p-4">
-        <i class="fas fa-rocket"></i>
-        LOG_FIRST_SESSION
+    <a href="{{ url_for('log_session') }}" class="btn btn-primary">
+        <i class="fas fa-play"></i> Log First Session
     </a>
 </div>
 {% endif %}
-
-<!-- Background Terminal Elements -->
-<div class="terminal-lines" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; opacity: 0.05;">
-    <div style="position: absolute; top: 10%; left: 5%; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--nothing-green); animation: terminal-glow 6s ease-in-out infinite;">
-        > DATABASE_QUERY_EXECUTING
-    </div>
-    <div style="position: absolute; top: 50%; right: 10%; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--nothing-cyan); animation: terminal-glow 6s ease-in-out infinite 2s;">
-        > SESSION_DATA_RETRIEVED
-    </div>
-    <div style="position: absolute; bottom: 20%; left: 15%; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--nothing-purple); animation: terminal-glow 6s ease-in-out infinite 4s;">
-        > ANALYTICS_COMPUTED
-    </div>
-</div>
 {% endblock %}

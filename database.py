@@ -144,8 +144,33 @@ class DatabaseManager:
                 )
             """)
 
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_study_sessions_user_id ON study_sessions(user_id);
+            """)
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_study_sessions_date ON study_sessions(session_date);
+            """)
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_pomodoro_sessions_user_id ON pomodoro_sessions(user_id);
+            """)
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_pomodoro_sessions_status ON pomodoro_sessions(status);
+            """)
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_friendships_user_id ON friendships(user_id);
+            """)
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_friendships_friend_id ON friendships(friend_id);
+            """)
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_study_goals_user_id ON study_goals(user_id);
+            """)
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_active_timers_user_id ON active_timers(user_id);
+            """)
+
             self.connection.commit()
-            logger.info("All database tables created successfully")
+            logger.info("All database tables and indexes created successfully")
             return True
 
         except sqlite3.Error:

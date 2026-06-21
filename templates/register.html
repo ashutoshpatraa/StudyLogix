@@ -1,80 +1,53 @@
 {% extends "base.html" %}
 
-{% block title %}ACCOUNT CREATION - STUDYLOGIX{% endblock %}
+{% block title %}Create Account - StudyLogix{% endblock %}
 
 {% block content %}
-<!-- Nothing OS Registration Interface -->
-<div class="hero-wrapper">
-    <div class="glass-card ambient-card max-w-480 p-10">
-        <!-- Header -->
-        <div class="text-center mb-8">
-            <div class="auth-header-icon" style="border-color: var(--nothing-green);">
-                <i class="fas fa-user-plus" style="font-size: 32px; color: var(--nothing-green);"></i>
+<div style="display: flex; min-height: 80vh; align-items: center; justify-content: center; padding: var(--space-4);">
+    <div class="card" style="width: 100%; max-width: 420px; padding: var(--space-6) var(--space-5); animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
+        <div style="text-align: center; margin-bottom: var(--space-5);">
+            <div style="width: 48px; height: 48px; border-radius: var(--radius-md); background: var(--accent-gradient); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto var(--space-3); box-shadow: var(--shadow-glow);">
+                <i class="fas fa-rocket"></i>
             </div>
-            <h2 class="font-display text-3xl mb-2">
-                CREATE_ACCOUNT
-            </h2>
-            <p class="text-muted-nothing text-md m-0">
-                INITIALIZE NEW USER PROFILE
-            </p>
+            <h1 style="font-size: 1.75rem; letter-spacing: -0.03em; margin-bottom: var(--space-1);">Create an account</h1>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">Join StudyLogix to optimize your learning</p>
         </div>
         
-        <!-- Register Form -->
-        <form method="POST" class="d-flex flex-column gap-6">
-            <!-- Username Field -->
-            <div class="form-group-nothing">
-                <label for="username" class="d-flex align-center gap-3 text-muted-nothing font-display text-md mb-2">
-                    <i class="fas fa-user" style="color: var(--nothing-cyan);"></i>
-                    IDENTIFIER
-                </label>
-                <input type="text" class="form-control-nothing font-mono" id="username" name="username" required placeholder="CHOOSE_USERNAME" autocomplete="username">
+        <form method="POST" action="{{ url_for('register') }}" id="registerForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div style="margin-bottom: var(--space-4);">
+                <label for="username" class="form-label">Username</label>
+                <div style="position: relative;">
+                    <i class="fas fa-user" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary);"></i>
+                    <input type="text" class="form-control" id="username" name="username" placeholder="Choose a unique username" required autofocus style="padding-left: 40px;">
+                </div>
             </div>
-                
-                <!-- Password Field -->
-            <div class="form-group-nothing">
-                <label for="password" class="d-flex align-center gap-3 text-muted-nothing font-display text-md mb-2">
-                    <i class="fas fa-lock" style="color: var(--nothing-purple);"></i>
-                    SECURITY_KEY
-                </label>
-                <input type="password" class="form-control-nothing font-mono" id="password" name="password" required placeholder="CREATE_PASSWORD" autocomplete="new-password">
+            
+            <div class="form-group" style="margin-bottom: var(--space-5);">
+                <label for="password" class="form-label">Password</label>
+                <div style="position: relative;">
+                    <i class="fas fa-lock" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary);"></i>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Create a strong password" required style="padding-left: 40px;">
+                </div>
             </div>
-                
-                <!-- Confirm Password Field -->
-            <div class="form-group-nothing">
-                <label for="confirm_password" class="d-flex align-center gap-3 text-muted-nothing font-display text-md mb-2">
-                    <i class="fas fa-check-double" style="color: var(--nothing-green);"></i>
-                    VERIFY_KEY
-                </label>
-                <input type="password" class="form-control-nothing font-mono" id="confirm_password" name="confirm_password" required placeholder="VERIFY_PASSWORD" autocomplete="new-password">
-            </div>
-                
-                <!-- Submit Button -->
-            <button type="submit" class="btn-nothing btn-nothing-primary mt-2" style="justify-content: center;">
-                <i class="fas fa-user-plus"></i>
-                REGISTER_PROFILE
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; margin-bottom: var(--space-4);">
+                Create Account <i class="fas fa-check" style="margin-left: 8px;"></i>
             </button>
+            
+            <div style="text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
+                Already have an account? <a href="{{ url_for('login') }}" style="color: var(--accent-base); font-weight: 500;">Sign in</a>
+            </div>
         </form>
-        
-        <!-- Login Link -->
-        <div class="text-center mt-6 pt-6 border-top-glass">
-            <p class="text-muted-nothing text-md m-0">
-                PROFILE_EXISTS? <a href="{{ url_for('login') }}" style="color: var(--nothing-cyan); text-decoration: none; font-family: 'DotGothic16', monospace;">AUTHENTICATE</a>
-            </p>
-        </div>
-        </div>
     </div>
 </div>
 
-<!-- Terminal Initialization Animation -->
-<div class="terminal-lines" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; opacity: 0.1;">
-    <div style="position: absolute; top: 15%; left: 5%; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--nothing-green); animation: terminal-glow 4s ease-in-out infinite;">
-        > ACCOUNT_SYSTEM_READY
-    </div>
-    <div style="position: absolute; top: 60%; right: 5%; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--nothing-cyan); animation: terminal-glow 4s ease-in-out infinite 1.5s;">
-        > DATABASE_CONNECTION_ACTIVE
-    </div>
-    <div style="position: absolute; bottom: 25%; left: 20%; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--nothing-purple); animation: terminal-glow 4s ease-in-out infinite 3s;">
-        > VALIDATION_PROTOCOLS_ENABLED
-    </div>
-</div>
+<script>
+document.getElementById('registerForm').addEventListener('submit', function() {
+    const btn = this.querySelector('button[type="submit"]');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+    btn.style.pointerEvents = 'none';
+    btn.style.opacity = '0.8';
+});
+</script>
 {% endblock %}

@@ -3,252 +3,215 @@
 {% block title %}Analytics - StudyLogix{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col">
-        <h2 class="mb-0">
-<!-- Nothing OS Analytics Interface -->
-<div class="glass-card mb-8">
-    <div class="p-6 border-bottom-glass d-flex justify-between align-center flex-wrap gap-4">
-        <div>
-            <h1 class="font-display text-4xl text-white m-0 d-flex align-center gap-4">
-                <i class="fas fa-chart-network text-cyan"></i>
-                DATA_ANALYTICS
-            </h1>
-            <p class="text-muted-nothing text-md mt-2 mb-0">
-                SYSTEM METRICS • PATTERN RECOGNITION • PERFORMANCE OPTIMIZATION
-            </p>
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: var(--space-5);">
+    <div>
+        <h1 class="hero-title" style="font-size: 2rem; margin-bottom: var(--space-1);">Analytics Dashboard</h1>
+        <p style="color: var(--text-secondary); margin: 0;">Visualize your progress and identify performance patterns.</p>
+    </div>
+    <button onclick="exportData()" class="btn btn-secondary">
+        <i class="fas fa-download"></i> Export Data
+    </button>
+</div>
+
+<!-- Top Metrics -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-bottom: var(--space-5);">
+    <div class="stat-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2);">
+            <div class="stat-label">Total Focus Time</div>
+            <div style="width: 32px; height: 32px; border-radius: var(--radius-md); background: var(--accent-light); color: var(--accent-base); display: flex; align-items: center; justify-content: center;"><i class="fas fa-clock"></i></div>
         </div>
-        <div class="d-flex gap-3">
-            <button onclick="exportData()" class="btn-nothing btn-nothing-primary">
-                <i class="fas fa-download"></i>
-                EXPORT_DATA
-            </button>
+        <div class="stat-value">{{ (total_time // 60) }}<span style="font-size: 1.25rem; color: var(--text-tertiary);">h</span> {{ (total_time % 60) }}<span style="font-size: 1.25rem; color: var(--text-tertiary);">m</span></div>
+        <div class="stat-desc" style="color: var(--success-base); display: flex; align-items: center; gap: 4px; margin-top: 8px;">
+            <i class="fas fa-arrow-up"></i> System optimal
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2);">
+            <div class="stat-label">Total Sessions</div>
+            <div style="width: 32px; height: 32px; border-radius: var(--radius-md); background: rgba(168, 85, 247, 0.1); color: #a855f7; display: flex; align-items: center; justify-content: center;"><i class="fas fa-layer-group"></i></div>
+        </div>
+        <div class="stat-value">{{ subjects_data|sum(attribute=2) or 0 }}</div>
+        <div class="stat-desc" style="color: #a855f7; display: flex; align-items: center; gap: 4px; margin-top: 8px;">
+            <i class="fas fa-check-circle"></i> Consistency metric
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2);">
+            <div class="stat-label">Daily Average</div>
+            <div style="width: 32px; height: 32px; border-radius: var(--radius-md); background: var(--warning-light); color: var(--warning-base); display: flex; align-items: center; justify-content: center;"><i class="fas fa-calendar-day"></i></div>
+        </div>
+        <div class="stat-value">{% if daily_data %}{{ (daily_data|sum(attribute=1) / daily_data|length / 60)|round(1) }}{% else %}0{% endif %}<span style="font-size: 1.25rem; color: var(--text-tertiary);">h</span></div>
+        <div class="stat-desc" style="color: var(--warning-base); display: flex; align-items: center; gap: 4px; margin-top: 8px;">
+            <i class="fas fa-chart-line"></i> Daily trend
         </div>
     </div>
 </div>
 
-<!-- Top Metrics Row -->
-<div class="d-grid gap-6 mb-8" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
-    <!-- Total Time Node -->
-    <div class="glass-card ambient-card p-6">
-        <div class="d-flex justify-between align-center mb-4">
-            <h3 class="font-display text-sm text-muted-nothing m-0">TOTAL_FOCUS_TIME</h3>
-            <i class="fas fa-clock text-cyan"></i>
-        </div>
-        <div class="font-mono text-3xl text-white mb-2">
-            {{ (total_time // 60) }}H {{ (total_time % 60) }}M
-        </div>
-        <div class="d-flex align-center gap-2 text-green font-mono text-xs">
-            <i class="fas fa-arrow-up"></i>
-            SYSTEM OPTIMAL
-        </div>
-    </div>
-
-    <!-- Total Sessions Node -->
-    <div class="glass-card ambient-card p-6" style="animation-delay: 0.2s;">
-        <div class="d-flex justify-between align-center mb-4">
-            <h3 class="font-display text-sm text-muted-nothing m-0">TOTAL_SESSIONS</h3>
-            <i class="fas fa-layer-group text-purple"></i>
-        </div>
-        <div class="font-mono text-3xl text-white mb-2">
-            {{ subjects_data|sum(attribute=2) or 0 }}
-        </div>
-        <div class="d-flex align-center gap-2 text-purple font-mono text-xs">
-            <i class="fas fa-check-circle"></i>
-            CONSISTENCY METRIC
-        </div>
-    </div>
-
-    <div class="glass-card ambient-card p-6">
-        <div class="d-flex justify-between align-center mb-4">
-            <h3 class="font-display text-sm text-muted-nothing m-0">DAILY_AVERAGE</h3>
-            <i class="fas fa-calendar-day text-orange"></i>
-        </div>
-        <div class="font-mono text-3xl text-white mb-2">
-            {% if daily_data %}
-                {{ (daily_data|sum(attribute=1) / daily_data|length / 60)|round(1) }}H
-            {% else %}
-                0H
-            {% endif %}
-        </div>
-        <div class="d-flex align-center gap-2 text-orange font-mono text-xs">
-            <i class="fas fa-chart-line"></i>
-            DAILY_TREND
-        </div>
-    </div>
-</div>
-
-<!-- Advanced Visualization Grid -->
-<div class="d-grid gap-6 mb-8" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));">
-    <!-- Subject Distribution Chart -->
-    <div class="glass-card ambient-card p-6">
-        <h3 class="font-display text-lg text-white m-0 mb-6 d-flex align-center gap-3 border-bottom-glass pb-4">
-            <i class="fas fa-chart-pie text-cyan"></i>
-            SUBJECT_DISTRIBUTION
+<!-- Charts Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: var(--space-5); margin-bottom: var(--space-5);">
+    <!-- Timeline -->
+    <div class="card" style="padding: var(--space-4);">
+        <h3 style="font-size: 1.1rem; margin-bottom: var(--space-4); display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-chart-line text-muted"></i> Study Timeline
         </h3>
-        <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
-            {% if subjects_data %}
-                <canvas id="subjectChart"></canvas>
-            {% else %}
-                <div class="text-center p-10 text-muted-nothing">
-                    <i class="fas fa-chart-pie text-4xl mb-4"></i>
-                    <p class="font-mono text-sm mb-6">NO_DATA_AVAILABLE</p>
-                    <a href="{{ url_for('log_session') }}" class="btn-nothing btn-nothing-primary" style="justify-content: center;">
-                        <i class="fas fa-plus-circle"></i>
-                        INITIALIZE_LOG
-                    </a>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Daily Timeline Chart -->
-    <div class="glass-card ambient-card p-6">
-        <h3 class="font-display text-lg text-white m-0 mb-6 d-flex align-center gap-3 border-bottom-glass pb-4">
-            <i class="fas fa-chart-line text-blue"></i>
-            STUDY_TIMELINE
-        </h3>
-        <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
+        <div style="position: relative; height: 300px; width: 100%;">
             {% if daily_data %}
                 <canvas id="timelineChart"></canvas>
             {% else %}
-                <div class="text-center p-10 text-muted-nothing">
-                    <i class="fas fa-chart-line text-4xl mb-4"></i>
-                    <p class="font-mono text-sm mb-6">NO_TIMELINE_DATA</p>
-                    <a href="{{ url_for('log_session') }}" class="btn-nothing btn-nothing-primary" style="justify-content: center;">
-                        <i class="fas fa-plus-circle"></i>
-                        START_TRACKING
-                    </a>
+                <div style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-tertiary);">
+                    <i class="fas fa-chart-line" style="font-size: 2rem; margin-bottom: var(--space-2); opacity: 0.5;"></i>
+                    <p style="margin-bottom: var(--space-3);">No timeline data available.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Distribution -->
+    <div class="card" style="padding: var(--space-4);">
+        <h3 style="font-size: 1.1rem; margin-bottom: var(--space-4); display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-chart-pie text-muted"></i> Subject Distribution
+        </h3>
+        <div style="position: relative; height: 300px; width: 100%;">
+            {% if subjects_data %}
+                <canvas id="subjectChart"></canvas>
+            {% else %}
+                <div style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-tertiary);">
+                    <i class="fas fa-chart-pie" style="font-size: 2rem; margin-bottom: var(--space-2); opacity: 0.5;"></i>
+                    <p style="margin-bottom: var(--space-3);">No subject data available.</p>
                 </div>
             {% endif %}
         </div>
     </div>
 </div>
 
-<!-- Subject Breakdown Table -->
-<div class="glass-card ambient-card mb-8">
-    <div class="p-6 border-bottom-glass">
-        <h3 class="font-display text-lg text-white m-0 d-flex align-center gap-3">
-            <i class="fas fa-table text-green"></i>
-            DETAILED_SUBJECT_BREAKDOWN
+<!-- Detailed Breakdown -->
+<div class="card" style="padding: 0; overflow: hidden;">
+    <div class="card-header" style="padding: var(--space-4) var(--space-4) 0; border-bottom: none;">
+        <h3 style="font-size: 1.1rem; margin: 0; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-table text-muted"></i> Detailed Breakdown
         </h3>
     </div>
     
     {% if subjects_data %}
-        <div class="table-responsive-wrapper" tabindex="0">
-            <table class="nothing-table">
-                <thead>
-                    <tr style="background: var(--glass-bg); border-bottom: 2px solid var(--nothing-cyan);">
-                        <th style="padding: 16px; font-family: 'DotGothic16', monospace; color: var(--nothing-cyan); font-size: 14px; text-align: left; border-right: 1px solid var(--glass-border);">SUBJECT</th>
-                        <th style="padding: 16px; font-family: 'DotGothic16', monospace; color: var(--nothing-cyan); font-size: 14px; text-align: center; border-right: 1px solid var(--glass-border);">TOTAL_TIME</th>
-                        <th style="padding: 16px; font-family: 'DotGothic16', monospace; color: var(--nothing-cyan); font-size: 14px; text-align: center; border-right: 1px solid var(--glass-border);">SESSIONS</th>
-                        <th style="padding: 16px; font-family: 'DotGothic16', monospace; color: var(--nothing-cyan); font-size: 14px; text-align: center; border-right: 1px solid var(--glass-border);">AVG_SESSION</th>
-                        <th style="padding: 16px; font-family: 'DotGothic16', monospace; color: var(--nothing-cyan); font-size: 14px; text-align: left;">PROGRESS</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for subject, minutes, sessions in subjects_data %}
-                    <tr style="border-bottom: 1px solid var(--glass-border); transition: all 0.3s ease;" onmouseover="this.style.background='var(--glass-hover)'" onmouseout="this.style.background='transparent'">
-                        <td style="padding: 16px; border-right: 1px solid var(--glass-border);">
-                            <div class="font-mono text-white">{{ subject }}</div>
-                            <div class="text-xs text-muted-nothing mt-1">{{ sessions }} LOGS</div>
-                        </td>
-                        <td style="padding: 16px; text-align: center; border-right: 1px solid var(--glass-border);">
-                            <span class="status-badge" style="background: var(--nothing-cyan); color: var(--nothing-black);">
-                                {{ (minutes // 60) }}H {{ (minutes % 60) }}M
-                            </span>
-                        </td>
-                        <td style="padding: 16px; text-align: center; border-right: 1px solid var(--glass-border);">
-                            <div class="font-mono text-white">{{ sessions }}</div>
-                        </td>
-                        <td style="padding: 16px; text-align: center; border-right: 1px solid var(--glass-border);">
-                            <div class="font-mono text-white">{{ ((minutes / sessions) // 60)|int }}H {{ ((minutes / sessions) % 60)|int }}M</div>
-                        </td>
-                        <td style="padding: 16px;">
-                            {% set percentage = (minutes / total_time * 100)|round(1) if total_time > 0 else 0 %}
-                            <div class="d-flex align-center gap-3">
-                                <div style="flex-grow: 1; height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; overflow: hidden;">
-                                    <div style="height: 100%; width: {{ percentage }}%; background: var(--nothing-green); box-shadow: 0 0 10px var(--nothing-green);"></div>
-                                </div>
-                                <span class="font-mono text-xs text-white">{{ percentage }}%</span>
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; margin-top: var(--space-3);">
+            <thead>
+                <tr style="background: var(--bg-surface-elevated); border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);">
+                    <th style="padding: 12px 24px; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Subject</th>
+                    <th style="padding: 12px 24px; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Total Time</th>
+                    <th style="padding: 12px 24px; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Sessions</th>
+                    <th style="padding: 12px 24px; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Avg/Session</th>
+                    <th style="padding: 12px 24px; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">Progress Share</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for subject, minutes, sessions in subjects_data %}
+                <tr style="border-bottom: 1px solid var(--border-subtle); transition: background var(--transition-fast);" onmouseover="this.style.background='var(--bg-surface-hover)'" onmouseout="this.style.background='transparent'">
+                    <td style="padding: 16px 24px; font-weight: 500;">
+                        {{ subject }}
+                    </td>
+                    <td style="padding: 16px 24px; font-variant-numeric: tabular-nums;">
+                        <span class="badge badge-neutral" style="font-size: 0.8rem;">{{ (minutes // 60) }}h {{ (minutes % 60) }}m</span>
+                    </td>
+                    <td style="padding: 16px 24px; font-variant-numeric: tabular-nums;">{{ sessions }}</td>
+                    <td style="padding: 16px 24px; font-variant-numeric: tabular-nums;">
+                        {{ ((minutes / sessions) // 60)|int }}h {{ ((minutes / sessions) % 60)|int }}m
+                    </td>
+                    <td style="padding: 16px 24px;">
+                        {% set percentage = (minutes / total_time * 100)|round(1) if total_time > 0 else 0 %}
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="flex-grow: 1; height: 6px; background: var(--bg-surface-elevated); border-radius: 3px; overflow: hidden;">
+                                <div style="height: 100%; width: {{ percentage }}%; background: var(--accent-base);"></div>
                             </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                            <span style="font-size: 0.85rem; color: var(--text-secondary); min-width: 40px; text-align: right;">{{ percentage }}%</span>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% else %}
-        <div class="text-center p-10 text-muted-nothing">
-            <i class="fas fa-table text-4xl mb-4"></i>
-            <p class="font-mono text-sm mb-6">NO_SUBJECT_DATA</p>
-            <a href="{{ url_for('log_session') }}" class="btn-nothing btn-nothing-primary" style="justify-content: center; display: inline-flex;">
-                <i class="fas fa-plus-circle"></i>
-                START_ANALYZING
-            </a>
-        </div>
+    <div style="padding: var(--space-6); text-align: center; color: var(--text-tertiary);">
+        <p>No subject data to display.</p>
+    </div>
     {% endif %}
 </div>
 {% endblock %}
 
 {% block scripts %}
-{% if subjects_data %}
 <script>
-// Subject Distribution Pie Chart
+const chartColors = [
+    '#4f46e5', '#3b82f6', '#06b6d4', '#10b981', 
+    '#8b5cf6', '#d946ef', '#f43f5e', '#f59e0b'
+];
+
+{% if subjects_data %}
 const subjectCtx = document.getElementById('subjectChart').getContext('2d');
-const subjectChart = new Chart(subjectCtx, {
+new Chart(subjectCtx, {
     type: 'doughnut',
     data: {
         labels: {{ subjects_data|map(attribute=0)|list|tojson }},
         datasets: [{
             data: {{ subjects_data|map(attribute=1)|map('int')|list|tojson }},
-            backgroundColor: [
-                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
-                '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
-            ],
-            borderWidth: 2,
-            borderColor: '#fff'
+            backgroundColor: chartColors,
+            borderWidth: 0,
+            hoverOffset: 4
         }]
     },
     options: {
         responsive: true,
         maintainAspectRatio: false,
+        cutout: '75%',
         plugins: {
             legend: {
-                position: 'bottom'
+                position: 'right',
+                labels: {
+                    usePointStyle: true,
+                    padding: 20,
+                    font: { family: "'Inter', sans-serif", size: 12 }
+                }
             },
             tooltip: {
                 callbacks: {
-                    label: function(context) {
-                        const minutes = context.parsed;
-                        const hours = Math.floor(minutes / 60);
-                        const mins = minutes % 60;
-                        return context.label + ': ' + hours + 'h ' + mins + 'm';
+                    label: function(ctx) {
+                        const mins = ctx.parsed;
+                        return ` ${Math.floor(mins/60)}h ${mins%60}m`;
                     }
                 }
             }
         }
     }
 });
-</script>
 {% endif %}
 
 {% if daily_data %}
-<script>
-// Daily Timeline Chart
 const timelineCtx = document.getElementById('timelineChart').getContext('2d');
-const timelineChart = new Chart(timelineCtx, {
+
+// Create gradient
+const gradient = timelineCtx.createLinearGradient(0, 0, 0, 300);
+gradient.addColorStop(0, 'rgba(79, 70, 229, 0.2)');
+gradient.addColorStop(1, 'rgba(79, 70, 229, 0)');
+
+new Chart(timelineCtx, {
     type: 'line',
     data: {
         labels: {{ daily_data|map(attribute=0)|list|tojson }},
         datasets: [{
             label: 'Study Hours',
             data: {{ daily_data|map(attribute=1)|map('float')|map('round', 2)|list|tojson }},
-            borderColor: '#36A2EB',
-            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+            borderColor: '#4f46e5',
+            backgroundColor: gradient,
             borderWidth: 2,
             fill: true,
-            tension: 0.4
+            tension: 0.4,
+            pointBackgroundColor: '#121212',
+            pointBorderColor: '#4f46e5',
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6
         }]
     },
     options: {
@@ -257,35 +220,31 @@ const timelineChart = new Chart(timelineCtx, {
         scales: {
             y: {
                 beginAtZero: true,
-                title: {
-                    display: true,
-                    text: 'Minutes'
-                }
+                border: { display: false },
+                grid: { color: 'rgba(255,255,255,0.05)' }
             },
             x: {
-                title: {
-                    display: true,
-                    text: 'Date'
-                }
+                border: { display: false },
+                grid: { display: false }
             }
         },
         plugins: {
-            legend: {
-                display: false
-            },
+            legend: { display: false },
             tooltip: {
                 callbacks: {
-                    label: function(context) {
-                        const minutes = context.parsed.y;
-                        const hours = Math.floor(minutes / 60);
-                        const mins = Math.round(minutes % 60);
-                        return 'Study Time: ' + hours + 'h ' + mins + 'm';
+                    label: function(ctx) {
+                        const mins = ctx.parsed.y;
+                        return ` ${Math.floor(mins/60)}h ${Math.round(mins%60)}m`;
                     }
                 }
             }
         }
     }
 });
-</script>
 {% endif %}
+
+function exportData() {
+    showToast('Export functionality to be implemented', 'info');
+}
+</script>
 {% endblock %}

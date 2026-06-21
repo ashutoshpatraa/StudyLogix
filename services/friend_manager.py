@@ -175,52 +175,53 @@ class FriendManager:
         with self.db_lock:
             cursor = self.db.connection.cursor()
             try:
+                # Optimized single query using GROUP BY and LEFT JOINs to avoid N+1
                 cursor.execute("""
-                    SELECT DISTINCT u.user_id, u.username
-                    FROM users u
-                    JOIN friendships f ON (
-                        (f.user_id = ? AND f.friend_id = u.user_id) OR
-                        (f.friend_id = ? AND f.user_id = u.user_id)
+                    WITH Friends AS (
+                        SELECT DISTINCT u.user_id, u.username
+                        FROM users u
+                        JOIN friendships f ON (
+                            (f.user_id = ? AND f.friend_id = u.user_id) OR
+                            (f.friend_id = ? AND f.user_id = u.user_id)
+                        )
+                        WHERE f.status = 'accepted'
+                    ),
+                    RegularMins AS (
+                        SELECT user_id, COALESCE(SUM(duration_minutes), 0) as mins
+                        FROM study_sessions
+                        WHERE session_date >= date('now', '-7 days')
+                        GROUP BY user_id
+                    ),
+                    PomodoroMins AS (
+                        SELECT user_id, COALESCE(SUM(duration_minutes), 0) as mins
+                        FROM pomodoro_sessions
+                        WHERE status = 'completed' AND DATE(started_at) >= date('now', '-7 days')
+                        GROUP BY user_id
+                    ),
+                    TodaySessions AS (
+                        SELECT user_id, COUNT(*) as count
+                        FROM pomodoro_sessions
+                        WHERE status = 'completed' AND DATE(started_at) = date('now')
+                        GROUP BY user_id
                     )
-                    WHERE f.status = 'accepted'
+                    SELECT f.user_id, f.username, 
+                           COALESCE(r.mins, 0) + COALESCE(p.mins, 0) AS weekly_minutes,
+                           COALESCE(t.count, 0) AS today_sessions
+                    FROM Friends f
+                    LEFT JOIN RegularMins r ON f.user_id = r.user_id
+                    LEFT JOIN PomodoroMins p ON f.user_id = p.user_id
+                    LEFT JOIN TodaySessions t ON f.user_id = t.user_id
                 """, (user_id, user_id))
 
-                friends_progress = []
-                for row in cursor.fetchall():
-                    friend_user_id = row[0]
-                    friend_username = row[1]
-
-                    cursor.execute("""
-                        SELECT COALESCE(SUM(duration_minutes), 0)
-                        FROM study_sessions
-                        WHERE user_id = ? AND session_date >= date('now', '-7 days')
-                    """, (friend_user_id,))
-                    regular_mins = cursor.fetchone()[0]
-
-                    cursor.execute("""
-                        SELECT COALESCE(SUM(duration_minutes), 0)
-                        FROM pomodoro_sessions
-                        WHERE user_id = ? AND status = 'completed'
-                        AND DATE(started_at) >= date('now', '-7 days')
-                    """, (friend_user_id,))
-                    pomodoro_mins = cursor.fetchone()[0]
-
-                    cursor.execute("""
-                        SELECT COUNT(*)
-                        FROM pomodoro_sessions
-                        WHERE user_id = ? AND status = 'completed'
-                        AND DATE(started_at) = date('now')
-                    """, (friend_user_id,))
-                    today_sessions = cursor.fetchone()[0]
-
-                    friends_progress.append({
-                        'user_id': friend_user_id,
-                        'username': friend_username,
-                        'weekly_minutes': regular_mins + pomodoro_mins,
-                        'today_sessions': today_sessions,
-                    })
-
-                return friends_progress
+                return [
+                    {
+                        'user_id': row[0],
+                        'username': row[1],
+                        'weekly_minutes': row[2],
+                        'today_sessions': row[3],
+                    }
+                    for row in cursor.fetchall()
+                ]
 
             except sqlite3.Error:
                 logger.exception("Error fetching friends progress")
