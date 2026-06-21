@@ -1,157 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{% block title %}StudyLogix{% endblock %}</title>
-    
-    <!-- Fonts: Inter for UI, JetBrains Mono for data/metrics -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-    
-    <!-- Icons (Minimal usage) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    {% block head %}{% endblock %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="description" content="StudyLogix — track sessions, measure progress, study smarter.">
+  <title>{% block title %}StudyLogix{% endblock %}</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  {% block head %}{% endblock %}
 </head>
 <body>
-    <div class="app-container">
-        
-        <!-- Sidebar Navigation (Only visible when logged in) -->
-        {% if session.get('user_id') %}
-        <nav class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <div class="logo-icon">S</div>
-                <div class="logo-text">StudyLogix</div>
-            </div>
-            
-            <ul class="nav-links">
-                <li>
-                    <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
-                        Dashboard
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ url_for('pomodoro') }}" class="nav-item {% if request.endpoint == 'pomodoro' %}active{% endif %}">
-                        Focus
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ url_for('log_session') }}" class="nav-item {% if request.endpoint == 'log_session' %}active{% endif %}">
-                        Log Session
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ url_for('sessions') }}" class="nav-item {% if request.endpoint == 'sessions' %}active{% endif %}">
-                        Archive
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ url_for('analytics') }}" class="nav-item {% if request.endpoint == 'analytics' %}active{% endif %}">
-                        Analytics
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ url_for('friends') }}" class="nav-item {% if request.endpoint == 'friends' %}active{% endif %}">
-                        Network
-                    </a>
-                </li>
-            </ul>
-            
-            <div class="user-profile">
-                <div class="avatar">{{ session.get('username', 'U')[0]|upper }}</div>
-                <div class="user-info">
-                    <div class="user-name">{{ session.get('username') }}</div>
-                    <a href="{{ url_for('logout') }}" style="color: var(--text-tertiary); font-size: 11px; text-decoration: none;">Sign Out</a>
-                </div>
-            </div>
-        </nav>
-        {% endif %}
-        
-        <!-- Main Content -->
-        <main class="main-content" style="{% if not session.get('user_id') %}margin-left: 0; max-width: 100%; display: flex; align-items: center; justify-content: center;{% endif %}">
-            {% block content %}{% endblock %}
-        </main>
+<div class="app-shell">
+
+  {% if session.get('user_id') %}
+  <!-- ── Sidebar ───────────────────────────────────────── -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-mark">S</div>
+      <span class="brand-name">StudyLogix</span>
     </div>
 
-    <!-- Toast Notification System -->
-    <div id="toast-container" class="toast-container">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="toast toast-{{ category }}">
-                        <i class="fas {% if category == 'success' %}fa-check{% elif category == 'error' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"></i>
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+    <div class="nav-section">
+      <span class="nav-label">Overview</span>
+      <a href="{{ url_for('dashboard') }}"
+         class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+        <i class="fa-regular fa-square-poll-vertical"></i> Dashboard
+      </a>
+      <a href="{{ url_for('analytics') }}"
+         class="nav-link {% if request.endpoint == 'analytics' %}active{% endif %}">
+        <i class="fa-regular fa-chart-bar"></i> Analytics
+      </a>
+
+      <span class="nav-label">Sessions</span>
+      <a href="{{ url_for('log_session') }}"
+         class="nav-link {% if request.endpoint == 'log_session' %}active{% endif %}">
+        <i class="fa-regular fa-pen-to-square"></i> Log Session
+      </a>
+      <a href="{{ url_for('pomodoro') }}"
+         class="nav-link {% if request.endpoint == 'pomodoro' %}active{% endif %}">
+        <i class="fa-regular fa-clock"></i> Focus Timer
+      </a>
+      <a href="{{ url_for('sessions') }}"
+         class="nav-link {% if request.endpoint == 'sessions' %}active{% endif %}">
+        <i class="fa-regular fa-folder-open"></i> History
+      </a>
+
+      <span class="nav-label">Community</span>
+      <a href="{{ url_for('friends') }}"
+         class="nav-link {% if request.endpoint == 'friends' %}active{% endif %}">
+        <i class="fa-regular fa-users"></i> Study Group
+      </a>
     </div>
 
-    <!-- Global Scripts -->
-    <script>
-        // Set Chart.js global defaults for the stark dark theme
-        Chart.defaults.color = '#a1a1aa';
-        Chart.defaults.font.family = "'JetBrains Mono', monospace";
-        Chart.defaults.borderColor = '#27272a';
-        
-        function showToast(message, category = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast toast-${category}`;
-            
-            let iconClass = 'fa-info-circle';
-            if (category === 'success') iconClass = 'fa-check';
-            if (category === 'error') iconClass = 'fa-exclamation-triangle';
-            
-            toast.innerHTML = `<i class="fas ${iconClass}"></i> ${message}`;
-            container.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(() => toast.remove(), 200);
-            }, 4000);
-        }
+    <div class="sidebar-footer">
+      <div class="user-avatar">{{ session.get('username', 'U')[0]|upper }}</div>
+      <div class="user-meta">
+        <div class="user-name">{{ session.get('username') }}</div>
+        <a href="{{ url_for('logout') }}" class="user-action">Sign out</a>
+      </div>
+    </div>
+  </nav>
+  {% endif %}
 
-        // Auto-remove initial flashed messages
-        document.addEventListener('DOMContentLoaded', () => {
-            const initialToasts = document.querySelectorAll('.toast');
-            initialToasts.forEach((toast, index) => {
-                setTimeout(() => {
-                    toast.style.opacity = '0';
-                    toast.style.transform = 'translateX(100%)';
-                    setTimeout(() => toast.remove(), 200);
-                }, 4000 + (index * 500));
-            });
-        });
+  <!-- ── Main ─────────────────────────────────────────── -->
+  <main class="main{% if not session.get('user_id') %} main--full{% endif %}"
+        style="{% if not session.get('user_id') %}margin-left: 0; max-width: 100%;{% endif %}">
+    {% block content %}{% endblock %}
+  </main>
+</div>
 
-        // Global Keyboard Shortcuts (Tool-first UX)
-        {% if session.get('user_id') %}
-        document.addEventListener('keydown', (e) => {
-            // Ignore if in an input field
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+<!-- ── Toast container ──────────────────────────────────── -->
+<div id="toast-container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="toast toast-{{ category }}">
+          <i class="fa-solid
+            {% if category == 'success' %}fa-circle-check text-ok
+            {% elif category == 'error' %}fa-circle-exclamation text-bad
+            {% else %}fa-circle-info text-accent{% endif %}"></i>
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
 
-            // Ctrl/Cmd + K -> Jump to Focus Mode
-            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-                e.preventDefault();
-                window.location.href = "{{ url_for('pomodoro') }}";
-            }
-            // Ctrl/Cmd + D -> Jump to Dashboard
-            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
-                e.preventDefault();
-                window.location.href = "{{ url_for('dashboard') }}";
-            }
-        });
-        {% endif %}
-    </script>
-    {% block scripts %}{% endblock %}
+<!-- ── Global Scripts ────────────────────────────────────── -->
+<script>
+// Chart.js defaults — editorial monochrome
+if (typeof Chart !== 'undefined') {
+  Chart.defaults.color = '#8c8c8c';
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  Chart.defaults.font.size = 12;
+  Chart.defaults.borderColor = '#272727';
+  Chart.defaults.plugins.legend.display = false;
+}
+
+// Toast utility
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  const icons = {
+    success: 'fa-circle-check text-ok',
+    error:   'fa-circle-exclamation text-bad',
+    warning: 'fa-triangle-exclamation text-warn',
+    info:    'fa-circle-info text-accent',
+  };
+  el.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i> ${message}`;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(16px)';
+    setTimeout(() => el.remove(), 200);
+  }, 4200);
+}
+
+// Auto-dismiss server-flashed messages
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.toast').forEach((t, i) => {
+    setTimeout(() => {
+      t.style.transition = 'opacity 200ms, transform 200ms';
+      t.style.opacity = '0';
+      t.style.transform = 'translateX(16px)';
+      setTimeout(() => t.remove(), 200);
+    }, 4000 + i * 400);
+  });
+});
+
+// Keyboard shortcuts
+{% if session.get('user_id') %}
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    window.location.href = "{{ url_for('pomodoro') }}";
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+    e.preventDefault();
+    window.location.href = "{{ url_for('dashboard') }}";
+  }
+});
+{% endif %}
+</script>
+
+{% block scripts %}{% endblock %}
 </body>
 </html>

@@ -1,53 +1,164 @@
 {% extends "base.html" %}
-
-{% block title %}Create Account - StudyLogix{% endblock %}
+{% block title %}Create account — StudyLogix{% endblock %}
 
 {% block content %}
-<div style="display: flex; min-height: 80vh; align-items: center; justify-content: center; padding: var(--space-4);">
-    <div class="card" style="width: 100%; max-width: 420px; padding: var(--space-6) var(--space-5); animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
-        <div style="text-align: center; margin-bottom: var(--space-5);">
-            <div style="width: 48px; height: 48px; border-radius: var(--radius-md); background: var(--accent-gradient); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto var(--space-3); box-shadow: var(--shadow-glow);">
-                <i class="fas fa-rocket"></i>
-            </div>
-            <h1 style="font-size: 1.75rem; letter-spacing: -0.03em; margin-bottom: var(--space-1);">Create an account</h1>
-            <p style="color: var(--text-secondary); font-size: 0.95rem;">Join StudyLogix to optimize your learning</p>
-        </div>
-        
-        <form method="POST" action="{{ url_for('register') }}" id="registerForm">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            <div style="margin-bottom: var(--space-4);">
-                <label for="username" class="form-label">Username</label>
-                <div style="position: relative;">
-                    <i class="fas fa-user" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary);"></i>
-                    <input type="text" class="form-control" id="username" name="username" placeholder="Choose a unique username" required autofocus style="padding-left: 40px;">
-                </div>
-            </div>
-            
-            <div class="form-group" style="margin-bottom: var(--space-5);">
-                <label for="password" class="form-label">Password</label>
-                <div style="position: relative;">
-                    <i class="fas fa-lock" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary);"></i>
-                    <input type="password" class="form-control" id="password" name="password" placeholder="Create a strong password" required style="padding-left: 40px;">
-                </div>
-            </div>
-            
-            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; margin-bottom: var(--space-4);">
-                Create Account <i class="fas fa-check" style="margin-left: 8px;"></i>
-            </button>
-            
-            <div style="text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
-                Already have an account? <a href="{{ url_for('login') }}" style="color: var(--accent-base); font-weight: 500;">Sign in</a>
-            </div>
-        </form>
-    </div>
-</div>
+<style>
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.auth-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 40px;
+}
+.auth-side {
+  background: var(--c-surface);
+  border-left: 1px solid var(--c-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+}
+.auth-form-wrap { width: 100%; max-width: 360px; }
+.auth-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 40px;
+}
+.auth-title {
+  font-family: var(--f-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  margin-bottom: 6px;
+}
+.auth-sub { font-size: 14px; color: var(--c-ink-3); margin-bottom: 32px; }
+.auth-footer {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 13px;
+  color: var(--c-ink-3);
+}
+.auth-footer a { color: var(--c-accent); }
 
+/* Feature list on right panel */
+.feature-list { max-width: 340px; }
+.feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.feature-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--c-line-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--c-accent);
+  font-size: 13px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.feature-title { font-weight: 600; font-size: 14px; margin-bottom: 3px; }
+.feature-desc { font-size: 13px; color: var(--c-ink-3); line-height: 1.5; }
+
+@media (max-width: 768px) {
+  .auth-shell { grid-template-columns: 1fr; }
+  .auth-side { display: none; }
+}
+</style>
+
+<div class="auth-shell">
+  <div class="auth-panel">
+    <div class="auth-form-wrap animate-fade-up">
+      <div class="auth-logo">
+        <div class="brand-mark">S</div>
+        <span class="brand-name">StudyLogix</span>
+      </div>
+
+      <h1 class="auth-title">Create your account</h1>
+      <p class="auth-sub">Start tracking your study sessions today.</p>
+
+      <form method="POST" action="{{ url_for('register') }}" id="registerForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="field">
+          <label class="field-label" for="username">Username</label>
+          <div class="input-group">
+            <i class="fa-regular fa-user input-icon"></i>
+            <input type="text" id="username" name="username" class="input"
+                   placeholder="3–30 characters, letters and numbers"
+                   required autofocus autocomplete="username"
+                   pattern="[a-zA-Z0-9_]{3,30}" title="3–30 characters, letters, numbers, underscores">
+          </div>
+          <div class="field-hint">Letters, numbers, and underscores only.</div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="password">Password</label>
+          <div class="input-group">
+            <i class="fa-solid fa-lock input-icon"></i>
+            <input type="password" id="password" name="password" class="input"
+                   placeholder="At least 8 characters"
+                   required autocomplete="new-password"
+                   minlength="8">
+          </div>
+          <div class="field-hint">Minimum 8 characters.</div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; height: 40px; margin-top: 8px;">
+          Create account
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Already have an account? <a href="{{ url_for('login') }}">Sign in</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-side">
+    <div class="feature-list">
+      <div style="font-family: var(--f-display); font-size: 1.1rem; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 28px;">Everything you need to study smarter</div>
+      <div class="feature-item">
+        <div class="feature-icon"><i class="fa-solid fa-timer"></i></div>
+        <div>
+          <div class="feature-title">Pomodoro focus timer</div>
+          <div class="feature-desc">25-minute deep work blocks with automatic breaks.</div>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon"><i class="fa-solid fa-chart-simple"></i></div>
+        <div>
+          <div class="feature-title">Analytics & insights</div>
+          <div class="feature-desc">Visualise how your time is distributed across subjects.</div>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon"><i class="fa-solid fa-users"></i></div>
+        <div>
+          <div class="feature-title">Study group</div>
+          <div class="feature-desc">See when your friends are studying to stay motivated.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
 <script>
-document.getElementById('registerForm').addEventListener('submit', function() {
-    const btn = this.querySelector('button[type="submit"]');
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
-    btn.style.pointerEvents = 'none';
-    btn.style.opacity = '0.8';
+document.getElementById('registerForm').addEventListener('submit', function () {
+  const btn = this.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating account…';
 });
 </script>
 {% endblock %}

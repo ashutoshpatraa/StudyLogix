@@ -268,6 +268,7 @@ def dashboard():
 
     return render_template(
         'dashboard.html',
+        now=datetime.now(),
         total_hours=total_hours,
         total_mins=total_mins,
         pomodoro_stats=pomodoro_stats,

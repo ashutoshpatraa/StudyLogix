@@ -1,95 +1,76 @@
 {% extends "base.html" %}
-
-{% block title %}History - StudyLogix{% endblock %}
+{% block title %}Session history — StudyLogix{% endblock %}
 
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: var(--space-5);">
-    <div>
-        <h1 class="hero-title" style="font-size: 2rem; margin-bottom: var(--space-1);">Session History</h1>
-        <p style="color: var(--text-secondary); margin: 0;">Review your past study records and track your consistency.</p>
-    </div>
-    <a href="{{ url_for('log_session') }}" class="btn btn-primary">
-        <i class="fas fa-plus"></i> New Session
-    </a>
+<div class="page-header animate-fade-up">
+  <div>
+    <div class="eyebrow" style="margin-bottom: 6px;">Your records</div>
+    <h1 class="page-title">Session history</h1>
+    <p class="page-subtitle">All your logged study sessions, most recent first.</p>
+  </div>
+  <a href="{{ url_for('log_session') }}" class="btn btn-primary">
+    <i class="fa-solid fa-plus"></i> Log session
+  </a>
 </div>
 
 {% if sessions %}
-<!-- Stats Overview -->
-<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: var(--space-5);">
-    <div class="stat-card">
-        <div class="stat-label">Total Sessions</div>
-        <div class="stat-value" style="color: var(--text-primary);">{{ sessions|length }}</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Total Time</div>
-        <div class="stat-value" style="color: var(--text-primary);">
-            {{ (sessions|sum(attribute=2) // 60) }}<span style="font-size: 1rem; color: var(--text-tertiary);">h</span> 
-            {{ (sessions|sum(attribute=2) % 60) }}<span style="font-size: 1rem; color: var(--text-tertiary);">m</span>
-        </div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Avg Session</div>
-        <div class="stat-value" style="color: var(--text-primary);">
-            {% set avg_duration = (sessions|sum(attribute=2) / sessions|length)|round|int if sessions else 0 %}
-            {{ (avg_duration // 60) }}<span style="font-size: 1rem; color: var(--text-tertiary);">h</span> 
-            {{ (avg_duration % 60) }}<span style="font-size: 1rem; color: var(--text-tertiary);">m</span>
-        </div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Unique Subjects</div>
-        <div class="stat-value" style="color: var(--text-primary);">{{ sessions|map(attribute=1)|unique|list|length }}</div>
-    </div>
+<!-- Summary stats -->
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px;" class="animate-fade-up delay-1">
+  {% set total_secs = sessions|sum(attribute=2) %}
+  {% set avg_duration = (total_secs / sessions|length)|round|int if sessions else 0 %}
+  {% for label, value in [
+    ('Sessions', sessions|length),
+    ('Total time', (total_secs // 60)|string + 'h ' + '{:02d}'.format(total_secs % 60) + 'm'),
+    ('Average', (avg_duration // 60)|string + 'h ' + '{:02d}'.format(avg_duration % 60) + 'm'),
+    ('Subjects', sessions|map(attribute=1)|unique|list|length),
+  ] %}
+  <div class="card" style="padding: 16px 20px;">
+    <div class="card-label">{{ label }}</div>
+    <div style="font-family: var(--f-display); font-size: 1.35rem; font-weight: 700; letter-spacing: -0.03em; margin-top: 4px;">{{ value }}</div>
+  </div>
+  {% endfor %}
 </div>
 
-<!-- Sessions List -->
-<div class="card" style="padding: 0; overflow: hidden;">
-    <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 800px;">
-            <thead>
-                <tr style="background: var(--bg-surface-elevated); border-bottom: 1px solid var(--border-subtle);">
-                    <th style="padding: 16px 24px; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Subject</th>
-                    <th style="padding: 16px 24px; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Date</th>
-                    <th style="padding: 16px 24px; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Duration</th>
-                    <th style="padding: 16px 24px; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Metrics</th>
-                    <th style="padding: 16px 24px; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Notes</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for session in sessions %}
-                <tr style="border-bottom: 1px solid var(--border-subtle); transition: background var(--transition-fast);" onmouseover="this.style.background='var(--bg-surface-hover)'" onmouseout="this.style.background='transparent'">
-                    <td style="padding: 16px 24px; font-weight: 500;">{{ session[1] }}</td>
-                    <td style="padding: 16px 24px; color: var(--text-secondary); font-variant-numeric: tabular-nums;">{{ session[6] }}</td>
-                    <td style="padding: 16px 24px; font-variant-numeric: tabular-nums;">
-                        {{ (session[2] // 60) }}h {{ '{:02d}'.format(session[2] % 60) }}m
-                    </td>
-                    <td style="padding: 16px 24px;">
-                        <div style="display: flex; gap: 8px;">
-                            <span class="badge badge-neutral" style="font-size: 0.7rem;">Mood: {{ session[3]|title }}</span>
-                            <span class="badge badge-neutral" style="font-size: 0.7rem;">Prod: {{ session[4].replace('_', ' ')|title }}</span>
-                        </div>
-                    </td>
-                    <td style="padding: 16px 24px; color: var(--text-secondary); font-size: 0.9rem; max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                        {% if session[5] %}{{ session[5] }}{% else %}<span style="opacity: 0.5;">-</span>{% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+<!-- Table -->
+<div class="card animate-fade-up delay-2" style="padding: 0; overflow: hidden;">
+  <div style="overflow-x: auto;">
+    <table class="data-table" style="min-width: 700px;">
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th>Date</th>
+          <th>Duration</th>
+          <th>Mood</th>
+          <th>Productivity</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in sessions %}
+        <tr>
+          <td>{{ s[1] }}</td>
+          <td class="mono" style="color: var(--c-ink-3);">{{ s[6] }}</td>
+          <td class="mono">{{ (s[2] // 60) }}h {{ '{:02d}'.format(s[2] % 60) }}m</td>
+          <td><span class="badge badge-neutral">{{ s[3]|title }}</span></td>
+          <td><span class="badge badge-neutral">{{ s[4].replace('_', ' ')|title }}</span></td>
+          <td style="max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--c-ink-3);">
+            {% if s[5] %}{{ s[5] }}{% else %}<span>—</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
 {% else %}
-<div class="card" style="text-align: center; padding: var(--space-8); display: flex; flex-direction: column; align-items: center;">
-    <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--bg-surface-elevated); display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--text-tertiary); margin-bottom: var(--space-4);">
-        <i class="fas fa-folder-open"></i>
-    </div>
-    <h3 style="font-size: 1.5rem; margin-bottom: var(--space-1);">No History Found</h3>
-    <p style="color: var(--text-secondary); margin-bottom: var(--space-4); max-width: 400px;">
-        You haven't logged any study sessions yet. Start your journey by recording your first session.
-    </p>
-    <a href="{{ url_for('log_session') }}" class="btn btn-primary">
-        <i class="fas fa-play"></i> Log First Session
-    </a>
+<div class="card animate-fade-up delay-1" style="padding: 72px 48px; text-align: center;">
+  <div style="font-size: 2rem; margin-bottom: 16px;">📂</div>
+  <h3 style="font-size: 1.25rem; margin-bottom: 8px;">No sessions yet</h3>
+  <p style="max-width: 360px; margin: 0 auto 24px;">
+    You haven't logged any study sessions. Start tracking to see your history here.
+  </p>
+  <a href="{{ url_for('log_session') }}" class="btn btn-primary">Log your first session</a>
 </div>
 {% endif %}
 {% endblock %}

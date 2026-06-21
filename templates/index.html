@@ -1,130 +1,262 @@
 {% extends "base.html" %}
-
-{% block title %}StudyLogix - Productivity OS{% endblock %}
+{% block title %}StudyLogix — Track your learning{% endblock %}
 
 {% block content %}
-<div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: var(--space-8); min-height: calc(100vh - 120px); align-items: center; max-width: 1400px; margin: 0 auto; padding: var(--space-6) 0;">
-    
-    <!-- Left: Editorial Copy -->
-    <div style="padding-right: var(--space-5);">
-        <h1 style="font-size: 3.5rem; line-height: 1.1; letter-spacing: -0.04em; margin-bottom: var(--space-4);">
-            The operating system for deep work.
-        </h1>
-        
-        <p style="color: var(--text-secondary); font-size: 1.1rem; line-height: 1.6; margin-bottom: var(--space-5); max-width: 400px;">
-            StudyLogix strips away distractions to leave you with pure, actionable data. Command your sessions, analyze your metrics, and execute your goals with absolute precision.
-        </p>
-        
-        <div style="display: flex; gap: var(--space-3);">
-            <a href="{{ url_for('register') }}" class="btn btn-primary" style="height: 40px; padding: 0 24px;">Initialize Account</a>
-            <a href="{{ url_for('login') }}" class="btn btn-secondary" style="height: 40px; padding: 0 24px;">System Login</a>
-        </div>
-        
-        <div style="margin-top: var(--space-8); padding-top: var(--space-4); border-top: 1px solid var(--border-subtle);">
-            <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-tertiary); text-transform: uppercase;">Command Palette Active</div>
-            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px;">
-                <span style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); padding: 2px 6px; border-radius: 4px; font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-primary);">Ctrl</span> + 
-                <span style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); padding: 2px 6px; border-radius: 4px; font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-primary);">K</span>
-                to enter Focus Mode globally.
-            </div>
-        </div>
-    </div>
-    
-    <!-- Right: Tool Interface Preview (Asymmetric Grid) -->
-    <div style="background: var(--bg-surface); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: var(--space-4); position: relative; overflow: hidden; box-shadow: 0 24px 80px -20px rgba(0,0,0,0.8);">
-        
-        <!-- App Header Mock -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); padding-bottom: var(--space-3); border-bottom: 1px solid var(--border-subtle);">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <div class="logo-icon">S</div>
-                <div class="mono-text" style="font-size: 0.8rem; color: var(--text-secondary);">/WORKSPACE/ANALYTICS</div>
-            </div>
-            <div style="display: flex; gap: 8px;">
-                <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--border-strong);"></div>
-                <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--border-strong);"></div>
-                <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--border-strong);"></div>
-            </div>
-        </div>
-        
-        <!-- Bento Grid Mock -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; gap: var(--space-3);">
-            
-            <!-- Main Active Node -->
-            <div class="bento-card" style="grid-column: 1 / -1; border-color: var(--accent-base); display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <div class="form-label" style="color: var(--accent-base);">Active Protocol</div>
-                    <div style="font-size: 1.5rem; font-weight: 600; color: #fff;">Quantum Mechanics</div>
-                    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">Deep Work Session in progress</div>
-                </div>
-                <div style="text-align: right;">
-                    <div class="mono-text" style="font-size: 2.5rem; font-weight: 700; color: var(--accent-base); line-height: 1;">42:18</div>
-                    <div class="badge badge-accent" style="margin-top: 8px;">FOCUSING</div>
-                </div>
-            </div>
-            
-            <!-- Secondary Node: Streak -->
-            <div class="bento-card">
-                <div class="form-label">System Consistency</div>
-                <div class="mono-text" style="font-size: 2rem; color: var(--success-base); margin: 8px 0;">14_DAYS</div>
-                <div style="display: flex; gap: 4px; margin-top: 8px;">
-                    <div style="height: 4px; flex-grow: 1; background: var(--success-base); border-radius: 2px;"></div>
-                    <div style="height: 4px; flex-grow: 1; background: var(--success-base); border-radius: 2px;"></div>
-                    <div style="height: 4px; flex-grow: 1; background: var(--success-base); border-radius: 2px;"></div>
-                    <div style="height: 4px; flex-grow: 1; background: var(--success-base); border-radius: 2px;"></div>
-                    <div style="height: 4px; flex-grow: 1; background: var(--border-subtle); border-radius: 2px;"></div>
-                </div>
-            </div>
-            
-            <!-- Secondary Node: Progress -->
-            <div class="bento-card">
-                <div class="form-label">Today's Objective</div>
-                <div style="display: flex; align-items: baseline; gap: 8px; margin: 8px 0;">
-                    <span class="mono-text" style="font-size: 2rem; color: #fff;">3.5<span style="font-size: 1rem; color: var(--text-tertiary);">H</span></span>
-                    <span class="mono-text" style="font-size: 1rem; color: var(--text-tertiary);">/ 4.0H</span>
-                </div>
-                <div style="height: 4px; width: 100%; background: var(--bg-surface-elevated); border-radius: 2px; margin-top: 12px; overflow: hidden;">
-                    <div style="height: 100%; width: 85%; background: #fff;"></div>
-                </div>
-            </div>
-            
-            <!-- Terminal Output Mock -->
-            <div class="bento-card" style="grid-column: 1 / -1; background: #000; padding: var(--space-3);">
-                <div class="mono-text" style="font-size: 0.75rem; color: var(--text-tertiary); margin-bottom: 4px;">> sys.logs.latest()</div>
-                <div class="mono-text" style="font-size: 0.8rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 4px;">
-                    <div style="display: flex; justify-content: space-between;">
-                        <span>[14:22:01] Session completed: Advanced Calculus</span>
-                        <span style="color: var(--success-base);">SUCCESS</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span>[14:22:05] Analyzing productivity metrics...</span>
-                        <span>DONE</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; color: var(--text-primary);">
-                        <span>[14:23:10] Awaiting next command_</span>
-                        <span class="cursor" style="animation: blink 1s infinite;">█</span>
-                    </div>
-                </div>
-            </div>
-            
-        </div>
-    </div>
-</div>
-
 <style>
-@keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
+.landing {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  align-items: stretch;
+}
+.landing-copy {
+  padding: 80px 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: 1px solid var(--c-line);
+}
+.landing-preview {
+  padding: 64px 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: var(--c-surface);
 }
 
-/* Make it stack cleanly on smaller screens */
-@media (max-width: 1024px) {
-    div[style*="grid-template-columns: 1fr 1.5fr"] {
-        grid-template-columns: 1fr !important;
-    }
-    div[style*="padding-right: var(--space-5)"] {
-        padding-right: 0 !important;
-        margin-bottom: var(--space-6);
-    }
+.landing-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-ink-3);
+  margin-bottom: 28px;
+}
+.landing-eyebrow::before {
+  content: '';
+  width: 18px;
+  height: 1px;
+  background: var(--c-accent);
+  display: block;
+}
+
+.landing-headline {
+  font-family: var(--f-display);
+  font-size: clamp(2.5rem, 4vw, 3.75rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  color: var(--c-ink);
+  margin-bottom: 24px;
+}
+.landing-headline em {
+  font-style: normal;
+  color: var(--c-accent);
+}
+
+.landing-body {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--c-ink-2);
+  max-width: 400px;
+  margin-bottom: 40px;
+}
+
+.landing-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.landing-meta {
+  margin-top: 56px;
+  padding-top: 32px;
+  border-top: 1px solid var(--c-line);
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 24px;
+}
+.landing-meta-item { }
+.landing-meta-num {
+  font-family: var(--f-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--c-ink);
+}
+.landing-meta-label {
+  font-size: 12px;
+  color: var(--c-ink-3);
+  margin-top: 2px;
+}
+
+/* Preview panel */
+.preview-card {
+  background: var(--c-bg);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  padding: 20px;
+  margin-bottom: 12px;
+  animation: fade-up 0.5s var(--ease) both;
+}
+.preview-card:nth-child(2) { animation-delay: 80ms; }
+.preview-card:nth-child(3) { animation-delay: 160ms; }
+
+.preview-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.preview-session-name {
+  font-family: var(--f-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.preview-timer {
+  font-family: var(--f-mono);
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--c-accent);
+}
+.preview-track {
+  height: 2px;
+  background: var(--c-raised);
+  border-radius: 1px;
+  overflow: hidden;
+  margin-top: 14px;
+}
+.preview-fill {
+  height: 100%;
+  background: var(--c-accent);
+  border-radius: 1px;
+}
+.preview-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.preview-stat {
+  background: var(--c-bg);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  animation: fade-up 0.5s var(--ease) both;
+}
+.preview-stat:nth-child(1) { animation-delay: 240ms; }
+.preview-stat:nth-child(2) { animation-delay: 300ms; }
+.preview-stat-num {
+  font-family: var(--f-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+.preview-stat-label {
+  font-size: 11px;
+  color: var(--c-ink-3);
+  margin-top: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+@media (max-width: 900px) {
+  .landing { grid-template-columns: 1fr; }
+  .landing-copy { padding: 60px 32px; border-right: none; border-bottom: 1px solid var(--c-line); }
+  .landing-preview { padding: 40px 32px; }
+  .landing-meta { grid-template-columns: 1fr 1fr; }
 }
 </style>
+
+<div class="landing">
+  <!-- ── Left: Copy ────────────────────────────────── -->
+  <div class="landing-copy">
+    <div class="landing-eyebrow">Study smarter</div>
+
+    <h1 class="landing-headline">
+      Every session<br>
+      <em>measured,</em><br>
+      every goal met.
+    </h1>
+
+    <p class="landing-body">
+      StudyLogix gives you a clear view of how you learn — track sessions,
+      measure your time by subject, set daily goals, and build consistency
+      over weeks. No fluff. Just progress.
+    </p>
+
+    <div class="landing-actions">
+      <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">
+        Get started
+      </a>
+      <a href="{{ url_for('login') }}" class="btn btn-outline btn-lg">
+        Sign in
+      </a>
+    </div>
+
+    <div class="landing-meta">
+      <div class="landing-meta-item">
+        <div class="landing-meta-num">25m</div>
+        <div class="landing-meta-label">Pomodoro focus blocks</div>
+      </div>
+      <div class="landing-meta-item">
+        <div class="landing-meta-num">∞</div>
+        <div class="landing-meta-label">Sessions you can track</div>
+      </div>
+      <div class="landing-meta-item">
+        <div class="landing-meta-num">7</div>
+        <div class="landing-meta-label">Days on your streak heatmap</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Right: Product Preview ────────────────────── -->
+  <div class="landing-preview">
+    <!-- Active session preview -->
+    <div class="preview-card">
+      <div class="preview-row">
+        <div>
+          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--c-accent); margin-bottom: 6px; font-weight: 600;">In progress</div>
+          <div class="preview-session-name">Linear Algebra</div>
+          <div style="font-size: 12px; color: var(--c-ink-3); margin-top: 4px;">Pomodoro session · Deep work</div>
+        </div>
+        <div class="preview-timer">18:42</div>
+      </div>
+      <div class="preview-track" style="margin-top: 14px;">
+        <div class="preview-fill" style="width: 62%;"></div>
+      </div>
+    </div>
+
+    <!-- Today's goal -->
+    <div class="preview-card">
+      <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--c-ink-3); margin-bottom: 10px; font-weight: 600;">Today's goal</div>
+      <div class="preview-row">
+        <div>
+          <div style="font-family: var(--f-display); font-size: 1.35rem; font-weight: 700; letter-spacing: -0.03em;">3h 20m <span style="font-size: 1rem; color: var(--c-ink-3); font-weight: 400;">/ 4h</span></div>
+          <div style="font-size: 12px; color: var(--c-ink-3); margin-top: 4px;">40 minutes remaining</div>
+        </div>
+        <span class="badge badge-accent">83%</span>
+      </div>
+      <div class="preview-track" style="margin-top: 12px;">
+        <div class="preview-fill" style="width: 83%; background: var(--c-ink);"></div>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="preview-stat-grid">
+      <div class="preview-stat">
+        <div class="preview-stat-num">14</div>
+        <div class="preview-stat-label">Day streak</div>
+      </div>
+      <div class="preview-stat">
+        <div class="preview-stat-num">24h</div>
+        <div class="preview-stat-label">This week</div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

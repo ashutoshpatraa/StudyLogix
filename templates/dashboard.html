@@ -1,260 +1,291 @@
 {% extends "base.html" %}
-
-{% block title %}Dashboard - StudyLogix{% endblock %}
+{% block title %}Dashboard — StudyLogix{% endblock %}
 
 {% block content %}
-<div style="display: flex; flex-direction: column; gap: var(--space-4);">
-    
-    <!-- Header Area -->
-    <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid var(--border-subtle); padding-bottom: var(--space-3); margin-bottom: var(--space-2);">
-        <div>
-            <div class="mono-text" style="font-size: 0.75rem; color: var(--text-tertiary); margin-bottom: 4px; text-transform: uppercase;">
-                <i class="fas fa-terminal" style="margin-right: 4px;"></i> System Authorized
-            </div>
-            <h1 style="font-size: 2rem; margin: 0; line-height: 1; letter-spacing: -0.04em;">/{{ session.username }}</h1>
-        </div>
-        
-        <div style="display: flex; gap: var(--space-2);">
-            <button onclick="openQuickStartModal()" class="btn btn-secondary">
-                <i class="fas fa-bolt" style="color: var(--accent-base);"></i> Quick Start
-            </button>
-            <a href="{{ url_for('pomodoro') }}" class="btn btn-primary">
-                <i class="fas fa-play"></i> Focus Mode
-            </a>
-        </div>
-    </div>
+{# ─── Greeting ──────────────────────────────────────────── #}
+{% set hour = now.hour if now is defined else 12 %}
+{% if hour < 12 %}{% set greeting = "Good morning" %}
+{% elif hour < 18 %}{% set greeting = "Good afternoon" %}
+{% else %}{% set greeting = "Good evening" %}{% endif %}
 
-    <!-- Asymmetric Bento Grid -->
-    <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--space-3);">
-        
-        <!-- Primary Action Node (Spans 8 cols) -->
-        <div class="bento-card" style="grid-column: span 8; border-color: var(--border-strong); display: flex; flex-direction: column; justify-content: space-between; min-height: 200px; background: linear-gradient(135deg, rgba(26,26,26,1) 0%, rgba(18,18,18,1) 100%);">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div>
-                    <div class="form-label" style="color: var(--accent-base);">System Status</div>
-                    <div style="font-size: 1.5rem; font-weight: 600; margin-top: 4px;">Ready for deployment</div>
-                </div>
-                <div class="badge badge-accent">IDLE</div>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: var(--space-5);">
-                <div style="max-width: 60%;">
-                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
-                        You have <strong style="color: var(--text-primary);">{{ subjects_data|length or 0 }} active domains</strong> and <strong style="color: var(--text-primary);">{{ total_hours }}h {{ total_mins }}m</strong> of logged cognitive output.
-                    </p>
-                </div>
-                <button onclick="openQuickStartModal()" class="btn btn-primary" style="height: 40px; padding: 0 24px;">
-                    Execute Focus <i class="fas fa-arrow-right" style="margin-left: 8px;"></i>
-                </button>
-            </div>
-        </div>
+<style>
+.dash-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+.span-2 { grid-column: span 2; }
+.span-3 { grid-column: span 3; }
 
-        <!-- Secondary Node: Streak (Spans 4 cols) -->
-        <div class="bento-card" style="grid-column: span 4; display: flex; flex-direction: column; justify-content: center;">
-            <div class="form-label">Consistency Streak</div>
-            <div style="display: flex; align-items: baseline; gap: 8px;">
-                <div class="mono-text" style="font-size: 3rem; font-weight: 700; color: var(--text-primary); line-height: 1;">
-                    {{ subjects_data|sum(attribute=2) or 0 }}
-                </div>
-                <div class="mono-text" style="color: var(--text-tertiary);">SESSIONS</div>
-            </div>
-            <div style="display: flex; gap: 4px; margin-top: 16px;">
-                {% set count = subjects_data|sum(attribute=2) or 0 %}
-                {% for i in range(5) %}
-                    {% if count > i %}
-                        <div style="height: 6px; flex-grow: 1; background: var(--text-primary); border-radius: 2px;"></div>
-                    {% else %}
-                        <div style="height: 6px; flex-grow: 1; background: var(--bg-surface-elevated); border-radius: 2px;"></div>
-                    {% endif %}
-                {% endfor %}
-            </div>
-        </div>
+/* Session row in activity list */
+.session-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 20px;
+  border-bottom: 1px solid var(--c-line);
+  transition: background var(--t-fast);
+}
+.session-row:last-child { border-bottom: none; }
+.session-row:hover { background: var(--c-raised); }
 
-        <!-- Progress Node (Spans 4 cols) -->
-        <div class="bento-card" style="grid-column: span 4; display: flex; flex-direction: column;">
-            <div class="form-label">Total Cognitive Output</div>
-            <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; margin: var(--space-3) 0;">
-                <div style="display: flex; align-items: baseline; gap: 4px;">
-                    <span class="mono-text" style="font-size: 2.5rem; font-weight: 700;">{{ total_hours }}</span>
-                    <span class="mono-text" style="color: var(--text-tertiary);">H</span>
-                    <span class="mono-text" style="font-size: 2.5rem; font-weight: 700; margin-left: 8px;">{{ '{:02d}'.format(total_mins) }}</span>
-                    <span class="mono-text" style="color: var(--text-tertiary);">M</span>
-                </div>
-            </div>
-            <div style="font-size: 0.8rem; color: var(--text-secondary); display: flex; justify-content: space-between;">
-                <span>System optimal</span>
-                <i class="fas fa-arrow-up" style="color: var(--success-base);"></i>
-            </div>
-        </div>
+/* Subject bar */
+.subject-row {
+  display: grid;
+  grid-template-columns: 130px 1fr 60px;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--c-line);
+}
+.subject-row:last-child { border-bottom: none; }
 
-        <!-- Recent Activity Log (Spans 8 cols) -->
-        <div class="bento-card" style="grid-column: span 8; padding: 0; display: flex; flex-direction: column;">
-            <div style="padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
-                <div class="form-label" style="margin: 0;">Activity Log</div>
-                <a href="{{ url_for('sessions') }}" style="font-size: 0.8rem; color: var(--text-tertiary); text-decoration: none;">View Full Log</a>
-            </div>
-            <div style="padding: var(--space-2) 0; flex-grow: 1;">
-                {% if recent_sessions %}
-                    <div style="display: flex; flex-direction: column;">
-                    {% for session in recent_sessions %}
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px var(--space-4); transition: background var(--transition-fast);" onmouseover="this.style.background='var(--bg-surface-elevated)'" onmouseout="this.style.background='transparent'">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <div style="width: 6px; height: 6px; border-radius: 50%; background: var(--text-tertiary);"></div>
-                                <div style="font-weight: 500; font-size: 0.95rem;">{{ session[1] }}</div>
-                            </div>
-                            <div style="display: flex; gap: 16px; align-items: center;">
-                                <div class="mono-text" style="font-size: 0.8rem; color: var(--text-secondary);">{{ (session[2] // 60) }}h {{ (session[2] % 60) }}m</div>
-                                <div class="mono-text" style="font-size: 0.75rem; color: var(--text-tertiary); width: 80px; text-align: right;">{{ session[6] }}</div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                    </div>
-                {% else %}
-                    <div style="padding: var(--space-5); text-align: center; color: var(--text-tertiary); display: flex; flex-direction: column; align-items: center;">
-                        <i class="fas fa-terminal" style="font-size: 1.5rem; margin-bottom: var(--space-2); opacity: 0.3;"></i>
-                        <div class="mono-text" style="font-size: 0.8rem;">NO_RECENT_LOGS</div>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
+@media (max-width: 1100px) {
+  .dash-grid { grid-template-columns: 1fr 1fr; }
+  .span-2, .span-3 { grid-column: span 2; }
+}
+@media (max-width: 720px) {
+  .dash-grid { grid-template-columns: 1fr; }
+  .span-2, .span-3 { grid-column: span 1; }
+}
+</style>
 
-        <!-- Subject Analysis List (Spans 12 cols, full width row) -->
-        <div class="bento-card" style="grid-column: span 12; padding: 0;">
-            <div style="padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-subtle);">
-                <div class="form-label" style="margin: 0;">Domain Distribution</div>
-            </div>
-            {% if subjects_data %}
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
-                {% for subject, minutes, sessions in subjects_data %}
-                    <div style="padding: var(--space-3) var(--space-4); border-right: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                            <div style="font-weight: 500;">{{ subject }}</div>
-                            <div class="mono-text" style="font-size: 0.8rem; color: var(--text-primary);">{{ (minutes // 60) }}h {{ '{:02d}'.format(minutes % 60) }}m</div>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div style="font-size: 0.8rem; color: var(--text-tertiary);">{{ sessions }} logs</div>
-                            {% set percentage = (minutes / (total_time|default(1)) * 100)|round(1) %}
-                            <div style="width: 60%; height: 2px; background: var(--bg-surface-elevated);">
-                                <div style="height: 100%; width: {{ [percentage, 100]|min }}%; background: var(--accent-base);"></div>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-                </div>
-            {% else %}
-                <div style="padding: var(--space-5); text-align: center; color: var(--text-tertiary);">
-                    <div class="mono-text" style="font-size: 0.8rem;">AWAITING_DATA</div>
-                </div>
-            {% endif %}
-        </div>
-
-    </div>
+<!-- ── Page header ────────────────────────────────────────── -->
+<div class="page-header animate-fade-up">
+  <div>
+    <div class="eyebrow" style="margin-bottom: 6px;">{{ greeting }}, {{ session.username }}</div>
+    <h1 class="page-title">Dashboard</h1>
+  </div>
+  <div class="flex gap-3">
+    <button onclick="openFocusModal()" class="btn btn-outline">
+      <i class="fa-regular fa-clock"></i> Start session
+    </button>
+    <a href="{{ url_for('log_session') }}" class="btn btn-primary">
+      <i class="fa-solid fa-plus"></i> Log manually
+    </a>
+  </div>
 </div>
 
-<!-- Quick Start Modal -->
-<div id="quickStartModal" class="modal-backdrop" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
-    <div style="background: var(--bg-surface); border: 1px solid var(--border-strong); padding: var(--space-5); width: 100%; max-width: 400px; border-radius: var(--radius-md);">
-        <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-4);">
-            <div class="form-label" style="margin: 0; color: var(--accent-base);">Initialize Focus Protocol</div>
-            <button onclick="closeQuickStartModal()" class="btn-ghost" style="border: none; cursor: pointer; color: var(--text-tertiary);"><i class="fas fa-times"></i></button>
-        </div>
-        
-        <form id="quickStartForm">
-            <div class="form-group">
-                <label for="quickSubject" class="form-label">Domain</label>
-                <input type="text" id="quickSubject" class="form-control" placeholder="e.g., Quantum Mechanics" required autofocus>
-            </div>
-            
-            <div class="form-group" style="margin-bottom: var(--space-5);">
-                <label for="quickDuration" class="form-label">Duration (Mins)</label>
-                <input type="number" id="quickDuration" class="form-control" value="25" min="1" max="120" required>
-            </div>
-            
-            <div style="display: flex; gap: var(--space-2); justify-content: flex-end;">
-                <button type="button" onclick="closeQuickStartModal()" class="btn btn-secondary">Cancel</button>
-                <button type="submit" class="btn btn-primary">Execute</button>
-            </div>
-        </form>
+<!-- ── Stat row ───────────────────────────────────────────── -->
+<div class="dash-grid animate-fade-up delay-1" style="margin-bottom: 16px;">
+
+  <!-- Total time -->
+  <div class="card">
+    <div class="card-label">Total study time</div>
+    <div class="flex items-end gap-2" style="margin-top: 4px;">
+      <span class="stat-number">{{ total_hours }}</span>
+      <span class="stat-unit" style="margin-bottom: 4px;">h</span>
+      <span class="stat-number" style="font-size: 1.75rem;">{{ '{:02d}'.format(total_mins) }}</span>
+      <span class="stat-unit" style="margin-bottom: 4px;">m</span>
     </div>
+    <div style="font-size: 12px; color: var(--c-ink-3); margin-top: 8px;">All sessions combined</div>
+  </div>
+
+  <!-- Sessions count -->
+  <div class="card">
+    <div class="card-label">Sessions logged</div>
+    <div class="flex items-end gap-2" style="margin-top: 4px;">
+      <span class="stat-number">{{ subjects_data|sum(attribute=2)|int if subjects_data else 0 }}</span>
+    </div>
+    <div style="font-size: 12px; color: var(--c-ink-3); margin-top: 8px;">Across all subjects</div>
+  </div>
+
+  <!-- Subjects active -->
+  <div class="card">
+    <div class="card-label">Subjects studied</div>
+    <div class="flex items-end gap-2" style="margin-top: 4px;">
+      <span class="stat-number">{{ subjects_data|length }}</span>
+    </div>
+    <div style="font-size: 12px; color: var(--c-ink-3); margin-top: 8px;">Distinct topics tracked</div>
+  </div>
+</div>
+
+<!-- ── Row 2: Recent activity + Subject breakdown ─────────── -->
+<div class="dash-grid animate-fade-up delay-2">
+
+  <!-- Recent activity -->
+  <div class="card span-2" style="padding: 0;">
+    <div class="flex items-center justify-between" style="padding: 16px 20px; border-bottom: 1px solid var(--c-line);">
+      <div class="card-label" style="margin: 0;">Recent activity</div>
+      <a href="{{ url_for('sessions') }}" class="btn btn-ghost btn-sm">View all</a>
+    </div>
+
+    {% if recent_sessions %}
+      {% for sess in recent_sessions %}
+      <div class="session-row">
+        <div class="flex items-center gap-3">
+          <div style="width: 6px; height: 6px; border-radius: 50%; background: var(--c-line-strong); flex-shrink: 0;"></div>
+          <div>
+            <div style="font-weight: 500; font-size: 14px;">{{ sess[1] }}</div>
+            <div style="font-size: 12px; color: var(--c-ink-3); margin-top: 2px;">{{ sess[6] }}</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="mono" style="font-size: 13px; color: var(--c-ink-2);">
+            {{ (sess[2] // 60) }}h {{ '{:02d}'.format(sess[2] % 60) }}m
+          </div>
+          {% if sess[4] %}
+          <span class="badge badge-neutral">{{ sess[3]|capitalize }}</span>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div style="padding: 48px; text-align: center;">
+        <div style="font-size: 24px; margin-bottom: 12px;">📖</div>
+        <div style="font-weight: 500; margin-bottom: 6px;">No sessions yet</div>
+        <div style="font-size: 13px; color: var(--c-ink-3); margin-bottom: 20px;">Log your first study session to see it here.</div>
+        <a href="{{ url_for('log_session') }}" class="btn btn-primary btn-sm">Log a session</a>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Subject breakdown -->
+  <div class="card" style="padding: 0;">
+    <div style="padding: 16px 20px; border-bottom: 1px solid var(--c-line);">
+      <div class="card-label" style="margin: 0;">By subject</div>
+    </div>
+
+    {% if subjects_data %}
+      {% set total_mins_all = subjects_data|sum(attribute=1)|int %}
+      {% for subject, minutes, sess_count in subjects_data[:6] %}
+      <div class="subject-row">
+        <div style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ subject }}</div>
+        <div class="progress-track">
+          {% set pct = [(minutes / total_mins_all * 100)|round(1), 100]|min if total_mins_all > 0 else 0 %}
+          <div class="progress-fill accent" style="width: {{ pct }}%;"></div>
+        </div>
+        <div class="mono" style="font-size: 12px; color: var(--c-ink-3); text-align: right;">
+          {{ (minutes // 60) }}h{{ '{:02d}'.format(minutes % 60) }}m
+        </div>
+      </div>
+      {% endfor %}
+      {% if subjects_data|length > 6 %}
+      <div style="padding: 10px 20px;">
+        <a href="{{ url_for('analytics') }}" class="btn btn-ghost btn-sm" style="width: 100%; justify-content: center;">
+          See all {{ subjects_data|length }} subjects
+        </a>
+      </div>
+      {% endif %}
+    {% else %}
+      <div style="padding: 40px 20px; text-align: center; color: var(--c-ink-3);">
+        <div style="font-size: 13px;">No subject data yet.</div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ── Pomodoro stats row ──────────────────────────────────── -->
+{% if pomodoro_stats %}
+<div class="animate-fade-up delay-3" style="margin-top: 16px;">
+  <div class="card" style="padding: 0;">
+    <div style="padding: 16px 20px; border-bottom: 1px solid var(--c-line);">
+      <div class="card-label" style="margin: 0;">Focus timer stats</div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); divide-x: 1px solid var(--c-line);">
+      {% set stats = [
+        ('Completed', pomodoro_stats.get('completed_sessions', 0), 'sessions'),
+        ('Total focus', (pomodoro_stats.get('total_minutes', 0) // 60)|string + 'h ' + ('{:02d}'.format(pomodoro_stats.get('total_minutes', 0) % 60)) + 'm', ''),
+        ('Today', pomodoro_stats.get('today_sessions', 0), 'sessions'),
+        ('This week', pomodoro_stats.get('weekly_sessions', 0), 'sessions'),
+      ] %}
+      {% for label, value, unit in stats %}
+      <div style="padding: 20px 20px; border-right: 1px solid var(--c-line);">
+        <div class="card-label">{{ label }}</div>
+        <div style="font-family: var(--f-display); font-size: 1.5rem; font-weight: 700; letter-spacing: -0.03em; margin-top: 4px;">{{ value }}</div>
+        {% if unit %}<div style="font-size: 12px; color: var(--c-ink-3);">{{ unit }}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- ── Focus modal ────────────────────────────────────────── -->
+<div id="focusModal" class="modal-backdrop" style="display: none;" onclick="if(event.target===this)closeFocusModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Start a focus session</span>
+      <button class="modal-close" onclick="closeFocusModal()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <form id="focusForm">
+      <div class="field">
+        <label class="field-label">Subject</label>
+        <input type="text" id="focusSubject" class="input" placeholder="e.g. Calculus, History…" required autofocus>
+      </div>
+      <div class="field">
+        <label class="field-label">Duration (minutes)</label>
+        <input type="number" id="focusDuration" class="input" value="25" min="1" max="120" required>
+        <div class="field-hint">Standard Pomodoro is 25 minutes.</div>
+      </div>
+      <div class="flex gap-3" style="margin-top: 8px;">
+        <button type="button" onclick="closeFocusModal()" class="btn btn-outline flex-1">Cancel</button>
+        <button type="submit" class="btn btn-primary flex-1">Begin focus</button>
+      </div>
+    </form>
+  </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    // Quick Start Modal Logic
-    const modal = document.getElementById('quickStartModal');
-    
-    window.openQuickStartModal = () => {
-        modal.style.display = 'flex';
-        setTimeout(() => document.getElementById('quickSubject').focus(), 100);
-    };
-    
-    window.closeQuickStartModal = () => {
-        modal.style.display = 'none';
-        document.getElementById('quickStartForm').reset();
-    };
+const focusModal = document.getElementById('focusModal');
 
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeQuickStartModal();
+window.openFocusModal = () => {
+  focusModal.style.display = 'flex';
+  setTimeout(() => document.getElementById('focusSubject').focus(), 60);
+};
+window.closeFocusModal = () => {
+  focusModal.style.display = 'none';
+  document.getElementById('focusForm').reset();
+};
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && focusModal.style.display === 'flex') closeFocusModal();
+});
+
+document.getElementById('focusForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const subject  = document.getElementById('focusSubject').value.trim();
+  const duration = parseInt(document.getElementById('focusDuration').value);
+  if (!subject) return showToast('Subject is required', 'error');
+  if (duration < 1 || duration > 120) return showToast('Duration must be 1–120 minutes', 'error');
+
+  const btn = e.target.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  btn.textContent = 'Starting…';
+
+  try {
+    const res = await fetch('/api/pomodoro/start', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+      },
+      body: JSON.stringify({ subject })
     });
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.style.display === 'flex') {
-            closeQuickStartModal();
-        }
-    });
-
-    document.getElementById('quickStartForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const subject = document.getElementById('quickSubject').value.trim();
-        const duration = parseInt(document.getElementById('quickDuration').value);
-        
-        if (!subject) return showToast('Subject is required', 'warning');
-        if (duration < 1 || duration > 120) return showToast('Duration must be between 1 and 120', 'warning');
-        
-        try {
-            const btn = e.target.querySelector('button[type="submit"]');
-            btn.innerHTML = 'Executing...';
-            btn.disabled = true;
-
-            const response = await fetch('/api/pomodoro/start', {
-                method: 'POST',
-                headers: { 
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-                body: JSON.stringify({ subject })
-            });
-            
-            const data = await response.json();
-            
-            if (response.ok && data.success) {
-                sessionStorage.setItem('activeSessionId', data.session_id);
-                sessionStorage.setItem('activeSessionDuration', duration);
-                sessionStorage.setItem('activeSessionSubject', subject);
-                
-                showToast('Entering focus mode...', 'info');
-                setTimeout(() => {
-                    window.location.href = `/pomodoro?autostart=true&duration=${duration}`;
-                }, 500);
-            } else {
-                showToast(data.error || 'Failed to start session', 'error');
-                btn.innerHTML = 'Execute';
-                btn.disabled = false;
-            }
-        } catch (err) {
-            showToast('Connection error', 'error');
-        }
-    });
-</script>
-
-<style>
-/* Responsive grid handling */
-@media (max-width: 1024px) {
-    div[style*="grid-template-columns: repeat(12"] > .bento-card {
-        grid-column: span 12 !important;
+    const data = await res.json();
+    if (res.ok && data.success) {
+      sessionStorage.setItem('activeSessionId', data.session_id);
+      sessionStorage.setItem('activeSessionDuration', duration);
+      sessionStorage.setItem('activeSessionSubject', subject);
+      showToast('Starting focus session…', 'info');
+      setTimeout(() => {
+        window.location.href = `/pomodoro?autostart=true&duration=${duration}`;
+      }, 400);
+    } else {
+      showToast(data.error || 'Failed to start session', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Begin focus';
     }
-}
-</style>
+  } catch {
+    showToast('Connection error', 'error');
+    btn.disabled = false;
+    btn.textContent = 'Begin focus';
+  }
+});
+</script>
 {% endblock %}

@@ -1,56 +1,148 @@
 {% extends "base.html" %}
-
-{% block title %}Sign In - StudyLogix{% endblock %}
+{% block title %}Sign in — StudyLogix{% endblock %}
 
 {% block content %}
-<div style="display: flex; min-height: 80vh; align-items: center; justify-content: center; padding: var(--space-4);">
-    <div class="card" style="width: 100%; max-width: 420px; padding: var(--space-6) var(--space-5); animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
-        <div style="text-align: center; margin-bottom: var(--space-5);">
-            <div style="width: 48px; height: 48px; border-radius: var(--radius-md); background: var(--accent-gradient); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto var(--space-3); box-shadow: var(--shadow-glow);">
-                <i class="fas fa-layer-group"></i>
-            </div>
-            <h1 style="font-size: 1.75rem; letter-spacing: -0.03em; margin-bottom: var(--space-1);">Welcome back</h1>
-            <p style="color: var(--text-secondary); font-size: 0.95rem;">Enter your credentials to access your account</p>
-        </div>
-        
-        <form method="POST" action="{{ url_for('login') }}" id="loginForm">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            <div style="margin-bottom: var(--space-4);">
-                <label for="username" class="form-label">Username</label>
-                <div style="position: relative;">
-                    <i class="fas fa-user" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary);"></i>
-                    <input type="text" class="form-control" id="username" name="username" placeholder="johndoe" required autofocus style="padding-left: 40px;">
-                </div>
-            </div>
-            
-            <div class="form-group" style="margin-bottom: var(--space-5);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <label for="password" class="form-label" style="margin-bottom: 0;">Password</label>
-                    <!-- Future feature: <a href="#" style="font-size: 0.8rem; color: var(--accent-base);">Forgot password?</a> -->
-                </div>
-                <div style="position: relative;">
-                    <i class="fas fa-lock" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary);"></i>
-                    <input type="password" class="form-control" id="password" name="password" placeholder="••••••••" required style="padding-left: 40px;">
-                </div>
-            </div>
-            
-            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; margin-bottom: var(--space-4);">
-                Sign In <i class="fas fa-arrow-right" style="margin-left: 8px;"></i>
-            </button>
-            
-            <div style="text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
-                Don't have an account? <a href="{{ url_for('register') }}" style="color: var(--accent-base); font-weight: 500;">Create one</a>
-            </div>
-        </form>
-    </div>
-</div>
+<style>
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.auth-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 40px;
+}
+.auth-side {
+  background: var(--c-surface);
+  border-left: 1px solid var(--c-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+}
+.auth-form-wrap {
+  width: 100%;
+  max-width: 360px;
+}
+.auth-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 40px;
+}
+.auth-title {
+  font-family: var(--f-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  margin-bottom: 6px;
+}
+.auth-sub {
+  font-size: 14px;
+  color: var(--c-ink-3);
+  margin-bottom: 32px;
+}
+.auth-footer {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 13px;
+  color: var(--c-ink-3);
+}
+.auth-footer a { color: var(--c-accent); }
 
+/* Quote panel */
+.auth-quote {
+  max-width: 340px;
+}
+.auth-quote-text {
+  font-family: var(--f-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  color: var(--c-ink);
+  margin-bottom: 20px;
+}
+.auth-quote-attr {
+  font-size: 13px;
+  color: var(--c-ink-3);
+}
+.auth-quote-line {
+  width: 32px;
+  height: 2px;
+  background: var(--c-accent);
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .auth-shell { grid-template-columns: 1fr; }
+  .auth-side { display: none; }
+}
+</style>
+
+<div class="auth-shell">
+  <div class="auth-panel">
+    <div class="auth-form-wrap animate-fade-up">
+      <div class="auth-logo">
+        <div class="brand-mark">S</div>
+        <span class="brand-name">StudyLogix</span>
+      </div>
+
+      <h1 class="auth-title">Welcome back</h1>
+      <p class="auth-sub">Sign in to continue your learning journey.</p>
+
+      <form method="POST" action="{{ url_for('login') }}" id="loginForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="field">
+          <label class="field-label" for="username">Username</label>
+          <div class="input-group">
+            <i class="fa-regular fa-user input-icon"></i>
+            <input type="text" id="username" name="username" class="input"
+                   placeholder="Your username" required autofocus autocomplete="username">
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="password">Password</label>
+          <div class="input-group">
+            <i class="fa-solid fa-lock input-icon"></i>
+            <input type="password" id="password" name="password" class="input"
+                   placeholder="••••••••" required autocomplete="current-password">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; height: 40px; margin-top: 8px;">
+          Sign in
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        No account? <a href="{{ url_for('register') }}">Create one</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-side">
+    <div class="auth-quote">
+      <div class="auth-quote-line"></div>
+      <p class="auth-quote-text">
+        "The secret of getting ahead is getting started."
+      </p>
+      <div class="auth-quote-attr">— Mark Twain</div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
 <script>
-document.getElementById('loginForm').addEventListener('submit', function() {
-    const btn = this.querySelector('button[type="submit"]');
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
-    btn.style.pointerEvents = 'none';
-    btn.style.opacity = '0.8';
+document.getElementById('loginForm').addEventListener('submit', function () {
+  const btn = this.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Signing in…';
 });
 </script>
 {% endblock %}

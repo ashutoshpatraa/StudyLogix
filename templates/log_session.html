@@ -1,85 +1,94 @@
 {% extends "base.html" %}
-
-{% block title %}Log Session - StudyLogix{% endblock %}
+{% block title %}Log session — StudyLogix{% endblock %}
 
 {% block content %}
-<div style="max-width: 600px; margin: 0 auto;">
-    <div style="text-align: center; margin-bottom: var(--space-6); animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
-        <div style="width: 56px; height: 56px; border-radius: var(--radius-lg); background: var(--accent-light); color: var(--accent-base); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto var(--space-3);">
-            <i class="fas fa-edit"></i>
+<div class="page-header animate-fade-up">
+  <div>
+    <div class="eyebrow" style="margin-bottom: 6px;">Sessions</div>
+    <h1 class="page-title">Log a session</h1>
+    <p class="page-subtitle">Record a study session to keep your analytics up to date.</p>
+  </div>
+</div>
+
+<div style="max-width: 560px; animation: fade-up 0.3s var(--ease) both;">
+  <div class="card">
+    <form method="POST" action="{{ url_for('log_session') }}" id="logSessionForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="field">
+        <label class="field-label" for="subject">Subject</label>
+        <input type="text" id="subject" name="subject" class="input"
+               placeholder="e.g. Linear Algebra, World History…" required autofocus>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="duration">Duration (minutes)</label>
+        <input type="number" id="duration" name="duration" class="input"
+               min="1" max="600" placeholder="e.g. 90" required>
+        <div class="field-hint">Enter the total time you studied, in minutes.</div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="field">
+          <label class="field-label" for="mood">Mood</label>
+          <select id="mood" name="mood" class="input" required>
+            <option value="" disabled selected>Select…</option>
+            <option value="excellent">Excellent</option>
+            <option value="good">Good</option>
+            <option value="fair">Fair</option>
+            <option value="poor">Poor</option>
+          </select>
         </div>
-        <h1 style="font-size: 2rem; margin-bottom: var(--space-1); letter-spacing: -0.03em;">Record Activity</h1>
-        <p style="color: var(--text-secondary);">Manually log a study session to keep your analytics accurate.</p>
-    </div>
-    
-    <div class="card" style="padding: var(--space-5); animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;">
-        <form method="POST" id="logSessionForm">
-            <div class="form-group">
-                <label for="subject" class="form-label">Subject</label>
-                <input type="text" class="form-control" id="subject" name="subject" placeholder="e.g. Linear Algebra" required autofocus>
-            </div>
-            
-            <div class="form-group">
-                <label for="duration" class="form-label">Duration (Minutes)</label>
-                <input type="number" class="form-control" id="duration" name="duration" min="1" max="600" placeholder="e.g. 90" required>
-            </div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);">
-                <div class="form-group">
-                    <label for="mood" class="form-label">Mood</label>
-                    <select class="form-control" id="mood" name="mood" required style="appearance: none; background-image: url('data:image/svg+xml;utf8,<svg fill=%22%23a1a1aa%22 height=%2224%22 viewBox=%220 0 24 24%22 width=%2224%22 xmlns=%22http://www.w3.org/2000/svg%22><path d=%22M7 10l5 5 5-5z%22/></svg>'); background-repeat: no-repeat; background-position: right 8px center;">
-                        <option value="" disabled selected>Select</option>
-                        <option value="excellent">Excellent</option>
-                        <option value="good">Good</option>
-                        <option value="fair">Fair</option>
-                        <option value="poor">Poor</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="productivity" class="form-label">Productivity</label>
-                    <select class="form-control" id="productivity" name="productivity" required style="appearance: none; background-image: url('data:image/svg+xml;utf8,<svg fill=%22%23a1a1aa%22 height=%2224%22 viewBox=%220 0 24 24%22 width=%2224%22 xmlns=%22http://www.w3.org/2000/svg%22><path d=%22M7 10l5 5 5-5z%22/></svg>'); background-repeat: no-repeat; background-position: right 8px center;">
-                        <option value="" disabled selected>Select</option>
-                        <option value="very_high">Very High</option>
-                        <option value="high">High</option>
-                        <option value="medium">Medium</option>
-                        <option value="low">Low</option>
-                        <option value="very_low">Very Low</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="session_date" class="form-label">Date</label>
-                <input type="date" class="form-control" id="session_date" name="session_date">
-                <div style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 4px;">Leave blank to log for today.</div>
-            </div>
-            
-            <div class="form-group" style="margin-bottom: var(--space-5);">
-                <label for="notes" class="form-label">Notes (Optional)</label>
-                <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Key takeaways, concepts covered..." style="resize: vertical;"></textarea>
-            </div>
-            
-            <div style="display: flex; gap: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border-subtle);">
-                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary" style="flex: 1;">Cancel</a>
-                <button type="submit" class="btn btn-primary" style="flex: 1;">Save Record</button>
-            </div>
-        </form>
-    </div>
+
+        <div class="field">
+          <label class="field-label" for="productivity">Productivity</label>
+          <select id="productivity" name="productivity" class="input" required>
+            <option value="" disabled selected>Select…</option>
+            <option value="very_high">Very high</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+            <option value="very_low">Very low</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="session_date">Date</label>
+        <input type="date" id="session_date" name="session_date" class="input">
+        <div class="field-hint">Leave blank to use today's date.</div>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="notes">Notes <span style="color: var(--c-ink-3); font-weight: 400; letter-spacing: 0;">(optional)</span></label>
+        <textarea id="notes" name="notes" class="input" rows="3"
+                  placeholder="Key takeaways, concepts covered, what to review next…"></textarea>
+      </div>
+
+      <hr class="divider">
+
+      <div class="flex gap-3">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline" style="flex: 1; justify-content: center;">Cancel</a>
+        <button type="submit" class="btn btn-primary" style="flex: 2;">
+          Save session
+        </button>
+      </div>
+    </form>
+  </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('session_date').value = new Date().toISOString().split('T')[0];
-    
-    document.getElementById('logSessionForm').addEventListener('submit', function() {
-        const btn = this.querySelector('button[type="submit"]');
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-        btn.style.pointerEvents = 'none';
-        btn.style.opacity = '0.8';
-    });
+  const dateInput = document.getElementById('session_date');
+  dateInput.value = new Date().toISOString().split('T')[0];
+
+  document.getElementById('logSessionForm').addEventListener('submit', function () {
+    const btn = this.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
+  });
 });
 </script>
 {% endblock %}
