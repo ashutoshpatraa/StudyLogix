@@ -50,8 +50,9 @@ A beautifully designed, **Nothing OS-inspired** web application for tracking stu
 | Layer | Technology |
 |-------|-----------|
 | **Backend** | Python · Flask · Gunicorn |
+| **Services** | Object-oriented modular services for business logic |
 | **Database** | SQLite (zero-config, file-based) |
-| **Auth** | bcrypt password hashing |
+| **Auth** | bcrypt password hashing · CSRF Protection |
 | **Frontend** | Jinja2 templates · Bootstrap 5 · Chart.js · Font Awesome |
 | **Design** | Nothing OS glassmorphism · DotGothic16 / JetBrains Mono fonts |
 | **Deployment** | Render.com · Docker (optional) |
@@ -116,13 +117,26 @@ http://localhost:5000
 
 ---
 
+## 🧪 Testing
+
+StudyLogix comes with automated tests using `pytest` to ensure application stability and reliability.
+
+### Running Tests
+To run the full test suite over authentication, database models, and the study flow:
+```bash
+pytest
+```
+*You can also run tests with verbosity:* `pytest -v`
+
+---
+
 ## 🌐 Deploy to Render.com
 
 StudyLogix includes a [`render.yaml`](render.yaml) blueprint for **one-click deployment** on [Render](https://render.com/).
 
 ### Option A — Blueprint Deploy (Fastest)
 
-1. Push your repo to GitHub (or fork [this repo](https://github.com/ashutoshpatraa/StudyLogix)).
+1. Push your repo to GitHub.
 2. Go to [Render Dashboard → **New** → **Blueprint**](https://dashboard.render.com/select-repo?type=blueprint).
 3. Connect your GitHub account and select the **StudyLogix** repo.
 4. Render reads `render.yaml` and auto-configures everything — just click **Apply**.
@@ -166,13 +180,7 @@ StudyLogix includes a [`render.yaml`](render.yaml) blueprint for **one-click dep
 ## 🐳 Docker (Alternative)
 
 ```dockerfile
-FROM python:3.12-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-COPY . .
-EXPOSE 5000
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+# See Dockerfile for full configuration
 ```
 
 ```bash
@@ -195,6 +203,7 @@ StudyLogix follows these security measures:
   - `Content-Security-Policy` (script/style/font allowlists)
   - `Referrer-Policy: strict-origin-when-cross-origin`
 - **Input validation** on all user-submitted fields (username, password, subjects, durations).
+- **CSRF Protection** applied on forms using Flask-WTF.
 - **IDOR protection** — Pomodoro session ownership is verified before completion or cancellation.
 - **No sensitive data in logs** — database errors are logged internally; users see generic messages.
 - **XSS prevention** — DOM manipulation uses `textContent` / `createElement` instead of `innerHTML`.
@@ -205,37 +214,39 @@ StudyLogix follows these security measures:
 
 ## 📁 Project Structure
 
-```
+```text
 StudyLogix/
-├── app.py                    # Main Flask application & routes
-├── database.py               # SQLite database manager & password hashing
-├── pomodoro_manager.py       # Pomodoro timer session logic
-├── friend_manager.py         # Friend requests, progress, & live timers
-├── managers.py               # CLI managers (UserManager, GoalManager)
-├── analytics.py              # CLI chart generation & CSV export
-├── requirements.txt          # Pinned Python dependencies
+├── app.py                    # Main Flask application & routes routes
+├── database.py               # SQLite database manager
+├── capture_readme.py         # Utility script for README screenshots
 ├── render.yaml               # Render.com deployment blueprint
+├── requirements.txt          # Python dependencies
 ├── .env.example              # Environment variable template
-├── .gitignore                # Git ignore rules
 ├── photos/                   # Screenshot images for README
-│   ├── index.png
-│   ├── login.png
-│   ├── dashboard.png
-│   └── timer.png
+├── services/                 # Business logic and services
+│   ├── friend_manager.py     # Friend requests, progress, & live timers
+│   ├── pomodoro_manager.py   # Pomodoro timer session logic
+│   ├── session_manager.py    # Study session CRUD
+│   └── user_manager.py       # Authentication & user operations
 ├── static/
+│   ├── charts/               # JS charting scripts
 │   └── css/
 │       └── style.css         # Nothing OS design system
-└── templates/
-    ├── base.html             # Base layout with navbar & theme toggle
-    ├── index.html            # Landing page
-    ├── login.html            # Login form
-    ├── register.html         # Registration form
-    ├── dashboard.html        # Main dashboard with stats
-    ├── pomodoro.html         # Floating orb Pomodoro timer
-    ├── log_session.html      # Manual session logging form
-    ├── sessions.html         # Session history archive
-    ├── analytics.html        # Analytics with Chart.js
-    └── friends.html          # Friends list & live timers
+├── templates/
+│   ├── base.html             # Base layout with navbar & theme toggle
+│   ├── index.html            # Landing page
+│   ├── login.html            # Login form
+│   ├── register.html         # Registration form
+│   ├── dashboard.html        # Main dashboard with stats
+│   ├── pomodoro.html         # Floating orb Pomodoro timer
+│   ├── log_session.html      # Manual session logging form
+│   ├── sessions.html         # Session history archive
+│   ├── analytics.html        # Analytics with Chart.js
+│   └── friends.html          # Friends list & live timers
+└── tests/                    # Automated Test Suite
+    ├── test_auth.py          # Tests for user authentication
+    ├── test_db.py            # Tests for database operations
+    └── test_study_flow.py    # Tests for logging sessions and pomodoros
 ```
 
 ---
@@ -255,7 +266,7 @@ Contributions are welcome! Follow these steps:
 - Follow existing code style and naming conventions.
 - Add or update docstrings for new functions.
 - Keep security in mind — validate inputs, avoid `innerHTML`, never commit secrets.
-- Test your changes locally before submitting.
+- Add and run tests to ensure your changes do not break anything locally before submitting.
 
 ### Reporting Issues
 
@@ -279,7 +290,6 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 - [ ] Spaced repetition flashcard integration
 - [ ] Progressive Web App (PWA) with offline support
 - [ ] REST API documentation (OpenAPI / Swagger)
-- [ ] Automated test suite (pytest)
 - [ ] Rate limiting on authentication endpoints
 - [ ] Email notifications for goal milestones
 
@@ -296,10 +306,4 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 ---
 
-<div align="center">
-
-**Made with ❤️ by [Ashu](https://github.com/ashutoshpatraa)**
-
-[⭐ Star this repo](https://github.com/ashutoshpatraa/StudyLogix) · [🐛 Report Bug](https://github.com/ashutoshpatraa/StudyLogix/issues) · [✨ Request Feature](https://github.com/ashutoshpatraa/StudyLogix/issues)
-
-</div>
+<div align="center">Made with ❤️ by the community.</div>
