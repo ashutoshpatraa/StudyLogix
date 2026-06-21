@@ -94,74 +94,53 @@
   margin-top: 2px;
 }
 
-/* Preview panel */
-.preview-card {
-  background: var(--c-bg);
-  border: 1px solid var(--c-line);
-  border-radius: var(--r-md);
-  padding: 20px;
-  margin-bottom: 12px;
+/* Feature cards (right panel) */
+.landing-features {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.lf-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--c-line);
   animation: fade-up 0.5s var(--ease) both;
 }
-.preview-card:nth-child(2) { animation-delay: 80ms; }
-.preview-card:nth-child(3) { animation-delay: 160ms; }
+.lf-card:first-child { padding-top: 0; }
+.lf-card:last-child  { border-bottom: none; padding-bottom: 0; }
+.lf-card:nth-child(2) { animation-delay: 60ms; }
+.lf-card:nth-child(3) { animation-delay: 120ms; }
+.lf-card:nth-child(4) { animation-delay: 180ms; }
 
-.preview-row {
+.lf-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--c-line-strong);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--c-accent);
+  flex-shrink: 0;
+  margin-top: 1px;
+  background: var(--c-raised);
 }
-.preview-session-name {
+.lf-body { flex: 1; min-width: 0; }
+.lf-title {
   font-family: var(--f-display);
-  font-size: 1.1rem;
+  font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.02em;
+  color: var(--c-ink);
+  margin-bottom: 4px;
 }
-.preview-timer {
-  font-family: var(--f-mono);
-  font-size: 1.5rem;
-  font-weight: 500;
-  color: var(--c-accent);
-}
-.preview-track {
-  height: 2px;
-  background: var(--c-raised);
-  border-radius: 1px;
-  overflow: hidden;
-  margin-top: 14px;
-}
-.preview-fill {
-  height: 100%;
-  background: var(--c-accent);
-  border-radius: 1px;
-}
-.preview-stat-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-.preview-stat {
-  background: var(--c-bg);
-  border: 1px solid var(--c-line);
-  border-radius: var(--r-md);
-  padding: 14px 16px;
-  animation: fade-up 0.5s var(--ease) both;
-}
-.preview-stat:nth-child(1) { animation-delay: 240ms; }
-.preview-stat:nth-child(2) { animation-delay: 300ms; }
-.preview-stat-num {
-  font-family: var(--f-display);
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.04em;
-}
-.preview-stat-label {
-  font-size: 11px;
+.lf-desc {
+  font-size: 13px;
   color: var(--c-ink-3);
-  margin-top: 3px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  line-height: 1.55;
 }
 
 @media (max-width: 900px) {
@@ -214,49 +193,44 @@
     </div>
   </div>
 
-  <!-- ── Right: Product Preview ────────────────────── -->
+  <!-- ── Right: Feature overview (no fake data) ──────── -->
   <div class="landing-preview">
-    <!-- Active session preview -->
-    <div class="preview-card">
-      <div class="preview-row">
-        <div>
-          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--c-accent); margin-bottom: 6px; font-weight: 600;">In progress</div>
-          <div class="preview-session-name">Linear Algebra</div>
-          <div style="font-size: 12px; color: var(--c-ink-3); margin-top: 4px;">Pomodoro session · Deep work</div>
-        </div>
-        <div class="preview-timer">18:42</div>
-      </div>
-      <div class="preview-track" style="margin-top: 14px;">
-        <div class="preview-fill" style="width: 62%;"></div>
-      </div>
-    </div>
+    <div class="landing-features">
 
-    <!-- Today's goal -->
-    <div class="preview-card">
-      <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--c-ink-3); margin-bottom: 10px; font-weight: 600;">Today's goal</div>
-      <div class="preview-row">
-        <div>
-          <div style="font-family: var(--f-display); font-size: 1.35rem; font-weight: 700; letter-spacing: -0.03em;">3h 20m <span style="font-size: 1rem; color: var(--c-ink-3); font-weight: 400;">/ 4h</span></div>
-          <div style="font-size: 12px; color: var(--c-ink-3); margin-top: 4px;">40 minutes remaining</div>
+      <div class="lf-card">
+        <div class="lf-icon"><i class="fa-solid fa-timer"></i></div>
+        <div class="lf-body">
+          <div class="lf-title">Pomodoro focus timer</div>
+          <div class="lf-desc">Start timed work blocks. Sessions are recorded automatically — subject, duration, and timestamp — so your history builds itself.</div>
         </div>
-        <span class="badge badge-accent">83%</span>
       </div>
-      <div class="preview-track" style="margin-top: 12px;">
-        <div class="preview-fill" style="width: 83%; background: var(--c-ink);"></div>
-      </div>
-    </div>
 
-    <!-- Stats row -->
-    <div class="preview-stat-grid">
-      <div class="preview-stat">
-        <div class="preview-stat-num">14</div>
-        <div class="preview-stat-label">Day streak</div>
+      <div class="lf-card">
+        <div class="lf-icon"><i class="fa-solid fa-fire-flame-curved"></i></div>
+        <div class="lf-body">
+          <div class="lf-title">52-week activity heatmap</div>
+          <div class="lf-desc">See your entire year of study at a glance. Every day you study fills in a cell — making consistency visible and concrete.</div>
+        </div>
       </div>
-      <div class="preview-stat">
-        <div class="preview-stat-num">24h</div>
-        <div class="preview-stat-label">This week</div>
+
+      <div class="lf-card">
+        <div class="lf-icon"><i class="fa-solid fa-chart-simple"></i></div>
+        <div class="lf-body">
+          <div class="lf-title">Subject-level analytics</div>
+          <div class="lf-desc">Time broken down by subject. See exactly where your hours are going, identify gaps, and rebalance before exams.</div>
+        </div>
       </div>
+
+      <div class="lf-card">
+        <div class="lf-icon"><i class="fa-solid fa-users"></i></div>
+        <div class="lf-body">
+          <div class="lf-title">Study group</div>
+          <div class="lf-desc">Connect with friends, compare activity, and keep each other accountable without competitive pressure.</div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
+
 {% endblock %}

@@ -1,421 +1,683 @@
 {% extends "base.html" %}
+{% block title %}Focus Timer — StudyLogix{% endblock %}
 
-{% block title %}Focus Mode - StudyLogix{% endblock %}
-
-{% block content %}
+{% block head %}
 <style>
-/* Focus Mode Specific Styles */
+/* ─── Focus Timer Page ───────────────────────────────────────────
+   Layout contract:
+   - Setup view: centred column, max-width 700px, flex gap-based
+   - Timer overlay: position:fixed, flex column, no absolute children
+     except the decorative ambient glow (z-index: 0, overflow hidden)
+   - All font sizes use clamp() so they scale continuously
+   - No fixed px sizes for typography
+───────────────────────────────────────────────────────────────── */
+
+/* ── Setup panel ─────────────────────────────────────────── */
+.pomo-setup {
+  max-width: 680px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.pomo-setup-header {
+  text-align: center;
+  margin-bottom: var(--s-6);
+}
+.pomo-setup-title {
+  font-family: var(--f-display);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: var(--s-2);
+}
+.pomo-setup-sub {
+  font-size: 14px;
+  color: var(--c-ink-3);
+}
+
+.pomo-presets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+@media (max-width: 520px) {
+  .pomo-presets { grid-template-columns: 1fr; }
+}
+
+.pomo-preset-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  padding: 20px 16px;
+  cursor: pointer;
+  transition: border-color var(--t-fast) var(--ease),
+              background  var(--t-fast) var(--ease),
+              transform   var(--t-fast) var(--ease);
+  user-select: none;
+}
+.pomo-preset-card:hover {
+  border-color: var(--c-line-strong);
+  background: var(--c-raised);
+}
+.pomo-preset-card:active { transform: scale(0.98); }
+.pomo-preset-card.is-custom { cursor: default; }
+.pomo-preset-card.is-custom:hover { border-color: var(--c-line); background: var(--c-surface); }
+
+.pomo-preset-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--c-ink-3);
+  margin-bottom: 8px;
+}
+.pomo-preset-time {
+  font-family: var(--f-display);
+  font-size: clamp(1.6rem, 4vw, 2.25rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.pomo-preset-desc {
+  font-size: 12px;
+  color: var(--c-ink-3);
+  line-height: 1.4;
+}
+
+.pomo-custom-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  align-items: stretch;
+}
+.pomo-custom-input {
+  flex: 1;
+  min-width: 0;
+  background: var(--c-bg);
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-sm);
+  padding: 9px 12px;
+  color: var(--c-ink);
+  font-family: var(--f-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: center;
+  transition: border-color var(--t-fast);
+  -webkit-appearance: none;
+  appearance: none;
+}
+.pomo-custom-input:focus {
+  outline: none;
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 3px var(--c-accent-dim);
+}
+.pomo-custom-input::placeholder { color: var(--c-ink-3); }
+
+/* ── Recent sessions panel ───────────────────────────────── */
+.pomo-sessions {
+  margin-top: 32px;
+}
+.pomo-session-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--c-line);
+  font-size: 13px;
+}
+.pomo-session-row:last-child { border-bottom: none; }
+.pomo-session-row:hover { background: var(--c-raised); }
+
+/* ── Focus overlay ───────────────────────────────────────── */
 .focus-overlay {
-    position: fixed;
-    inset: 0;
-    background: var(--bg-base);
-    z-index: 9000;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.5s ease-in-out;
+  position: fixed;
+  inset: 0;
+  background: var(--c-bg);
+  z-index: 9000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(16px, 3vh, 32px);
+  padding: clamp(16px, 4vw, 48px);
+  overflow: hidden;           /* contain the ambient glow */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 400ms var(--ease);
 }
-
 .focus-overlay.active {
-    opacity: 1;
-    pointer-events: all;
+  opacity: 1;
+  pointer-events: all;
 }
 
-.timer-container {
-    text-align: center;
-    position: relative;
-    z-index: 2;
-    transform: scale(0.95);
-    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* Decorative ambient glow — z:0, contained, no layout impact */
+.focus-ambient {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.focus-ambient::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(70vw, 600px);
+  height: min(70vw, 600px);
+  background: radial-gradient(circle, var(--c-accent) 0%, transparent 70%);
+  opacity: 0.04;
+  border-radius: 50%;
+  filter: blur(80px);
+  animation: ambient-pulse 10s ease-in-out infinite alternate;
+}
+.focus-ambient.is-break::after {
+  background: radial-gradient(circle, var(--c-ok) 0%, transparent 70%);
+}
+@keyframes ambient-pulse {
+  from { opacity: 0.025; transform: translate(-50%, -50%) scale(0.88); }
+  to   { opacity: 0.055; transform: translate(-50%, -50%) scale(1.12); }
 }
 
-.focus-overlay.active .timer-container {
-    transform: scale(1);
+/* Timer body — flex column, z:1 above ambient */
+.focus-body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(8px, 2vh, 20px);
+  text-align: center;
+  /* Scale-in animation on activation */
+  transform: scale(0.94);
+  transition: transform 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.focus-overlay.active .focus-body { transform: scale(1); }
+
+.focus-mode-label {
+  font-size: clamp(0.7rem, 1.5vw, 0.95rem);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--c-ink-3);
 }
 
-.timer-display {
-    font-family: var(--font-display);
-    font-size: 15vw;
-    line-height: 1;
-    font-weight: 700;
-    letter-spacing: -0.04em;
-    color: var(--text-primary);
-    margin-bottom: var(--space-2);
-    font-variant-numeric: tabular-nums;
+.focus-time {
+  font-family: var(--f-display);
+  /* clamp: 4rem at 320px, scales to ~13rem at 1440px, caps at 14rem */
+  font-size: clamp(4rem, 18vw, 14rem);
+  font-weight: 700;
+  letter-spacing: -0.06em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-ink);
 }
 
-.timer-label {
-    font-size: 1.5rem;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    font-weight: 500;
-    margin-bottom: var(--space-6);
+/* Progress bar under the time */
+.focus-progress-track {
+  width: min(420px, 80vw);
+  height: 2px;
+  background: var(--c-line);
+  border-radius: 1px;
+  overflow: hidden;
+}
+.focus-progress-fill {
+  height: 100%;
+  width: 100%;
+  background: var(--c-accent);
+  border-radius: 1px;
+  transform-origin: left;
+  transform: scaleX(1);
+  transition: transform 1s linear;
 }
 
-.timer-controls {
-    display: flex;
-    gap: var(--space-3);
-    justify-content: center;
-    opacity: 0;
-    transform: translateY(20px);
-    transition: all 0.5s ease-out;
+/* Timer controls row */
+.focus-controls {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 2vw, 20px);
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 400ms var(--ease) 280ms,
+              transform 400ms var(--ease) 280ms;
+}
+.focus-overlay.active .focus-controls {
+  opacity: 1;
+  transform: translateY(0);
 }
 
-.focus-overlay.active .timer-controls {
-    opacity: 1;
-    transform: translateY(0);
-    transition-delay: 0.3s;
+.focus-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(48px, 8vw, 64px);
+  height: clamp(48px, 8vw, 64px);
+  border-radius: 50%;
+  border: 1px solid var(--c-line-strong);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font-size: clamp(0.9rem, 2vw, 1.35rem);
+  cursor: pointer;
+  transition: background var(--t-fast), transform var(--t-fast), border-color var(--t-fast);
+  flex-shrink: 0;
+}
+.focus-btn:hover {
+  background: var(--c-raised);
+  border-color: var(--c-ink-2);
+  transform: scale(1.06);
+}
+.focus-btn:active { transform: scale(0.96); }
+.focus-btn.danger:hover {
+  background: rgba(248, 113, 113, 0.15);
+  border-color: var(--c-bad);
+  color: var(--c-bad);
 }
 
-.timer-btn {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    border: 1px solid var(--border-subtle);
-    background: var(--bg-surface-elevated);
-    color: var(--text-primary);
-    font-size: 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all var(--transition-spring);
+/* Keyboard shortcut hint */
+.focus-shortcuts {
+  position: relative;     /* flow, not absolute */
+  z-index: 1;
+  display: flex;
+  gap: clamp(12px, 3vw, 24px);
+  font-size: clamp(11px, 1.2vw, 13px);
+  color: var(--c-ink-3);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.focus-shortcuts kbd {
+  display: inline-flex;
+  align-items: center;
+  background: var(--c-raised);
+  border: 1px solid var(--c-line-strong);
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-family: var(--f-mono);
+  font-size: inherit;
+  color: var(--c-ink-2);
 }
 
-.timer-btn:hover {
-    background: var(--bg-surface-hover);
-    transform: scale(1.05);
+/* ── Confirm modal inside overlay ───────────────────────── */
+.pomo-confirm-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(2px);
+  z-index: 9100;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
 }
-
-.timer-btn.danger:hover {
-    background: var(--error-base);
-    color: white;
-    border-color: var(--error-base);
+.pomo-confirm-modal.open { display: flex; }
+.pomo-confirm-box {
+  background: var(--c-surface);
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-lg);
+  padding: 28px;
+  width: 100%;
+  max-width: 380px;
+  animation: modal-up var(--t-mid) var(--ease);
 }
-
-.focus-glow {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 60vw;
-    height: 60vw;
-    background: radial-gradient(circle, var(--accent-base) 0%, transparent 70%);
-    opacity: 0.05;
-    filter: blur(100px);
-    z-index: 1;
-    border-radius: 50%;
-    animation: pulse 8s ease-in-out infinite alternate;
+.pomo-confirm-title {
+  font-family: var(--f-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
 }
-
-@keyframes pulse {
-    from { opacity: 0.03; transform: translate(-50%, -50%) scale(0.9); }
-    to { opacity: 0.08; transform: translate(-50%, -50%) scale(1.1); }
+.pomo-confirm-msg {
+  font-size: 13px;
+  color: var(--c-ink-3);
+  margin-bottom: 24px;
+  line-height: 1.5;
 }
-
-.shortcuts-hint {
-    position: absolute;
-    bottom: var(--space-4);
-    color: var(--text-tertiary);
-    font-size: 0.85rem;
-    display: flex;
-    gap: var(--space-4);
-}
-
-.shortcuts-hint kbd {
-    background: var(--bg-surface-elevated);
-    padding: 2px 6px;
-    border-radius: 4px;
-    border: 1px solid var(--border-subtle);
-    font-family: monospace;
-    font-size: 0.75rem;
+.pomo-confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
 }
 </style>
+{% endblock %}
 
-<!-- Setup Interface -->
-<div class="card" style="max-width: 800px; margin: 0 auto; padding: var(--space-5);">
-    <div style="text-align: center; margin-bottom: var(--space-6);">
-        <div style="width: 64px; height: 64px; border-radius: var(--radius-lg); background: var(--accent-light); color: var(--accent-base); display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto var(--space-3);">
-            <i class="fas fa-stopwatch"></i>
-        </div>
-        <h1 class="hero-title" style="font-size: 2rem; margin-bottom: var(--space-1);">Focus Protocol</h1>
-        <p style="color: var(--text-secondary);">Eliminate distractions. Enter the flow state.</p>
-    </div>
-
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-3);">
-        <!-- Standard Focus -->
-        <div class="card" style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); cursor: pointer;" onclick="startPomodoro()">
-            <h3 style="display: flex; align-items: center; gap: 8px; font-size: 1.1rem; color: var(--accent-base); margin-bottom: var(--space-2);">
-                <i class="fas fa-brain"></i> Deep Work
-            </h3>
-            <div style="font-family: var(--font-display); font-size: 2rem; font-weight: 700; margin-bottom: var(--space-2);">25m</div>
-            <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">Standard pomodoro session</p>
-        </div>
-
-        <!-- Break -->
-        <div class="card" style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); cursor: pointer;" onclick="startBreak()">
-            <h3 style="display: flex; align-items: center; gap: 8px; font-size: 1.1rem; color: var(--success-base); margin-bottom: var(--space-2);">
-                <i class="fas fa-coffee"></i> Rest
-            </h3>
-            <div style="font-family: var(--font-display); font-size: 2rem; font-weight: 700; margin-bottom: var(--space-2);">5m</div>
-            <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">Short mental reset</p>
-        </div>
-
-        <!-- Custom -->
-        <div class="card" style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle);">
-            <h3 style="display: flex; align-items: center; gap: 8px; font-size: 1.1rem; color: var(--text-primary); margin-bottom: var(--space-2);">
-                <i class="fas fa-sliders-h"></i> Custom
-            </h3>
-            <div style="display: flex; gap: 8px; margin-bottom: var(--space-2);">
-                <input type="number" id="customMinutes" class="form-control" style="background: var(--bg-base); font-family: var(--font-display); font-size: 1.2rem; padding: 4px 8px; text-align: center;" placeholder="Min" min="1" max="120">
-            </div>
-            <button onclick="startCustomTimer()" class="btn btn-secondary" style="width: 100%; padding: 4px;">Start</button>
-        </div>
-    </div>
+{% block content %}
+<!-- ── Page header ─────────────────────────────────────── -->
+<div class="page-header animate-fade-up">
+  <div>
+    <div class="eyebrow" style="margin-bottom: 6px;">Sessions</div>
+    <h1 class="page-title">Focus Timer</h1>
+    <p class="page-subtitle">Deep work blocks measured and recorded automatically.</p>
+  </div>
 </div>
 
-<!-- Immersive Full-Screen Timer -->
-<div class="focus-overlay" id="focusOverlay">
-    <div class="focus-glow" id="focusGlow"></div>
-    <div class="timer-container">
-        <div class="timer-label" id="sessionLabel">Focus Session</div>
-        <div class="timer-display" id="timeDisplay">25:00</div>
-        <div class="timer-controls">
-            <button class="timer-btn" onclick="pauseTimer()" id="pauseBtn" aria-label="Pause timer">
-                <i class="fas fa-pause"></i>
-            </button>
-            <button class="timer-btn danger" onclick="stopTimer()" id="stopBtn" aria-label="Stop timer">
-                <i class="fas fa-stop"></i>
-            </button>
+<!-- ── Setup panel ─────────────────────────────────────── -->
+<div class="pomo-setup animate-fade-up delay-1">
+  <div class="pomo-presets">
+
+    <!-- Deep Work (25 min) -->
+    <div class="pomo-preset-card" onclick="startPomodoro()" role="button" tabindex="0"
+         onkeydown="if(event.key==='Enter')startPomodoro()">
+      <div class="pomo-preset-label">Deep work</div>
+      <div class="pomo-preset-time">25m</div>
+      <div class="pomo-preset-desc">Standard Pomodoro focus block</div>
+    </div>
+
+    <!-- Short break (5 min) -->
+    <div class="pomo-preset-card" onclick="startBreak()" role="button" tabindex="0"
+         onkeydown="if(event.key==='Enter')startBreak()">
+      <div class="pomo-preset-label" style="color: var(--c-ok);">Short break</div>
+      <div class="pomo-preset-time" style="color: var(--c-ok);">5m</div>
+      <div class="pomo-preset-desc">Mental reset before next block</div>
+    </div>
+
+    <!-- Custom -->
+    <div class="pomo-preset-card is-custom">
+      <div class="pomo-preset-label">Custom</div>
+      <div class="pomo-custom-row">
+        <input type="number" id="customMinutes" class="pomo-custom-input"
+               placeholder="min" min="1" max="300" aria-label="Custom duration in minutes">
+        <button onclick="startCustomTimer()" class="btn btn-primary" style="height: auto; padding: 0 16px; flex-shrink: 0;">
+          Start
+        </button>
+      </div>
+      <div class="pomo-preset-desc" style="margin-top: 8px;">1–300 minutes</div>
+    </div>
+
+  </div>
+
+  <!-- Keyboard hint on setup screen -->
+  <div style="text-align: center; margin-top: 8px;">
+    <span style="font-size: 12px; color: var(--c-ink-3);">
+      Press <kbd style="background:var(--c-raised);border:1px solid var(--c-line-strong);border-radius:3px;padding:1px 6px;font-family:var(--f-mono);font-size:11px;">Ctrl</kbd>+<kbd style="background:var(--c-raised);border:1px solid var(--c-line-strong);border-radius:3px;padding:1px 6px;font-family:var(--f-mono);font-size:11px;">K</kbd> from anywhere to jump here.
+    </span>
+  </div>
+
+  <!-- Recent Pomodoro sessions -->
+  {% if recent_sessions %}
+  <div class="pomo-sessions animate-fade-up delay-2">
+    <div class="card" style="padding: 0; margin-top: 0;">
+      <div class="flex items-center justify-between" style="padding: 14px 20px; border-bottom: 1px solid var(--c-line);">
+        <div class="card-label" style="margin: 0;">Recent focus sessions</div>
+        <div class="flex gap-3" style="font-size: 13px; color: var(--c-ink-3);">
+          Completed: <strong style="color: var(--c-ink);">{{ pomodoro_stats.get('completed_sessions', 0) }}</strong>
         </div>
+      </div>
+      {% for sess in recent_sessions %}
+      <div class="pomo-session-row">
+        <div class="flex items-center gap-3">
+          <div style="width:5px;height:5px;border-radius:50%;background:var(--c-ok);flex-shrink:0;"></div>
+          <span style="font-weight: 500; color: var(--c-ink);">{{ sess[1] }}</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="mono" style="color: var(--c-ink-3); font-size: 12px;">{{ sess[4] if sess[4] else '–' }}m</span>
+          <span class="badge badge-neutral">{{ sess[3] }}</span>
+        </div>
+      </div>
+      {% endfor %}
     </div>
-    
-    <div class="shortcuts-hint">
-        <span><kbd>Space</kbd> Pause</span>
-        <span><kbd>Esc</kbd> Stop</span>
-    </div>
+  </div>
+  {% endif %}
 </div>
 
+<!-- ── Focus overlay (full-screen timer) ──────────────── -->
+<div class="focus-overlay" id="focusOverlay" role="dialog" aria-modal="true" aria-label="Focus timer">
+
+  <!-- Decorative ambient glow — layout-neutral -->
+  <div class="focus-ambient" id="focusAmbient"></div>
+
+  <!-- Timer body -->
+  <div class="focus-body">
+    <div class="focus-mode-label" id="sessionLabel">Focus session</div>
+    <div class="focus-time" id="timeDisplay" aria-live="polite" aria-atomic="true">25:00</div>
+    <div class="focus-progress-track" id="progressTrack">
+      <div class="focus-progress-fill" id="progressFill"></div>
+    </div>
+    <div class="focus-controls">
+      <button class="focus-btn" id="pauseBtn" onclick="pauseTimer()" aria-label="Pause or resume timer">
+        <i class="fa-solid fa-pause" aria-hidden="true"></i>
+      </button>
+      <button class="focus-btn danger" onclick="stopTimer()" aria-label="Stop and save session">
+        <i class="fa-solid fa-stop" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Keyboard shortcuts — in flow, not absolute -->
+  <div class="focus-shortcuts" aria-hidden="true">
+    <span><kbd>Space</kbd> Pause / Resume</span>
+    <span><kbd>Esc</kbd> Stop &amp; save</span>
+  </div>
+</div>
+
+<!-- ── Confirm modal ────────────────────────────────────── -->
+<div id="confirmModal" class="pomo-confirm-modal" role="dialog" aria-modal="true">
+  <div class="pomo-confirm-box">
+    <div class="pomo-confirm-title" id="confirmTitle"></div>
+    <div class="pomo-confirm-msg"   id="confirmMessage"></div>
+    <div class="pomo-confirm-actions">
+      <button class="btn btn-outline" onclick="closeConfirmModal(false)">Cancel</button>
+      <button class="btn btn-primary" onclick="closeConfirmModal(true)"  id="confirmOk">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notification tone -->
 <audio id="notificationSound" preload="auto">
-    <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbByRrZE2MXPKBqLOpRSZXeD1jgNP8hAL0fKnMjdoFfzHWFLyHj7bCiTv1hZJvOHt+fJPJ6sHuL+KjQFWJ8LT1gNB4Z4Qk8Hb5jLqHpKStnK8mZHldnC6pnXwdBnf4VCr0yWTrZZnSJ7rXsLaKlMTyTHlJJ3TvKRn1GhKo1+1H8UE1wjJYCyPeF8SdM/qvs+Q5P/XC2hOJ9nM6Gx8rZL4y9jA+FtQ1TUwmvJJ9ljX9nO3OMSLPQlOCzMHFnGF8H9YMzYHqaHYL1hQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYFhQ7r7SYAAA=" type="audio/wav">
+  <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbByRrZE2MXPKBqLOpRSZXeD1jgNP8hAL0fKnMjdoFfzHWFLyHj7bCiTv1hZJvOHt+fJPJ6sHuL+KjQFWJ8LT1gNB4Z4Qk8Hb5jLqHpKStnK8mZHldnC6pnXwdBnf4VCr0yWTrZZnSJ7rXsLaKlMTyTHlJJ3TvKRn1GhKo1+1H8UE1wjJYCyPeF8SdM/qvs+Q5P/XC2hOJ9nM6Gx8rZL4y9jA+FtQ1TUwmvJJ9ljX9nO3OMSLPQlOCzMHFnGF8H9YMzYHqaHYL1hQ7r7SYFhQ7r7SYA=" type="audio/wav">
 </audio>
-
-<!-- Custom Modal -->
-<div id="confirmModal" class="modal-backdrop" style="display: none;">
-    <div class="modal-content" style="padding: var(--space-4);">
-        <h3 id="confirmTitle" style="margin-bottom: var(--space-2); font-size: 1.25rem;"></h3>
-        <p id="confirmMessage" style="color: var(--text-secondary); margin-bottom: var(--space-4);"></p>
-        <div style="display: flex; justify-content: flex-end; gap: var(--space-2);">
-            <button id="confirmCancel" class="btn btn-ghost" onclick="closeConfirmModal(false)">Cancel</button>
-            <button id="confirmOk" class="btn btn-primary" onclick="closeConfirmModal(true)">Confirm</button>
-        </div>
-    </div>
-</div>
-
 {% endblock %}
 
 {% block scripts %}
 <script>
-// Confirm Modal logic
-let confirmResolve;
-function showConfirm(title, message) {
-    return new Promise((resolve) => {
-        confirmResolve = resolve;
-        document.getElementById('confirmTitle').textContent = title;
-        document.getElementById('confirmMessage').textContent = message;
-        document.getElementById('confirmModal').style.display = 'flex';
-    });
-}
-function closeConfirmModal(result) {
-    document.getElementById('confirmModal').style.display = 'none';
-    if (confirmResolve) { confirmResolve(result); confirmResolve = null; }
-}
+'use strict';
 
-// Timer Logic
-let timerInterval;
-let isRunning = false;
-let isPaused = false;
-let currentTime = 0;
-let totalTime = 0;
-let isBreakTime = false;
+// ─── State ──────────────────────────────────────────────
+let timerInterval  = null;
+let isRunning      = false;
+let isPaused       = false;
+let currentTime    = 0;
+let totalTime      = 0;
+let isBreakMode    = false;
 let currentSessionId = null;
-let currentSubject = 'STUDY';
 
-function formatTime(seconds) {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+// ─── Utilities ───────────────────────────────────────────
+function fmt(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-function playNotification() {
-    const audio = document.getElementById('notificationSound');
-    audio.play().catch(e => console.log('Audio error', e));
+function csrfToken() {
+  return document.querySelector('meta[name="csrf-token"]').content;
 }
 
-function enterFocusMode() {
-    document.getElementById('focusOverlay').classList.add('active');
-    document.body.style.overflow = 'hidden';
-    
-    // Change glow color based on mode
-    const glow = document.getElementById('focusGlow');
-    if (isBreakTime) {
-        glow.style.background = 'radial-gradient(circle, var(--success-base) 0%, transparent 70%)';
-    } else {
-        glow.style.background = 'radial-gradient(circle, var(--accent-base) 0%, transparent 70%)';
-    }
+function apiPost(url, body) {
+  return fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() },
+    body: JSON.stringify(body)
+  }).then(r => r.json());
+}
+
+function playTone() {
+  document.getElementById('notificationSound').play().catch(() => {});
+}
+
+// ─── Confirm modal ───────────────────────────────────────
+let _confirmResolve = null;
+
+function showConfirm(title, msg) {
+  return new Promise(resolve => {
+    _confirmResolve = resolve;
+    document.getElementById('confirmTitle').textContent   = title;
+    document.getElementById('confirmMessage').textContent = msg;
+    document.getElementById('confirmModal').classList.add('open');
+    document.getElementById('confirmOk').focus();
+  });
+}
+
+function closeConfirmModal(result) {
+  document.getElementById('confirmModal').classList.remove('open');
+  if (_confirmResolve) { _confirmResolve(result); _confirmResolve = null; }
+}
+
+// ─── Progress bar ────────────────────────────────────────
+function updateProgress() {
+  const ratio = totalTime > 0 ? currentTime / totalTime : 0;
+  document.getElementById('progressFill').style.transform = `scaleX(${ratio})`;
+}
+
+// ─── Focus mode transitions ───────────────────────────────
+function enterFocusMode(breakMode) {
+  const overlay = document.getElementById('focusOverlay');
+  const ambient = document.getElementById('focusAmbient');
+  overlay.classList.add('active');
+  ambient.className = 'focus-ambient' + (breakMode ? ' is-break' : '');
+  document.body.style.overflow = 'hidden';
 }
 
 function exitFocusMode() {
-    document.getElementById('focusOverlay').classList.remove('active');
-    document.body.style.overflow = '';
-    isRunning = false;
-    isPaused = false;
-    currentSessionId = null;
-    document.title = "Focus Mode - StudyLogix";
+  document.getElementById('focusOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+  clearInterval(timerInterval);
+  timerInterval    = null;
+  isRunning        = false;
+  isPaused         = false;
+  currentSessionId = null;
+  document.title   = 'Focus Timer — StudyLogix';
+  // Reset progress bar
+  document.getElementById('progressFill').style.transform = 'scaleX(1)';
 }
 
-function startPomodoro() { startTimer(25, false, 'DEEP WORK'); }
-function startBreak() { startTimer(5, true, 'REST'); }
+// ─── Timer core ───────────────────────────────────────────
+function startTimer(minutes, breakMode, label, skipBackend) {
+  if (isRunning) return;
+
+  isBreakMode = breakMode;
+  totalTime   = minutes * 60;
+  currentTime = totalTime;
+  isRunning   = true;
+  isPaused    = false;
+
+  document.getElementById('timeDisplay').textContent    = fmt(currentTime);
+  document.getElementById('sessionLabel').textContent   = label;
+  document.getElementById('pauseBtn').innerHTML         = '<i class="fa-solid fa-pause" aria-hidden="true"></i>';
+  updateProgress();
+  enterFocusMode(breakMode);
+
+  if (!breakMode && !skipBackend) {
+    apiPost('/api/pomodoro/start', { subject: label })
+      .then(data => { if (data.success) currentSessionId = data.session_id; })
+      .catch(() => {});
+  }
+
+  timerInterval = setInterval(() => {
+    if (isPaused) return;
+    currentTime--;
+    const display = fmt(currentTime);
+    document.getElementById('timeDisplay').textContent = display;
+    document.title = `${display} — ${label}`;
+    updateProgress();
+    if (currentTime <= 0) timerComplete();
+  }, 1000);
+}
+
+function startPomodoro()    { startTimer(25, false, 'Deep work',    false); }
+function startBreak()       { startTimer(5,  true,  'Short break',  false); }
 function startCustomTimer() {
-    const m = parseInt(document.getElementById('customMinutes').value);
-    if (m > 0 && m <= 120) startTimer(m, false, 'CUSTOM FOCUS');
-    else showToast('Enter valid minutes (1-120)', 'warning');
-}
-
-function startTimer(minutes, breakMode, label, skipBackend = false) {
-    if (isRunning) return;
-    
-    isBreakTime = breakMode;
-    totalTime = minutes * 60;
-    currentTime = totalTime;
-    isRunning = true;
-    isPaused = false;
-    
-    document.getElementById('timeDisplay').textContent = formatTime(currentTime);
-    document.getElementById('sessionLabel').textContent = label;
-    
-    enterFocusMode();
-    
-    if (!isBreakTime && !skipBackend) {
-        fetch('/api/pomodoro/start', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({ subject: label })
-        }).then(res => res.json()).then(data => {
-            if (data.success) currentSessionId = data.session_id;
-        }).catch(e => console.error(e));
-    }
-    
-    timerInterval = setInterval(() => {
-        if (!isPaused) {
-            currentTime--;
-            const fTime = formatTime(currentTime);
-            document.getElementById('timeDisplay').textContent = fTime;
-            document.title = `${fTime} - ${label}`;
-            
-            if (currentTime <= 0) timerComplete();
-        }
-    }, 1000);
-}
-
-function timerComplete() {
-    clearInterval(timerInterval);
-    playNotification();
-    
-    if (!isBreakTime && currentSessionId) {
-        const elapsedMinutes = Math.max(1, Math.ceil((totalTime - currentTime) / 60));
-        fetch('/api/pomodoro/complete', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({ session_id: currentSessionId, duration: elapsedMinutes })
-        }).then(() => {
-            exitFocusMode();
-            showConfirm('Focus Complete!', 'Start a 5-minute break?').then(res => {
-                if (res) setTimeout(() => startBreak(), 500);
-            });
-        }).catch(() => exitFocusMode());
-    } else {
-        exitFocusMode();
-        if (isBreakTime) {
-            showConfirm('Break Complete!', 'Ready for another session?').then(res => {
-                if (res) setTimeout(() => startPomodoro(), 500);
-            });
-        }
-    }
+  const raw = document.getElementById('customMinutes').value;
+  const m   = parseInt(raw, 10);
+  if (Number.isFinite(m) && m >= 1 && m <= 300) {
+    startTimer(m, false, `${m}m focus`, false);
+  } else {
+    showToast('Enter a number between 1 and 300', 'error');
+  }
 }
 
 function pauseTimer() {
-    isPaused = !isPaused;
-    const btn = document.getElementById('pauseBtn');
-    btn.innerHTML = isPaused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
+  if (!isRunning) return;
+  isPaused = !isPaused;
+  document.getElementById('pauseBtn').innerHTML = isPaused
+    ? '<i class="fa-solid fa-play"  aria-hidden="true"></i>'
+    : '<i class="fa-solid fa-pause" aria-hidden="true"></i>';
 }
 
 async function stopTimer() {
-    const res = await showConfirm('Stop Timer', 'Are you sure you want to stop? Progress will be saved.');
-    if (res) {
-        clearInterval(timerInterval);
-        isRunning = false;
-        
-        const elapsedMinutes = Math.max(1, Math.ceil((totalTime - currentTime) / 60));
-        
-        if (currentSessionId && !isBreakTime) {
-            fetch('/api/pomodoro/complete', {
-                method: 'POST',
-                headers: { 
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-                body: JSON.stringify({ session_id: currentSessionId, duration: elapsedMinutes })
-            }).then(() => exitFocusMode()).catch(() => exitFocusMode());
-        } else if (currentSessionId) {
-            fetch('/api/pomodoro/cancel', {
-                method: 'POST',
-                headers: { 
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-                body: JSON.stringify({ session_id: currentSessionId })
-            }).then(() => exitFocusMode()).catch(() => exitFocusMode());
-        } else {
-            exitFocusMode();
-        }
-    }
+  if (!isRunning) return;
+  const confirmed = await showConfirm('Stop session?', 'Your progress will be saved automatically.');
+  if (!confirmed) return;
+
+  clearInterval(timerInterval);
+  timerInterval = null;
+  isRunning     = false;
+
+  const elapsedMin = Math.max(1, Math.ceil((totalTime - currentTime) / 60));
+
+  if (currentSessionId && !isBreakMode) {
+    apiPost('/api/pomodoro/complete', { session_id: currentSessionId, duration: elapsedMin })
+      .then(() => exitFocusMode())
+      .catch(() => exitFocusMode());
+  } else if (currentSessionId) {
+    apiPost('/api/pomodoro/cancel', { session_id: currentSessionId })
+      .then(() => exitFocusMode())
+      .catch(() => exitFocusMode());
+  } else {
+    exitFocusMode();
+  }
 }
 
-document.addEventListener('keydown', (e) => {
-    if (isRunning) {
-        if (e.code === 'Space') { e.preventDefault(); pauseTimer(); }
-        else if (e.code === 'Escape') { e.preventDefault(); stopTimer(); }
+function timerComplete() {
+  clearInterval(timerInterval);
+  timerInterval = null;
+  playTone();
+
+  if (!isBreakMode && currentSessionId) {
+    const elapsedMin = Math.max(1, Math.ceil(totalTime / 60));
+    apiPost('/api/pomodoro/complete', { session_id: currentSessionId, duration: elapsedMin })
+      .then(() => {
+        exitFocusMode();
+        showConfirm('Session complete!', 'Take a 5-minute break?')
+          .then(yes => { if (yes) setTimeout(startBreak, 400); });
+      })
+      .catch(() => exitFocusMode());
+  } else {
+    exitFocusMode();
+    if (isBreakMode) {
+      showConfirm('Break over!', 'Ready for another focus block?')
+        .then(yes => { if (yes) setTimeout(startPomodoro, 400); });
     }
+  }
+}
+
+// ─── Keyboard shortcuts ───────────────────────────────────
+document.addEventListener('keydown', e => {
+  // Only act when the overlay is visible and no input is focused
+  const overlayActive = document.getElementById('focusOverlay').classList.contains('active');
+  if (!overlayActive) return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+  if (e.code === 'Space') { e.preventDefault(); pauseTimer(); }
+  if (e.code === 'Escape') { e.preventDefault(); stopTimer(); }
 });
 
-// Autostart logic
-window.onload = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('autostart') === 'true') {
-        const id = sessionStorage.getItem('activeSessionId');
-        const dur = sessionStorage.getItem('activeSessionDuration');
-        const sub = sessionStorage.getItem('activeSessionSubject');
-        
-        if (id && dur && sub) {
-            sessionStorage.removeItem('activeSessionId');
-            sessionStorage.removeItem('activeSessionDuration');
-            sessionStorage.removeItem('activeSessionSubject');
-            currentSessionId = id;
-            currentSubject = sub;
-            startTimer(parseInt(dur), false, sub.toUpperCase(), true);
-        }
-    }
-};
+// ─── Autostart (from dashboard "Start session") ───────────
+window.addEventListener('load', () => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('autostart') !== 'true') return;
+
+  const id  = sessionStorage.getItem('activeSessionId');
+  const dur = sessionStorage.getItem('activeSessionDuration');
+  const sub = sessionStorage.getItem('activeSessionSubject');
+
+  if (id && dur && sub) {
+    sessionStorage.removeItem('activeSessionId');
+    sessionStorage.removeItem('activeSessionDuration');
+    sessionStorage.removeItem('activeSessionSubject');
+    currentSessionId = id;
+    startTimer(parseInt(dur, 10), false, sub, true /* skip backend, already started */);
+  }
+});
 </script>
 {% endblock %}
