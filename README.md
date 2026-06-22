@@ -37,11 +37,11 @@ A beautifully designed, **Nothing OS-inspired** web application for tracking stu
 
 | Landing Page | Login |
 |:---:|:---:|
-| ![Landing](photos/index.png) | ![Login](photos/login.png) |
+| ![Landing](photos/landing.png) | ![Login](photos/sign-in.png) |
 
 | Dashboard | Pomodoro Timer |
 |:---:|:---:|
-| ![Dashboard](photos/dashboard.png) | ![Timer](photos/timer.png) |
+| ![Dashboard](photos/today.png) | ![Timer](photos/focus.png) |
 
 ---
 
@@ -218,7 +218,6 @@ StudyLogix follows these security measures:
 StudyLogix/
 ├── app.py                    # Main Flask application & routes routes
 ├── database.py               # SQLite database manager
-├── capture_readme.py         # Utility script for README screenshots
 ├── render.yaml               # Render.com deployment blueprint
 ├── requirements.txt          # Python dependencies
 ├── .env.example              # Environment variable template
